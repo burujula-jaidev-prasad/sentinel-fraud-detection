@@ -1,0 +1,60 @@
+{
+  "case_id": "case_0260_559_492632",
+  "transaction": {
+    "step": 559,
+    "type": "TRANSFER",
+    "amount": 127564.33,
+    "nameOrig": "C315492632",
+    "nameDest": "C1866365124",
+    "hour": 7
+  },
+  "scores": {
+    "model_score": 0.6664,
+    "anomaly_score": 0.0892
+  },
+  "amount_analysis": {
+    "amount": 127564.33,
+    "percentile_vs_train": 38.22,
+    "is_above_p99": false,
+    "train_p99_limit": 2439133.86
+  },
+  "sender_history": {
+    "nameOrig": "C315492632",
+    "prior_tx_count": 0,
+    "prior_total_amount": 0.0,
+    "prior_avg_amount": 0.0,
+    "prior_max_amount": 0.0,
+    "prior_types": []
+  },
+  "receiver_history": {
+    "nameDest": "C1866365124",
+    "prior_tx_count": 0,
+    "prior_total_amount": 0.0,
+    "prior_avg_amount": 0.0,
+    "prior_max_amount": 0.0
+  },
+  "network_evidence": {
+    "has_linked_pair": true,
+    "pattern": "same_step_identical_amount",
+    "matched_counterpart_type": "CASH_OUT",
+    "matched_pair_count": 1,
+    "linked_counterparts": [
+      {
+        "step": 559,
+        "type": "CASH_OUT",
+        "amount": 127564.33,
+        "nameOrig": "C471097879",
+        "nameDest": "C312345",
+        "tx_id": 403222
+      }
+    ],
+    "evidence_note": "Detected 1 matching CASH_OUT transaction(s) at step 559 with identical amount $127,564.33."
+  },
+  "risk_officer": {
+    "decision_strict": "hold",
+    "decision_balanced": "hold",
+    "decision_lenient": "allow",
+    "escalated": false
+  },
+  "isFraud": 1
+}

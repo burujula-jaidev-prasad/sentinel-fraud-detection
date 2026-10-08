@@ -1,0 +1,21 @@
+SUMMARY:
+Case case_0050_366_250081 concerns a CASH_OUT transaction of $500,003.56 at simulation step 366 (Hour 6). The transaction was assigned a fraud probability score of 0.6972 and an anomaly score of 0.0819. The Risk Officer decision under the balanced policy is 'hold'.
+
+KEY FACTS:
+- Transaction ID/Case: case_0050_366_250081
+- Type: CASH_OUT
+- Amount: $500,003.56 (88.8th percentile of training transactions)
+- Step / Hour: Step 366 (Hour 6)
+- Sender: C1283250081 (no prior history available)
+- Receiver: C956555426 (no prior history available)
+- Model Score (RF Probability): 0.6972
+- Anomaly Score (Isolation Forest): 0.0819
+- Operational Decision: hold (Escalate to human: False)
+
+WHY FLAGGED:
+- Model fraud probability score (0.6972) exceeds the 0.50 operational threshold.
+
+RECOMMENDED ACTION:
+Hold transaction in temporary security queue pending standard automated review and customer alert confirmation.
+
+AI-generated from case facts, human review required.

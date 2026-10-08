@@ -1,0 +1,51 @@
+{
+  "case_id": "case_0313_631_055382",
+  "transaction": {
+    "step": 631,
+    "type": "CASH_OUT",
+    "amount": 2391612.36,
+    "nameOrig": "C2115055382",
+    "nameDest": "C1884304223",
+    "hour": 7
+  },
+  "scores": {
+    "model_score": 0.9797,
+    "anomaly_score": 0.1955
+  },
+  "amount_analysis": {
+    "amount": 2391612.36,
+    "percentile_vs_train": 98.96,
+    "is_above_p99": false,
+    "train_p99_limit": 2439133.86
+  },
+  "sender_history": {
+    "nameOrig": "C2115055382",
+    "prior_tx_count": 0,
+    "prior_total_amount": 0.0,
+    "prior_avg_amount": 0.0,
+    "prior_max_amount": 0.0,
+    "prior_types": []
+  },
+  "receiver_history": {
+    "nameDest": "C1884304223",
+    "prior_tx_count": 3,
+    "prior_total_amount": 6866856.69,
+    "prior_avg_amount": 2288952.23,
+    "prior_max_amount": 5369339.71
+  },
+  "network_evidence": {
+    "has_linked_pair": false,
+    "pattern": "same_step_identical_amount",
+    "matched_counterpart_type": null,
+    "matched_pair_count": 0,
+    "linked_counterparts": [],
+    "evidence_note": "No same-step identical-amount counterpart found."
+  },
+  "risk_officer": {
+    "decision_strict": "escalate_to_human",
+    "decision_balanced": "escalate_to_human",
+    "decision_lenient": "escalate_to_human",
+    "escalated": true
+  },
+  "isFraud": 1
+}

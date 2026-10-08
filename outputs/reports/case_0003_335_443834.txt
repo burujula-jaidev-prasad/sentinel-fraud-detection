@@ -1,0 +1,21 @@
+SUMMARY:
+Case case_0003_335_443834 concerns a TRANSFER transaction of $2,067,751.65 at simulation step 335 (Hour 23). The transaction was assigned a fraud probability score of 0.6406 and an anomaly score of 0.1727. The Risk Officer decision under the balanced policy is 'hold'.
+
+KEY FACTS:
+- Transaction ID/Case: case_0003_335_443834
+- Type: TRANSFER
+- Amount: $2,067,751.65 (98.7th percentile of training transactions)
+- Step / Hour: Step 335 (Hour 23)
+- Sender: C1688443834 (no prior history available)
+- Receiver: C774852893 (3 prior transaction(s) totalling $243,092.59)
+- Model Score (RF Probability): 0.6406
+- Anomaly Score (Isolation Forest): 0.1727
+- Operational Decision: hold (Escalate to human: False)
+
+WHY FLAGGED:
+- Model fraud probability score (0.6406) exceeds the 0.50 operational threshold.
+
+RECOMMENDED ACTION:
+Hold transaction in temporary security queue pending standard automated review and customer alert confirmation.
+
+AI-generated from case facts, human review required.

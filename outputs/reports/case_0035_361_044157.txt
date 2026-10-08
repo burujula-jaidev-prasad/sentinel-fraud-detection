@@ -1,0 +1,21 @@
+SUMMARY:
+Case case_0035_361_044157 concerns a CASH_OUT transaction of $254,765.33 at simulation step 361 (Hour 1). The transaction was assigned a fraud probability score of 0.6350 and an anomaly score of 0.0972. The Risk Officer decision under the balanced policy is 'hold'.
+
+KEY FACTS:
+- Transaction ID/Case: case_0035_361_044157
+- Type: CASH_OUT
+- Amount: $254,765.33 (67.3th percentile of training transactions)
+- Step / Hour: Step 361 (Hour 1)
+- Sender: C413044157 (no prior history available)
+- Receiver: C1613240876 (1 prior transaction(s) totalling $277,638.06)
+- Model Score (RF Probability): 0.6350
+- Anomaly Score (Isolation Forest): 0.0972
+- Operational Decision: hold (Escalate to human: False)
+
+WHY FLAGGED:
+- Model fraud probability score (0.6350) exceeds the 0.50 operational threshold.
+
+RECOMMENDED ACTION:
+Hold transaction in temporary security queue pending standard automated review and customer alert confirmation.
+
+AI-generated from case facts, human review required.

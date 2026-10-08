@@ -1,0 +1,51 @@
+{
+  "case_id": "case_0376_716_680114",
+  "transaction": {
+    "step": 716,
+    "type": "CASH_OUT",
+    "amount": 1897921.7,
+    "nameOrig": "C400680114",
+    "nameDest": "C613935961",
+    "hour": 20
+  },
+  "scores": {
+    "model_score": 0.8938,
+    "anomaly_score": 0.1464
+  },
+  "amount_analysis": {
+    "amount": 1897921.7,
+    "percentile_vs_train": 98.43,
+    "is_above_p99": false,
+    "train_p99_limit": 2439133.86
+  },
+  "sender_history": {
+    "nameOrig": "C400680114",
+    "prior_tx_count": 0,
+    "prior_total_amount": 0.0,
+    "prior_avg_amount": 0.0,
+    "prior_max_amount": 0.0,
+    "prior_types": []
+  },
+  "receiver_history": {
+    "nameDest": "C613935961",
+    "prior_tx_count": 1,
+    "prior_total_amount": 420143.28,
+    "prior_avg_amount": 420143.28,
+    "prior_max_amount": 420143.28
+  },
+  "network_evidence": {
+    "has_linked_pair": false,
+    "pattern": "same_step_identical_amount",
+    "matched_counterpart_type": null,
+    "matched_pair_count": 0,
+    "linked_counterparts": [],
+    "evidence_note": "No same-step identical-amount counterpart found."
+  },
+  "risk_officer": {
+    "decision_strict": "hold",
+    "decision_balanced": "hold",
+    "decision_lenient": "allow",
+    "escalated": false
+  },
+  "isFraud": 1
+}

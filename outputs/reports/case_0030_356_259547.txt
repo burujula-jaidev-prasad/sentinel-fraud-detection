@@ -1,0 +1,21 @@
+SUMMARY:
+Case case_0030_356_259547 concerns a CASH_OUT transaction of $36,037.74 at simulation step 356 (Hour 20). The transaction was assigned a fraud probability score of 0.5253 and an anomaly score of -0.0387. The Risk Officer decision under the balanced policy is 'hold'.
+
+KEY FACTS:
+- Transaction ID/Case: case_0030_356_259547
+- Type: CASH_OUT
+- Amount: $36,037.74 (10.5th percentile of training transactions)
+- Step / Hour: Step 356 (Hour 20)
+- Sender: C529259547 (no prior history available)
+- Receiver: C1334426465 (no prior history available)
+- Model Score (RF Probability): 0.5253
+- Anomaly Score (Isolation Forest): -0.0387
+- Operational Decision: hold (Escalate to human: False)
+
+WHY FLAGGED:
+- Model fraud probability score (0.5253) exceeds the 0.50 operational threshold.
+
+RECOMMENDED ACTION:
+Hold transaction in temporary security queue pending standard automated review and customer alert confirmation.
+
+AI-generated from case facts, human review required.

@@ -1,0 +1,22 @@
+SUMMARY:
+Case case_0007_336_550452 concerns a CASH_OUT transaction of $964,388.10 at simulation step 336 (Hour 0). The transaction was assigned a fraud probability score of 0.5540 and an anomaly score of 0.2150. The Risk Officer decision under the balanced policy is 'hold'.
+
+KEY FACTS:
+- Transaction ID/Case: case_0007_336_550452
+- Type: CASH_OUT
+- Amount: $964,388.10 (95.4th percentile of training transactions)
+- Step / Hour: Step 336 (Hour 0)
+- Sender: C186550452 (no prior history available)
+- Receiver: C2061604304 (no prior history available)
+- Model Score (RF Probability): 0.5540
+- Anomaly Score (Isolation Forest): 0.2150
+- Operational Decision: hold (Escalate to human: False)
+
+WHY FLAGGED:
+- Model fraud probability score (0.5540) exceeds the 0.50 operational threshold.
+- Network Analyst detected a correlated same-step identical-amount TRANSFER counterpart.
+
+RECOMMENDED ACTION:
+Hold transaction in temporary security queue pending standard automated review and customer alert confirmation.
+
+AI-generated from case facts, human review required.

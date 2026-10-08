@@ -1,0 +1,21 @@
+SUMMARY:
+Case case_0077_387_702229 concerns a CASH_OUT transaction of $245,970.86 at simulation step 387 (Hour 3). The transaction was assigned a fraud probability score of 0.5956 and an anomaly score of 0.0583. The Risk Officer decision under the balanced policy is 'hold'.
+
+KEY FACTS:
+- Transaction ID/Case: case_0077_387_702229
+- Type: CASH_OUT
+- Amount: $245,970.86 (65.8th percentile of training transactions)
+- Step / Hour: Step 387 (Hour 3)
+- Sender: C1529702229 (no prior history available)
+- Receiver: C1178104169 (1 prior transaction(s) totalling $165,496.50)
+- Model Score (RF Probability): 0.5956
+- Anomaly Score (Isolation Forest): 0.0583
+- Operational Decision: hold (Escalate to human: False)
+
+WHY FLAGGED:
+- Model fraud probability score (0.5956) exceeds the 0.50 operational threshold.
+
+RECOMMENDED ACTION:
+Hold transaction in temporary security queue pending standard automated review and customer alert confirmation.
+
+AI-generated from case facts, human review required.

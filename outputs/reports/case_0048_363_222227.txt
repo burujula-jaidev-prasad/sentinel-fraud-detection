@@ -1,0 +1,21 @@
+SUMMARY:
+Case case_0048_363_222227 concerns a TRANSFER transaction of $1,715,635.41 at simulation step 363 (Hour 3). The transaction was assigned a fraud probability score of 0.8105 and an anomaly score of 0.1814. The Risk Officer decision under the balanced policy is 'hold'.
+
+KEY FACTS:
+- Transaction ID/Case: case_0048_363_222227
+- Type: TRANSFER
+- Amount: $1,715,635.41 (98.1th percentile of training transactions)
+- Step / Hour: Step 363 (Hour 3)
+- Sender: C2115222227 (no prior history available)
+- Receiver: C2054556206 (no prior history available)
+- Model Score (RF Probability): 0.8105
+- Anomaly Score (Isolation Forest): 0.1814
+- Operational Decision: hold (Escalate to human: False)
+
+WHY FLAGGED:
+- Model fraud probability score (0.8105) exceeds the 0.50 operational threshold.
+
+RECOMMENDED ACTION:
+Hold transaction in temporary security queue pending standard automated review and customer alert confirmation.
+
+AI-generated from case facts, human review required.

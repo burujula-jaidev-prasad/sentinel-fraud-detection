@@ -1,0 +1,60 @@
+{
+  "case_id": "case_0042_362_198921",
+  "transaction": {
+    "step": 362,
+    "type": "CASH_OUT",
+    "amount": 10000000.0,
+    "nameOrig": "C23198921",
+    "nameDest": "C486186579",
+    "hour": 2
+  },
+  "scores": {
+    "model_score": 0.9549,
+    "anomaly_score": 0.2731
+  },
+  "amount_analysis": {
+    "amount": 10000000.0,
+    "percentile_vs_train": 99.88,
+    "is_above_p99": true,
+    "train_p99_limit": 2439133.86
+  },
+  "sender_history": {
+    "nameOrig": "C23198921",
+    "prior_tx_count": 0,
+    "prior_total_amount": 0.0,
+    "prior_avg_amount": 0.0,
+    "prior_max_amount": 0.0,
+    "prior_types": []
+  },
+  "receiver_history": {
+    "nameDest": "C486186579",
+    "prior_tx_count": 0,
+    "prior_total_amount": 0.0,
+    "prior_avg_amount": 0.0,
+    "prior_max_amount": 0.0
+  },
+  "network_evidence": {
+    "has_linked_pair": true,
+    "pattern": "same_step_identical_amount",
+    "matched_counterpart_type": "TRANSFER",
+    "matched_pair_count": 1,
+    "linked_counterparts": [
+      {
+        "step": 362,
+        "type": "TRANSFER",
+        "amount": 10000000.0,
+        "nameOrig": "C1208192074",
+        "nameDest": "C255905586",
+        "tx_id": 339548
+      }
+    ],
+    "evidence_note": "Detected 1 matching TRANSFER transaction(s) at step 362 with identical amount $10,000,000.00."
+  },
+  "risk_officer": {
+    "decision_strict": "escalate_to_human",
+    "decision_balanced": "escalate_to_human",
+    "decision_lenient": "escalate_to_human",
+    "escalated": true
+  },
+  "isFraud": 1
+}

@@ -1,0 +1,22 @@
+SUMMARY:
+Case case_0062_379_956129 concerns a CASH_OUT transaction of $2,983,996.60 at simulation step 379 (Hour 19). The transaction was assigned a fraud probability score of 0.9747 and an anomaly score of 0.1593. The Risk Officer decision under the balanced policy is 'escalate_to_human'.
+
+KEY FACTS:
+- Transaction ID/Case: case_0062_379_956129
+- Type: CASH_OUT
+- Amount: $2,983,996.60 (99.3th percentile of training transactions)
+- Step / Hour: Step 379 (Hour 19)
+- Sender: C588956129 (no prior history available)
+- Receiver: C1673836428 (no prior history available)
+- Model Score (RF Probability): 0.9747
+- Anomaly Score (Isolation Forest): 0.1593
+- Operational Decision: escalate_to_human (Escalate to human: True)
+
+WHY FLAGGED:
+- Model fraud probability score (0.9747) exceeds the 0.50 operational threshold.
+- Transaction amount ($2,983,996.60) exceeds the training 99th percentile limit ($2,439,133.86).
+
+RECOMMENDED ACTION:
+Escalate immediately to a human fraud investigator for manual verification and identity authentication prior to fund release.
+
+AI-generated from case facts, human review required.

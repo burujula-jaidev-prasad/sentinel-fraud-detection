@@ -1,0 +1,21 @@
+SUMMARY:
+Case case_0034_359_971374 concerns a CASH_OUT transaction of $2,056,779.24 at simulation step 359 (Hour 23). The transaction was assigned a fraud probability score of 0.9591 and an anomaly score of 0.1791. The Risk Officer decision under the balanced policy is 'escalate_to_human'.
+
+KEY FACTS:
+- Transaction ID/Case: case_0034_359_971374
+- Type: CASH_OUT
+- Amount: $2,056,779.24 (98.6th percentile of training transactions)
+- Step / Hour: Step 359 (Hour 23)
+- Sender: C374971374 (no prior history available)
+- Receiver: C738912638 (no prior history available)
+- Model Score (RF Probability): 0.9591
+- Anomaly Score (Isolation Forest): 0.1791
+- Operational Decision: escalate_to_human (Escalate to human: True)
+
+WHY FLAGGED:
+- Model fraud probability score (0.9591) exceeds the 0.50 operational threshold.
+
+RECOMMENDED ACTION:
+Escalate immediately to a human fraud investigator for manual verification and identity authentication prior to fund release.
+
+AI-generated from case facts, human review required.

@@ -1,0 +1,22 @@
+SUMMARY:
+Case case_0031_357_398472 concerns a TRANSFER transaction of $6,205,046.39 at simulation step 357 (Hour 21). The transaction was assigned a fraud probability score of 0.7265 and an anomaly score of 0.2280. The Risk Officer decision under the balanced policy is 'escalate_to_human'.
+
+KEY FACTS:
+- Transaction ID/Case: case_0031_357_398472
+- Type: TRANSFER
+- Amount: $6,205,046.39 (99.6th percentile of training transactions)
+- Step / Hour: Step 357 (Hour 21)
+- Sender: C321398472 (no prior history available)
+- Receiver: C1907325625 (no prior history available)
+- Model Score (RF Probability): 0.7265
+- Anomaly Score (Isolation Forest): 0.2280
+- Operational Decision: escalate_to_human (Escalate to human: True)
+
+WHY FLAGGED:
+- Model fraud probability score (0.7265) exceeds the 0.50 operational threshold.
+- Transaction amount ($6,205,046.39) exceeds the training 99th percentile limit ($2,439,133.86).
+
+RECOMMENDED ACTION:
+Escalate immediately to a human fraud investigator for manual verification and identity authentication prior to fund release.
+
+AI-generated from case facts, human review required.

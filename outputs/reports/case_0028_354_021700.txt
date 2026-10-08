@@ -1,0 +1,21 @@
+SUMMARY:
+Case case_0028_354_021700 concerns a TRANSFER transaction of $2,343,672.21 at simulation step 354 (Hour 18). The transaction was assigned a fraud probability score of 0.5304 and an anomaly score of 0.1422. The Risk Officer decision under the balanced policy is 'hold'.
+
+KEY FACTS:
+- Transaction ID/Case: case_0028_354_021700
+- Type: TRANSFER
+- Amount: $2,343,672.21 (98.9th percentile of training transactions)
+- Step / Hour: Step 354 (Hour 18)
+- Sender: C1272021700 (no prior history available)
+- Receiver: C1789752750 (no prior history available)
+- Model Score (RF Probability): 0.5304
+- Anomaly Score (Isolation Forest): 0.1422
+- Operational Decision: hold (Escalate to human: False)
+
+WHY FLAGGED:
+- Model fraud probability score (0.5304) exceeds the 0.50 operational threshold.
+
+RECOMMENDED ACTION:
+Hold transaction in temporary security queue pending standard automated review and customer alert confirmation.
+
+AI-generated from case facts, human review required.

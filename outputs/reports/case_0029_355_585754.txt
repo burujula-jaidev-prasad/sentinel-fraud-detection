@@ -1,0 +1,21 @@
+SUMMARY:
+Case case_0029_355_585754 concerns a CASH_OUT transaction of $482,727.40 at simulation step 355 (Hour 19). The transaction was assigned a fraud probability score of 0.5016 and an anomaly score of 0.0037. The Risk Officer decision under the balanced policy is 'hold'.
+
+KEY FACTS:
+- Transaction ID/Case: case_0029_355_585754
+- Type: CASH_OUT
+- Amount: $482,727.40 (88.2th percentile of training transactions)
+- Step / Hour: Step 355 (Hour 19)
+- Sender: C2090585754 (no prior history available)
+- Receiver: C140642311 (4 prior transaction(s) totalling $725,771.99)
+- Model Score (RF Probability): 0.5016
+- Anomaly Score (Isolation Forest): 0.0037
+- Operational Decision: hold (Escalate to human: False)
+
+WHY FLAGGED:
+- Model fraud probability score (0.5016) exceeds the 0.50 operational threshold.
+
+RECOMMENDED ACTION:
+Hold transaction in temporary security queue pending standard automated review and customer alert confirmation.
+
+AI-generated from case facts, human review required.

@@ -1,0 +1,21 @@
+SUMMARY:
+Case case_0008_338_505619 concerns a CASH_OUT transaction of $665,435.50 at simulation step 338 (Hour 2). The transaction was assigned a fraud probability score of 0.7870 and an anomaly score of 0.1872. The Risk Officer decision under the balanced policy is 'hold'.
+
+KEY FACTS:
+- Transaction ID/Case: case_0008_338_505619
+- Type: CASH_OUT
+- Amount: $665,435.50 (92.6th percentile of training transactions)
+- Step / Hour: Step 338 (Hour 2)
+- Sender: C1270505619 (no prior history available)
+- Receiver: C1948389481 (no prior history available)
+- Model Score (RF Probability): 0.7870
+- Anomaly Score (Isolation Forest): 0.1872
+- Operational Decision: hold (Escalate to human: False)
+
+WHY FLAGGED:
+- Model fraud probability score (0.7870) exceeds the 0.50 operational threshold.
+
+RECOMMENDED ACTION:
+Hold transaction in temporary security queue pending standard automated review and customer alert confirmation.
+
+AI-generated from case facts, human review required.

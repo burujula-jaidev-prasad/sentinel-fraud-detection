@@ -1,0 +1,51 @@
+{
+  "case_id": "case_0154_461_334477",
+  "transaction": {
+    "step": 461,
+    "type": "TRANSFER",
+    "amount": 57443.28,
+    "nameOrig": "C745334477",
+    "nameDest": "C1348355402",
+    "hour": 5
+  },
+  "scores": {
+    "model_score": 0.6618,
+    "anomaly_score": 0.1231
+  },
+  "amount_analysis": {
+    "amount": 57443.28,
+    "percentile_vs_train": 17.13,
+    "is_above_p99": false,
+    "train_p99_limit": 2439133.86
+  },
+  "sender_history": {
+    "nameOrig": "C745334477",
+    "prior_tx_count": 0,
+    "prior_total_amount": 0.0,
+    "prior_avg_amount": 0.0,
+    "prior_max_amount": 0.0,
+    "prior_types": []
+  },
+  "receiver_history": {
+    "nameDest": "C1348355402",
+    "prior_tx_count": 2,
+    "prior_total_amount": 575809.72,
+    "prior_avg_amount": 287904.86,
+    "prior_max_amount": 326449.37
+  },
+  "network_evidence": {
+    "has_linked_pair": false,
+    "pattern": "same_step_identical_amount",
+    "matched_counterpart_type": null,
+    "matched_pair_count": 0,
+    "linked_counterparts": [],
+    "evidence_note": "No same-step identical-amount counterpart found."
+  },
+  "risk_officer": {
+    "decision_strict": "hold",
+    "decision_balanced": "hold",
+    "decision_lenient": "allow",
+    "escalated": false
+  },
+  "isFraud": 0
+}

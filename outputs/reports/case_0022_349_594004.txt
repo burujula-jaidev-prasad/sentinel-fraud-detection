@@ -1,0 +1,21 @@
+SUMMARY:
+Case case_0022_349_594004 concerns a CASH_OUT transaction of $814,133.83 at simulation step 349 (Hour 13). The transaction was assigned a fraud probability score of 0.6906 and an anomaly score of 0.1053. The Risk Officer decision under the balanced policy is 'hold'.
+
+KEY FACTS:
+- Transaction ID/Case: case_0022_349_594004
+- Type: CASH_OUT
+- Amount: $814,133.83 (94.3th percentile of training transactions)
+- Step / Hour: Step 349 (Hour 13)
+- Sender: C1890594004 (no prior history available)
+- Receiver: C473832081 (no prior history available)
+- Model Score (RF Probability): 0.6906
+- Anomaly Score (Isolation Forest): 0.1053
+- Operational Decision: hold (Escalate to human: False)
+
+WHY FLAGGED:
+- Model fraud probability score (0.6906) exceeds the 0.50 operational threshold.
+
+RECOMMENDED ACTION:
+Hold transaction in temporary security queue pending standard automated review and customer alert confirmation.
+
+AI-generated from case facts, human review required.

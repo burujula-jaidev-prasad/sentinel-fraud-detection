@@ -1,0 +1,19 @@
+# Environments and Secrets (Never commit secrets)
+.env
+.env.*
+*.env
+
+# Python artifacts
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Large raw datasets (can be downloaded or generated)
+data/paysim_sample.csv
