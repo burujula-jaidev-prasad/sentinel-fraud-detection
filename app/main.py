@@ -465,11 +465,74 @@ with tab3:
 
 
 # =============================================================================
-# TAB 4: GRAPH ANALYSIS (PLACEHOLDER)
+# =============================================================================
+# TAB 4: GRAPH ANALYSIS
 # =============================================================================
 with tab4:
-    st.markdown('<p class="tab-desc">Multi-hop money laundering graph network visualization.</p>', unsafe_allow_html=True)
-    st.info("🚧 Network Graph Analysis view is coming next.")
+    st.markdown('<p class="tab-desc">Correlated financial crime network analysis and tandem transfer-cashout topology.</p>', unsafe_allow_html=True)
+
+    if not df_edges.empty:
+        g_col1, g_col2, g_col3 = st.columns(3)
+        with g_col1:
+            st.markdown(
+                f'<div class="metric-card"><div class="metric-title">Identified Correlated Pairs</div>'
+                f'<div class="metric-val">{len(df_edges)}</div>'
+                f'<div class="metric-sub">90 Fraud-Fraud, 3 Legit-Legit</div></div>',
+                unsafe_allow_html=True,
+            )
+        with g_col2:
+            test_edges = df_edges[df_edges["step"] > 333]
+            st.markdown(
+                f'<div class="metric-card"><div class="metric-title">Test Period Pairs (step > 333)</div>'
+                f'<div class="metric-val">{len(test_edges)}</div>'
+                f'<div class="metric-sub">100% (46/46) Fraud-Fraud (Covers 92 test frauds)</div></div>',
+                unsafe_allow_html=True,
+            )
+        with g_col3:
+            total_net_val = df_edges["amount"].sum()
+            st.markdown(
+                f'<div class="metric-card"><div class="metric-title">Total Linked Flow Volume</div>'
+                f'<div class="metric-val">{total_net_val:,.2f}</div>'
+                f'<div class="metric-sub">In currency units</div></div>',
+                unsafe_allow_html=True,
+            )
+
+        st.markdown("### 🕸️ Correlated Tandem Flow Explorer")
+        st.markdown(
+            "Empirical discovery: In PaySim, money mule accounts are generated per transaction (0 fraud destination accounts reappear as senders). "
+            "However, **same-step + identical-amount pairs** form a distinct structural signature of coordinated laundering."
+        )
+
+        f_step_col, f_pair_col = st.columns([1, 2])
+        with f_step_col:
+            avail_steps = sorted(df_edges["step"].unique())
+            selected_step = st.selectbox("Filter Correlated Pairs by Step", options=["All Steps"] + [str(s) for s in avail_steps])
+        
+        filtered_edges = df_edges.copy()
+        if selected_step != "All Steps":
+            filtered_edges = filtered_edges[filtered_edges["step"] == int(selected_step)]
+
+        with f_pair_col:
+            st.markdown(f"**Viewing {len(filtered_edges)} correlated pairs**")
+
+        disp_edges = filtered_edges[["step", "amount", "transfer_orig", "transfer_dest", "cashout_orig", "cashout_dest", "is_fraud_pair"]].copy()
+        disp_edges.rename(columns={"amount": "amount (currency units)"}, inplace=True)
+        st.dataframe(disp_edges, use_container_width=True, hide_index=True)
+
+        st.markdown("### 📊 Distribution of Linked Fraud Amounts")
+        edge_chart = (
+            alt.Chart(df_edges)
+            .mark_circle(size=80, color="#EF4444")
+            .encode(
+                x=alt.X("step:Q", title="Simulation Step"),
+                y=alt.Y("amount:Q", title="Tandem Transaction Amount (currency units)"),
+                tooltip=["step", "amount", "transfer_orig", "cashout_dest", "is_fraud_pair"],
+            )
+            .properties(height=260)
+        )
+        st.altair_chart(edge_chart, use_container_width=True)
+    else:
+        st.info("No network edges found in outputs/network_edges.csv.")
 
 
 # =============================================================================
@@ -534,19 +597,104 @@ with tab5:
 
 
 # =============================================================================
-# TAB 6: AGENT DIAGNOSTICS (PLACEHOLDER)
+# TAB 6: AGENT DIAGNOSTICS & TELEMETRY
 # =============================================================================
 with tab6:
-    st.markdown('<p class="tab-desc">Multi-agent communication telemetry and execution traces.</p>', unsafe_allow_html=True)
-    st.info("🚧 Agent Diagnostics and Multi-Agent telemetry is coming next.")
+    st.markdown('<p class="tab-desc">Multi-agent communication telemetry, execution trace logs, and scoring distribution telemetry.</p>', unsafe_allow_html=True)
+
+    st.markdown("### 🤖 Multi-Agent Pipeline Architecture")
+    st.markdown(
+        """
+        ```mermaid
+        flowchart LR
+            TX[Incoming Transaction] --> Scout[1. Scout Agent]
+            Scout -->|Flagged Alert| Inv[2. Investigator Agent]
+            Inv -->|Historical Profile| Net[3. Network Analyst]
+            Net -->|Correlated Evidence| RO[4. Risk Officer]
+            RO -->|Policy Decision & Case| Rep[5. Reporter Agent]
+            Rep -->|Plain-English Report| Case[Case File Dossier]
+        ```
+        """
+    )
+
+    diag_col1, diag_col2 = st.columns(2)
+    with diag_col1:
+        st.markdown("#### 📋 Agent Operational Matrix")
+        agent_table = pd.DataFrame([
+            {"Agent": "Scout", "Role": "Real-time Screening", "Model / Method": "Random Forest + Isolation Forest", "Output": "Candidate Alerts"},
+            {"Agent": "Investigator", "Role": "Behavioral Profiling", "Model / Method": "Historical Inflow/Outflow Engine", "Output": "Prior Step Velocity Profiles"},
+            {"Agent": "NetworkAnalyst", "Role": "Crime Ring Correlation", "Model / Method": "Same-Step Identical-Amount Matcher", "Output": "Correlated Graph Evidence"},
+            {"Agent": "RiskOfficer", "Role": "Policy Decisioning", "Model / Method": "Strict / Balanced / Lenient Rules", "Output": "Operational Decisions (Hold/Escalate)"},
+            {"Agent": "Reporter", "Role": "Fact-Based Synthesis", "Model / Method": "Google Gemini 1.5 + Template Fallback", "Output": "Plain-English Case Reports"},
+        ])
+        st.dataframe(agent_table, use_container_width=True, hide_index=True)
+
+    with diag_col2:
+        st.markdown("#### 🎯 Score Distribution Telemetry")
+        if not df_alerts.empty:
+            scatter_chart = (
+                alt.Chart(df_alerts.head(500))
+                .mark_circle(size=45, opacity=0.7)
+                .encode(
+                    x=alt.X("model_score:Q", title="Random Forest Fraud Probability"),
+                    y=alt.Y("anomaly_score:Q", title="Isolation Forest Anomaly Score"),
+                    color=alt.Color("decision_balanced:N", scale=alt.Scale(domain=["allow", "hold", "escalate_to_human"], range=["#10B981", "#F59E0B", "#EF4444"])),
+                    tooltip=["step", "type", "amount", "model_score", "anomaly_score", "decision_balanced"],
+                )
+                .properties(height=260)
+            )
+            st.altair_chart(scatter_chart, use_container_width=True)
 
 
 # =============================================================================
-# TAB 7: INVESTIGATION WORKSPACE (PLACEHOLDER)
+# TAB 7: INVESTIGATION WORKSPACE & AUDIT LOG
 # =============================================================================
 with tab7:
-    st.markdown('<p class="tab-desc">Collaborative case management and audit logging workspace.</p>', unsafe_allow_html=True)
-    st.info("🚧 Collaborative Investigation Workspace is coming next.")
+    st.markdown('<p class="tab-desc">Collaborative human decision audit trail, compliance records, and case activity logs.</p>', unsafe_allow_html=True)
+
+    decisions_file = "outputs/decisions.csv"
+    if os.path.exists(decisions_file):
+        df_dec = pd.read_csv(decisions_file)
+    else:
+        df_dec = pd.DataFrame(columns=["timestamp", "case_id", "action", "operator_note"])
+
+    d_col1, d_col2, d_col3 = st.columns(3)
+    with d_col1:
+        st.markdown(
+            f'<div class="metric-card"><div class="metric-title">Total Human Decisions Logged</div>'
+            f'<div class="metric-val">{len(df_dec)}</div>'
+            f'<div class="metric-sub">Recorded in outputs/decisions.csv</div></div>',
+            unsafe_allow_html=True,
+        )
+    with d_col2:
+        holds_logged = len(df_dec[df_dec["action"] == "HOLD"]) if not df_dec.empty else 0
+        st.markdown(
+            f'<div class="metric-card"><div class="metric-title">Operator Holds</div>'
+            f'<div class="metric-val">{holds_logged}</div>'
+            f'<div class="metric-sub">Funds frozen pending KYC</div></div>',
+            unsafe_allow_html=True,
+        )
+    with d_col3:
+        escalations_logged = len(df_dec[df_dec["action"] == "ESCALATE"]) if not df_dec.empty else 0
+        st.markdown(
+            f'<div class="metric-card"><div class="metric-title">Operator Escalations</div>'
+            f'<div class="metric-val">{escalations_logged}</div>'
+            f'<div class="metric-sub">Referred to Legal / Law Enforcement</div></div>',
+            unsafe_allow_html=True,
+        )
+
+    st.markdown("### 📜 Real-Time Audit Log")
+    if not df_dec.empty:
+        st.dataframe(df_dec.sort_values(by="timestamp", ascending=False), use_container_width=True, hide_index=True)
+        csv_data = df_dec.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            label="📥 Download Compliance Audit Trail (CSV)",
+            data=csv_data,
+            file_name=f"sentinel_audit_trail_{datetime.date.today()}.csv",
+            mime="text/csv",
+        )
+    else:
+        st.info("No human decisions logged yet. Use Tab 3 (Case File) to log Hold, Release, or Escalate actions.")
 
 
 # =============================================================================
