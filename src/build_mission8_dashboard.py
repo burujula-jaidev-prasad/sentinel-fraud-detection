@@ -1,4 +1,4 @@
-"""Mission 8 Story Dashboard Builder: Left-hand story navigation, 12 dynamic cards, model detection visualizer, interactive tooltips, and live patrol."""
+"""Mission 8 Story Dashboard Builder: Left-hand story navigation, 12 dynamic cards, Paytm vs NSE deep-dive, Sentinel 3D Night City, and live patrol."""
 
 import os
 import json
@@ -45,9 +45,10 @@ def build_mission8_site():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinel | Financial Fraud Intelligence Story Dashboard</title>
-    <!-- Chart.js CDN -->
+    <title>Sentinel | Financial Fraud Intelligence & Market Link</title>
+    <!-- Chart.js & Three.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
             --bg-color: #080d1a;
@@ -78,6 +79,7 @@ def build_mission8_site():
             line-height: 1.5;
             display: flex;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         /* Left-Hand Story Navigation */
@@ -128,7 +130,7 @@ def build_mission8_site():
             display: flex;
             flex-direction: column;
             gap: 6px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .nav-item-btn {
@@ -176,6 +178,13 @@ def build_mission8_site():
             font-weight: 400;
         }
 
+        .sidebar-btn-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
         .sidebar-guide-btn {
             background: linear-gradient(135deg, #1e293b, #0f172a);
             border: 1px solid #38bdf8;
@@ -189,13 +198,32 @@ def build_mission8_site():
             align-items: center;
             justify-content: center;
             gap: 8px;
-            margin-bottom: 16px;
             transition: all 0.2s;
         }
-
         .sidebar-guide-btn:hover {
             background: rgba(56, 189, 248, 0.15);
             box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+            color: #ffffff;
+        }
+
+        .sidebar-city-btn {
+            background: linear-gradient(135deg, #1e1b4b, #0f172a);
+            border: 1px solid #818cf8;
+            color: #c7d2fe;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .sidebar-city-btn:hover {
+            background: rgba(129, 140, 248, 0.2);
+            box-shadow: 0 0 14px rgba(129, 140, 248, 0.4);
             color: #ffffff;
         }
 
@@ -318,14 +346,12 @@ def build_mission8_site():
             transition: all 0.2s;
             user-select: none;
         }
-
         .info-btn:hover, .info-btn:focus {
             background: var(--primary-cyan);
             color: #080d1a;
             box-shadow: 0 0 8px var(--primary-cyan);
         }
 
-        /* Tooltip Box */
         .tooltip-container {
             position: relative;
             display: inline-flex;
@@ -352,7 +378,6 @@ def build_mission8_site():
             transition: opacity 0.2s ease, transform 0.2s ease;
             z-index: 999;
         }
-
         .popover-box::after {
             content: '';
             position: absolute;
@@ -363,7 +388,6 @@ def build_mission8_site():
             border-style: solid;
             border-color: #38bdf8 transparent transparent transparent;
         }
-
         .popover-box.align-right {
             left: auto;
             right: 0;
@@ -374,7 +398,6 @@ def build_mission8_site():
             right: 20px;
             transform: none;
         }
-
         .tooltip-container:hover .popover-box,
         .tooltip-container:focus-within .popover-box,
         .popover-box.show {
@@ -397,30 +420,13 @@ def build_mission8_site():
             align-items: center;
             gap: 6px;
         }
-        .popover-desc {
-            color: #cbd5e1;
-            margin-bottom: 6px;
-        }
-        .popover-action {
-            color: #f59e0b;
-            font-size: 11px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 4px;
-        }
+        .popover-desc { color: #cbd5e1; margin-bottom: 6px; }
+        .popover-action { color: #f59e0b; font-size: 11px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 4px; }
 
-        /* Step Section Headers */
-        .step-section {
-            display: none;
-        }
-
-        .step-section.active {
-            display: block;
-        }
-
-        .step-header {
-            margin-bottom: 20px;
-        }
-
+        /* Step Sections */
+        .step-section { display: none; }
+        .step-section.active { display: block; }
+        .step-header { margin-bottom: 20px; }
         .step-badge {
             display: inline-block;
             background: rgba(56, 189, 248, 0.15);
@@ -433,30 +439,15 @@ def build_mission8_site():
             letter-spacing: 1px;
             margin-bottom: 6px;
         }
+        .step-title { font-size: 22px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        .step-sub { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
 
-        .step-title {
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .step-sub {
-            color: var(--text-muted);
-            font-size: 13px;
-            margin-top: 2px;
-        }
-
-        /* Story Cards Grid */
         .cards-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
             gap: 20px;
             margin-bottom: 24px;
         }
-
         .cards-grid-full {
             display: grid;
             grid-template-columns: 1fr;
@@ -464,7 +455,6 @@ def build_mission8_site():
             margin-bottom: 24px;
         }
 
-        /* Card Container */
         .story-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -476,29 +466,9 @@ def build_mission8_site():
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             position: relative;
         }
-
-        .card-header-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 8px;
-            margin-bottom: 6px;
-        }
-
-        .card-question {
-            font-size: 16px;
-            font-weight: 700;
-            color: #ffffff;
-        }
-
-        .card-headline {
-            font-size: 14px;
-            color: var(--primary-cyan);
-            font-weight: 600;
-            margin-bottom: 16px;
-            line-height: 1.4;
-        }
-
+        .card-header-bar { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+        .card-question { font-size: 16px; font-weight: 700; color: #ffffff; }
+        .card-headline { font-size: 14px; color: var(--primary-cyan); font-weight: 600; margin-bottom: 16px; line-height: 1.4; }
         .card-visual-box {
             position: relative;
             height: 280px;
@@ -512,7 +482,6 @@ def build_mission8_site():
             align-items: center;
             justify-content: center;
         }
-
         .card-explanation {
             font-size: 12.5px;
             color: var(--text-muted);
@@ -521,28 +490,11 @@ def build_mission8_site():
             border-top: 1px solid rgba(255, 255, 255, 0.05);
             margin-bottom: 8px;
         }
-        .card-explanation strong {
-            color: var(--text-main);
-        }
+        .card-explanation strong { color: var(--text-main); }
+        .card-source-footer { font-size: 11px; color: #64748b; font-family: monospace; display: flex; justify-content: space-between; align-items: center; }
 
-        .card-source-footer {
-            font-size: 11px;
-            color: #64748b;
-            font-family: monospace;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        /* 2x2 Confusion Box */
-        .matrix-2x2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            width: 100%;
-            height: 100%;
-        }
-
+        /* 2x2 Matrix */
+        .matrix-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; height: 100%; }
         .matrix-cell {
             background: #080d1a;
             border: 1px solid var(--border-color);
@@ -555,37 +507,17 @@ def build_mission8_site():
             cursor: pointer;
             transition: all 0.2s;
         }
-        .matrix-cell:hover {
-            border-color: rgba(56, 189, 248, 0.4);
-            transform: translateY(-2px);
-        }
+        .matrix-cell:hover { border-color: rgba(56, 189, 248, 0.4); transform: translateY(-2px); }
         .matrix-cell.tp { border-left: 4px solid var(--safe-green); }
         .matrix-cell.fp { border-left: 4px solid var(--alert-amber); }
         .matrix-cell.fn { border-left: 4px solid var(--fraud-red); }
         .matrix-cell.tn { border-left: 4px solid var(--honest-grey); }
+        .matrix-cell-header { display: flex; justify-content: space-between; align-items: center; }
+        .matrix-cell-title { font-size: 12.5px; font-weight: 700; color: var(--text-main); }
+        .matrix-cell-tech { font-size: 10.5px; color: var(--text-muted); margin-bottom: 4px; }
+        .matrix-cell-val { font-size: 20px; font-weight: 700; color: #ffffff; }
 
-        .matrix-cell-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .matrix-cell-title {
-            font-size: 12.5px;
-            font-weight: 700;
-            color: var(--text-main);
-        }
-        .matrix-cell-tech {
-            font-size: 10.5px;
-            color: var(--text-muted);
-            margin-bottom: 4px;
-        }
-        .matrix-cell-val {
-            font-size: 20px;
-            font-weight: 700;
-            color: #ffffff;
-        }
-
-        /* Model Process Flow & Simulator Styles */
+        /* Pipeline & Simulator */
         .model-pipeline-container {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -593,7 +525,6 @@ def build_mission8_site():
             width: 100%;
             margin-bottom: 16px;
         }
-
         .pipeline-step-card {
             background: #0a1122;
             border: 1px solid var(--border-color);
@@ -614,27 +545,10 @@ def build_mission8_site():
             font-size: 14px;
             z-index: 10;
         }
-        .pipeline-step-card:last-child::after {
-            display: none;
-        }
-
-        .pipe-num {
-            font-size: 10px;
-            font-weight: 700;
-            color: var(--primary-cyan);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .pipe-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: #ffffff;
-        }
-        .pipe-body {
-            font-size: 11.5px;
-            color: #94a3b8;
-            line-height: 1.4;
-        }
+        .pipeline-step-card:last-child::after { display: none; }
+        .pipe-num { font-size: 10px; font-weight: 700; color: var(--primary-cyan); text-transform: uppercase; letter-spacing: 1px; }
+        .pipe-title { font-size: 13px; font-weight: 700; color: #ffffff; }
+        .pipe-body { font-size: 11.5px; color: #94a3b8; line-height: 1.4; }
 
         .simulator-box {
             background: #091020;
@@ -646,25 +560,9 @@ def build_mission8_site():
             flex-direction: column;
             gap: 14px;
         }
-
-        .simulator-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1.2fr;
-            gap: 14px;
-            align-items: center;
-        }
-
-        .sim-input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .sim-input-group label {
-            font-size: 11.5px;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
+        .simulator-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1.2fr; gap: 14px; align-items: center; }
+        .sim-input-group { display: flex; flex-direction: column; gap: 4px; }
+        .sim-input-group label { font-size: 11.5px; color: var(--text-muted); font-weight: 600; }
         .sim-result-card {
             background: #111e38;
             border: 1px solid var(--border-color);
@@ -677,6 +575,21 @@ def build_mission8_site():
             text-align: center;
         }
 
+        /* Market Table */
+        .market-stat-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+            margin-top: 8px;
+        }
+        .market-stat-table th, .market-stat-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .market-stat-table th { color: var(--text-muted); font-weight: 600; background: rgba(255,255,255,0.02); }
+        .market-stat-table td { color: #f8fafc; }
+
         /* Dot Grid */
         .dot-grid-container {
             display: grid;
@@ -687,19 +600,8 @@ def build_mission8_site():
             overflow: hidden;
             padding: 10px;
         }
-        .grid-dot {
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: var(--honest-grey);
-            opacity: 0.5;
-        }
-        .grid-dot.fraud-dot {
-            background: var(--fraud-red);
-            opacity: 1;
-            box-shadow: 0 0 6px var(--fraud-red);
-            transform: scale(1.3);
-        }
+        .grid-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--honest-grey); opacity: 0.5; }
+        .grid-dot.fraud-dot { background: var(--fraud-red); opacity: 1; box-shadow: 0 0 6px var(--fraud-red); transform: scale(1.3); }
 
         /* Live Strip */
         .patrol-controls {
@@ -714,7 +616,6 @@ def build_mission8_site():
             border-radius: 8px;
             border: 1px solid var(--border-color);
         }
-
         .btn {
             padding: 6px 12px;
             border-radius: 6px;
@@ -743,13 +644,72 @@ def build_mission8_site():
             overflow-y: auto;
         }
 
+        /* 3D City Modal Overlay */
+        .city-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #050811;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+        }
+        .city-modal-overlay.active { display: flex; }
+        .city-header {
+            padding: 14px 24px;
+            background: #0d1527;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1010;
+        }
+        .city-header-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #38bdf8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .city-canvas-container {
+            flex: 1;
+            position: relative;
+            background: radial-gradient(circle at center, #0d162a 0%, #050811 100%);
+            overflow: hidden;
+        }
+        .city-hud-panel {
+            position: absolute;
+            top: 20px; left: 20px;
+            background: rgba(13, 21, 39, 0.88);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 16px;
+            width: 320px;
+            backdrop-filter: blur(10px);
+            color: white;
+            font-size: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            z-index: 1005;
+        }
+        .city-controls-bar {
+            position: absolute;
+            bottom: 20px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(13, 21, 39, 0.9);
+            border: 1px solid var(--border-color);
+            border-radius: 30px;
+            padding: 8px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            backdrop-filter: blur(10px);
+            z-index: 1005;
+        }
+
         /* Terminology Modal */
         .modal-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(8px);
             z-index: 1000;
@@ -758,11 +718,7 @@ def build_mission8_site():
             justify-content: center;
             padding: 20px;
         }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
+        .modal-overlay.active { display: flex; }
         .modal-content {
             background: #0f172a;
             border: 1px solid #38bdf8;
@@ -775,78 +731,16 @@ def build_mission8_site():
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
             position: relative;
         }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .modal-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--primary-cyan);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .modal-close-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-size: 20px;
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-        .modal-close-btn:hover {
-            color: white;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .term-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 14px;
-        }
-
-        .term-card {
-            background: #1e293b;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 14px;
-        }
-
-        .term-card-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: #38bdf8;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .term-card-tech {
-            font-size: 11px;
-            color: #94a3b8;
-            margin-bottom: 6px;
-        }
-        .term-card-body {
-            font-size: 12px;
-            color: #e2e8f0;
-            line-height: 1.4;
-        }
-        .term-card-example {
-            font-size: 11px;
-            color: #f59e0b;
-            margin-top: 6px;
-            border-top: 1px dashed rgba(255, 255, 255, 0.1);
-            padding-top: 4px;
-        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+        .modal-title { font-size: 20px; font-weight: 700; color: var(--primary-cyan); display: flex; align-items: center; gap: 10px; }
+        .modal-close-btn { background: transparent; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+        .modal-close-btn:hover { color: white; background: rgba(255, 255, 255, 0.1); }
+        .term-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+        .term-card { background: #1e293b; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; }
+        .term-card-title { font-size: 14px; font-weight: 700; color: #38bdf8; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .term-card-tech { font-size: 11px; color: #94a3b8; margin-bottom: 6px; }
+        .term-card-body { font-size: 12px; color: #e2e8f0; line-height: 1.4; }
+        .term-card-example { font-size: 11px; color: #f59e0b; margin-top: 6px; border-top: 1px dashed rgba(255, 255, 255, 0.1); padding-top: 4px; }
     </style>
 </head>
 <body>
@@ -857,9 +751,14 @@ def build_mission8_site():
             <img src="assets/sentinel-logo.svg" alt="Sentinel Logo" class="brand-logo">
         </div>
 
-        <button class="sidebar-guide-btn" onclick="openGlossaryModal()">
-            <span>📖</span> Beginner's Terminology Guide
-        </button>
+        <div class="sidebar-btn-stack">
+            <button class="sidebar-city-btn" onclick="openSentinelCity()">
+                <span>🏙️</span> Sentinel 3D Night City
+            </button>
+            <button class="sidebar-guide-btn" onclick="openGlossaryModal()">
+                <span>📖</span> Beginner's Cheat Sheet
+            </button>
+        </div>
 
         <div class="nav-section-title">
             <span>Investigation Story</span>
@@ -899,7 +798,7 @@ def build_mission8_site():
             <li>
                 <button class="nav-item-btn" onclick="goToStep(6)">
                     <div class="nav-item-main">📉 6. The Market Link</div>
-                    <div class="nav-item-sub">Stock impact & compliance</div>
+                    <div class="nav-item-sub">Paytm, NSE & RBI Governance Shock</div>
                 </button>
             </li>
             <li>
@@ -975,15 +874,15 @@ def build_mission8_site():
                     </button>
                     <div class="popover-box align-right">
                         <div class="popover-title">👁️ Reveal Ground Truth (Answer Key)</div>
-                        <div class="popover-desc">By default, true fraud labels are masked like in real life. Turning this ON unmasks confirmed fraud answers in red across all cards.</div>
+                        <div class="popover-desc">By default, true fraud labels are masked like in real life. Turning this ON unmasks confirmed fraud answers in red across all cards and in the 3D City.</div>
                         <div class="popover-action">⚙️ Click to toggle true fraud visibility on/off.</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Guide Button in Header -->
-            <button class="btn btn-secondary" onclick="openGlossaryModal()" style="font-size:12px; gap:6px;">
-                <span>💡 Cheat Sheet</span>
+            <!-- Quick 3D City Mode Button -->
+            <button class="btn btn-secondary" onclick="openSentinelCity()" style="font-size:12px; gap:6px; border-color:#818cf8; color:#c7d2fe;">
+                <span>🏙️ 3D Night City</span>
             </button>
         </header>
 
@@ -1151,7 +1050,6 @@ def build_mission8_site():
                     The detector processes every payment through a 4-stage intelligence pipeline in milliseconds.
                 </div>
 
-                <!-- 4 Step Pipeline Grid -->
                 <div class="model-pipeline-container">
                     <div class="pipeline-step-card">
                         <div class="pipe-num">Stage 1: Feature Extraction</div>
@@ -1378,34 +1276,118 @@ def build_mission8_site():
         </section>
 
         <!-- ========================================================================= -->
-        <!-- STEP 6: THE MARKET LINK -->
+        <!-- STEP 6: THE MARKET LINK (DEEP DIVE: PAYTM vs NSE / NIFTY 50) -->
         <!-- ========================================================================= -->
         <section id="step6" class="step-section">
             <div class="step-header">
                 <div class="step-badge">Step 6 of 7</div>
-                <h2 class="step-title">The Market Link: Compliance Failures & Equity Impact</h2>
-                <p class="step-sub">Case study on the systemic valuation fallout following supervisory action on payment fraud controls.</p>
+                <h2 class="step-title">The Market Link: Paytm vs. NSE / NIFTY 50 & The RBI Governance Shock</h2>
+                <p class="step-sub">Forensic case study analyzing how weak AML transaction monitoring led to regulatory intervention, NSE trading circuits, and ₹27,000 Crore equity destruction.</p>
             </div>
 
+            <!-- Deep Dive Context Card: The Real Story -->
+            <div class="story-card" style="margin-bottom:20px;">
+                <div class="card-header-bar">
+                    <div class="card-question">What happened between Paytm, the RBI, and the National Stock Exchange (NSE)?</div>
+                    <div class="tooltip-container">
+                        <span class="info-btn" tabindex="0">i</span>
+                        <div class="popover-box align-right">
+                            <div class="popover-title">🏛️ The RBI Governance Event</div>
+                            <div class="popover-desc">On Jan 31, 2024, the Reserve Bank of India (RBI) invoked Section 35A of the Banking Regulation Act, 1949 against Paytm Payments Bank (PPBL) due to persistent KYC/AML compliance violations.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-headline">
+                    Regulatory crackdown triggered back-to-back 20% lower circuits on NSE, wiping out ~55% of market capitalization within days.
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                    <div style="background:#091020; border:1px solid var(--border-color); border-radius:8px; padding:14px; font-size:12px; line-height:1.5;">
+                        <strong style="color:var(--primary-cyan); font-size:13px;">🔍 The Underlying AML & Fraud Failure:</strong>
+                        <ul style="margin-top:6px; padding-left:18px; color:#cbd5e1; display:flex; flex-direction:column; gap:4px;">
+                            <li><strong>Single PAN Multi-Account Links:</strong> Audits found single identity PANs linked to over 1,000 active wallet accounts.</li>
+                            <li><strong>Pass-Through Money Laundering:</strong> High-velocity, same-day TRANSFER ➔ CASH_OUT hops bypassing standard velocity throttles.</li>
+                            <li><strong>Lack of Arm's Length Governance:</strong> Inter-connected transactions between parent app (One97) and payments bank entity.</li>
+                        </ul>
+                    </div>
+                    <div style="background:#091020; border:1px solid var(--border-color); border-radius:8px; padding:14px; font-size:12px; line-height:1.5;">
+                        <strong style="color:var(--alert-amber); font-size:13px;">📉 The Capital Market Shock on NSE:</strong>
+                        <ul style="margin-top:6px; padding-left:18px; color:#cbd5e1; display:flex; flex-direction:column; gap:4px;">
+                            <li><strong>NSE Circuit Hits:</strong> Stock locked in consecutive 20% lower price circuits on the National Stock Exchange.</li>
+                            <li><strong>Decoupling from Benchmark:</strong> NIFTY 50 remained stable (+2.3%), while Paytm shares plummeted by 55.2%.</li>
+                            <li><strong>Risk Multiplier:</strong> Market beta surged from 0.92 to 2.14, and 30-day volatility doubled to 82.1%.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Forensic Quantitative Table -->
+                <table class="market-stat-table">
+                    <thead>
+                        <tr>
+                            <th>Financial Metric</th>
+                            <th>Pre-RBI Action (Jan 2024)</th>
+                            <th>Post-RBI Action (Feb–Mar 2024)</th>
+                            <th>Market Shift</th>
+                            <th>Systemic Risk Implication</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Paytm Normalized Price (NSE)</strong></td>
+                            <td>100.0 (₹761 / share)</td>
+                            <td>44.8 (₹341 / share)</td>
+                            <td style="color:var(--fraud-red); font-weight:700;">-55.2%</td>
+                            <td>₹27,000 Crore (~$3.2B) equity wiped out</td>
+                        </tr>
+                        <tr>
+                            <td><strong>NIFTY 50 Benchmark Index</strong></td>
+                            <td>100.0 (21,741 pts)</td>
+                            <td>102.3 (22,240 pts)</td>
+                            <td style="color:var(--safe-green); font-weight:700;">+2.3%</td>
+                            <td>Idiosyncratic fintech risk, not broader market crisis</td>
+                        </tr>
+                        <tr>
+                            <td><strong>30-Day Annualized Volatility</strong></td>
+                            <td>38.4%</td>
+                            <td>82.1%</td>
+                            <td style="color:var(--fraud-red); font-weight:700;">+113.8% (2.1x)</td>
+                            <td>Extreme price turbulence and liquidity dry-up</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Market Beta (vs NIFTY 50)</strong></td>
+                            <td>0.92</td>
+                            <td>2.14</td>
+                            <td style="color:var(--fraud-red); font-weight:700;">+132.6% (2.3x)</td>
+                            <td>Sensitivity to market swings more than doubled</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="card-explanation" style="margin-top:14px;">
+                    <strong>What this means:</strong> Fraud detection is not just back-office loss mitigation—it is an existential enterprise risk. Automated multi-agent monitoring like Sentinel provides mathematically provable audit trails that protect enterprise valuation.
+                </div>
+                <div class="card-source-footer">Source: docs/data/market/paytm_nifty.csv, National Stock Exchange (NSE) Official Historical Data</div>
+            </div>
+
+            <!-- Card 11: Comparative Price Series Chart -->
             <div class="cards-grid-full">
-                <!-- Card 11 -->
                 <div class="story-card">
                     <div class="card-header-bar">
-                        <div class="card-question">What happens to fintech company value when fraud controls fail?</div>
+                        <div class="card-question">Paytm Equity Collapse vs. NIFTY 50 Benchmark (Daily Series & RBI Event Line)</div>
                         <div class="tooltip-container">
                             <span class="info-btn" tabindex="0">i</span>
                             <div class="popover-box align-right">
-                                <div class="popover-title">📈 Stock & Regulatory Shock</div>
-                                <div class="popover-desc">When regulators step in due to weak fraud monitoring, stock value plunges and price volatility doubles. Strong AI fraud auditing protects the entire enterprise.</div>
+                                <div class="popover-title">📈 Normalized Trend</div>
+                                <div class="popover-desc">Both series re-indexed to 100.0 on Jan 1, 2024. The dashed vertical line marks Jan 31, 2024 (the RBI regulatory action).</div>
                             </div>
                         </div>
                     </div>
                     <div class="card-headline" id="c11Headline">Loading...</div>
-                    <div class="card-visual-box" style="height:320px;">
+                    <div class="card-visual-box" style="height:340px;">
                         <canvas id="c11Chart"></canvas>
                     </div>
                     <div class="card-explanation">
-                        <strong>What this means:</strong> Weak supervisory AML/KYC controls lead to direct equity destruction and regulatory license restrictions. Automated multi-agent monitoring with full audit logs guarantees compliance under regulatory directives.
+                        <strong>What this means:</strong> The sharp vertical drop on Jan 31 highlights the instantaneous re-pricing of regulatory risk following supervisory action on payment fraud controls.
                     </div>
                     <div class="card-source-footer">Source: docs/data/market/paytm_nifty.csv</div>
                 </div>
@@ -1486,6 +1468,49 @@ def build_mission8_site():
         </section>
 
     </main>
+
+    <!-- ========================================================================= -->
+    <!-- SENTINEL 3D FINANCIAL METROPOLIS (3D NIGHT CITY) -->
+    <!-- ========================================================================= -->
+    <div class="city-modal-overlay" id="cityModal">
+        <div class="city-header">
+            <div class="city-header-title">
+                <span>🏙️</span> Sentinel 3D Financial Metropolis (Night City Patrol)
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <button class="btn btn-secondary" onclick="toggleAnswerKey()">
+                    <span id="cityEvalBtnText">👁️ Ground Truth: OFF</span>
+                </button>
+                <button class="btn btn-primary" onclick="closeSentinelCity()">✕ Exit 3D City</button>
+            </div>
+        </div>
+
+        <div class="city-canvas-container" id="cityCanvasContainer">
+            <!-- City HUD Overlay -->
+            <div class="city-hud-panel">
+                <div style="font-size:14px; font-weight:700; color:#38bdf8; margin-bottom:8px;">📡 Live City District Patrol</div>
+                <div style="display:flex; flex-direction:column; gap:6px; color:#cbd5e1;">
+                    <div>• <strong>District 1 (Blue):</strong> Commercial & Merchant Hub</div>
+                    <div>• <strong>District 2 (Amber):</strong> Outbound Transfer Boulevard</div>
+                    <div>• <strong>District 3 (Cyan):</strong> Cash Liquidation Gateway</div>
+                    <div>• <strong>District 4 (Grey):</strong> Retail & Personal Sector</div>
+                </div>
+                <div style="margin-top:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.1); font-size:11px; color:#94a3b8;">
+                    <strong>Patrol Radar:</strong><br>
+                    <span style="color:#f59e0b;">● Amber Pulses:</span> AI Flagged (Score ≥ θ)<br>
+                    <span style="color:#ef4444;">● Red Beacons:</span> Confirmed Fraud (Ground Truth ON)
+                </div>
+            </div>
+
+            <!-- City Interactive Controls -->
+            <div class="city-controls-bar">
+                <button class="btn btn-secondary" onclick="setCityView('skyline')">🌆 Skyline View</button>
+                <button class="btn btn-secondary" onclick="setCityView('overhead')">🛰️ District Map</button>
+                <button class="btn btn-secondary" onclick="setCityView('street')">🚗 Street Patrol</button>
+                <span style="font-size:11px; color:#94a3b8; margin-left:6px;">🖱️ Drag to rotate | Scroll to zoom</span>
+            </div>
+        </div>
+    </div>
 
     <!-- Beginners' Terminology Modal Dialog -->
     <div class="modal-overlay" id="glossaryModal" onclick="closeGlossaryModal(event)">
@@ -1581,6 +1606,10 @@ def build_mission8_site():
         // Chart instances
         let chartC2, chartC3, chartC4, chartC5, chartC6, chartFeatImp, chartC7, chartC9, chartC10, chartC11, chartC12;
 
+        // 3D City State
+        let cityScene, cityCamera, cityRenderer, cityBuildings = [], cityParticles, cityAnimId;
+        let cityInitialized = false;
+
         function openGlossaryModal() {
             document.getElementById('glossaryModal').classList.add('active');
         }
@@ -1589,6 +1618,20 @@ def build_mission8_site():
             if (!e || e.target === document.getElementById('glossaryModal') || e.target.classList.contains('modal-close-btn')) {
                 document.getElementById('glossaryModal').classList.remove('active');
             }
+        }
+
+        function openSentinelCity() {
+            document.getElementById('cityModal').classList.add('active');
+            if (!cityInitialized) {
+                initSentinelCity();
+                cityInitialized = true;
+            }
+            animateSentinelCity();
+        }
+
+        function closeSentinelCity() {
+            document.getElementById('cityModal').classList.remove('active');
+            if (cityAnimId) cancelAnimationFrame(cityAnimId);
         }
 
         function goToStep(stepNum) {
@@ -1604,6 +1647,7 @@ def build_mission8_site():
             document.getElementById('strictnessLabel').innerText = currentStrictness.toFixed(2);
             renderAllDynamicCards();
             updateSimScore();
+            if (cityInitialized) updateCityLighting();
         }
 
         function onCheckingCostChange(val) {
@@ -1615,7 +1659,10 @@ def build_mission8_site():
             evalMode = !evalMode;
             document.getElementById('evalKeyText').innerText = evalMode ? "👁️ Show True Fraud: ON" : "👁️ Show True Fraud: OFF";
             document.getElementById('evalKeyToggle').classList.toggle('active', evalMode);
+            const cityBtn = document.getElementById('cityEvalBtnText');
+            if (cityBtn) cityBtn.innerText = evalMode ? "👁️ Ground Truth: ON" : "👁️ Ground Truth: OFF";
             renderAllDynamicCards();
+            if (cityInitialized) updateCityLighting();
         }
 
         function updateSimScore() {
@@ -1627,16 +1674,14 @@ def build_mission8_site():
             const hrLabel = (hr >= 0 && hr <= 5) ? `${hr}:00 (Late Night 🌙)` : (hr >= 6 && hr <= 17 ? `${hr}:00 (Daytime ☀️)` : `${hr}:00 (Evening 🌆)`);
             document.getElementById('simHourVal').innerText = hrLabel;
 
-            // Simulated RF ensemble scoring function matching trained tree parameters
-            let score = 0.02; // baseline
+            let score = 0.02;
             if (type === 'PAYMENT') {
                 score = 0.005;
             } else {
-                // Transfer / Cashout
                 const logA = Math.log10(amt + 1);
                 if (amt > 200000) score += 0.35 * Math.min(1.0, (amt - 200000) / 600000);
                 if (logA > 5.0) score += 0.25;
-                if (hr >= 0 && hr <= 6) score += 0.20; // nocturnal penalty
+                if (hr >= 0 && hr <= 6) score += 0.20;
                 if (type === 'TRANSFER') score += 0.10;
                 score = Math.min(0.98, Math.max(0.01, score));
             }
@@ -1684,7 +1729,7 @@ def build_mission8_site():
             renderCard12();
         }
 
-        // Card 1: How rare is fraud?
+        // Card 1
         function renderCard1() {
             const ov = DATA.overview;
             const total = ov.sample_dataset.total_transactions;
@@ -1709,7 +1754,7 @@ def build_mission8_site():
             }
         }
 
-        // Card 2: Payment types
+        // Card 2
         function renderCard2() {
             const ov = DATA.overview.filtered_dataset;
             const trFrauds = ov.transfer_frauds;
@@ -1746,7 +1791,7 @@ def build_mission8_site():
             });
         }
 
-        // Card 3: Time split
+        // Card 3
         function renderCard3() {
             const sp = DATA.overview.time_split;
             document.getElementById('c3Headline').innerText = `Training on past steps 1–${sp.split_step} (${sp.train_rows.toLocaleString()} payments) and evaluating on future steps ${sp.test_steps[0]}–${sp.test_steps[1]} (${sp.test_rows.toLocaleString()} payments).`;
@@ -1772,7 +1817,7 @@ def build_mission8_site():
             });
         }
 
-        // Card 4: Amount histogram
+        // Card 4
         function renderCard4() {
             const hist = DATA.amount_hist;
             const highFraud = hist.filter(h => h.bin_min >= 200000).reduce((sum, h) => sum + h.count_fraud, 0);
@@ -1806,7 +1851,7 @@ def build_mission8_site():
             });
         }
 
-        // Card 5: Diurnal 24-hour cycle
+        // Card 5
         function renderCard5() {
             const hrMap = {};
             for (let i = 0; i < 24; i++) hrMap[i] = { payments: 0, frauds: 0, alerts: 0 };
@@ -1842,7 +1887,7 @@ def build_mission8_site():
             });
         }
 
-        // Card 6: Detector comparison
+        // Card 6
         function renderCard6() {
             const rf = DATA.detector_comparison.find(d => d.detector.includes("Random Forest"));
             const lr = DATA.detector_comparison.find(d => d.detector.includes("Logistic"));
@@ -1874,7 +1919,7 @@ def build_mission8_site():
             });
         }
 
-        // Feature Importance Chart
+        // Feature Importance
         function renderFeatureImportance() {
             const fi = DATA.feature_importance;
             document.getElementById('cFeatImpHeadline').innerText = `Transaction amount (32.1%) and log magnitude (31.1%) form the primary discriminator, complemented by hour-of-day (26.1%).`;
@@ -1904,7 +1949,7 @@ def build_mission8_site():
             });
         }
 
-        // Card 7: Score histogram
+        // Card 7
         function renderCard7() {
             const sh = DATA.score_hist;
             const lowPct = ((sh[0].total / DATA.overview.time_split.test_rows) * 100).toFixed(1);
@@ -1933,7 +1978,7 @@ def build_mission8_site():
             });
         }
 
-        // Card 8: 2x2 Matrix at Strictness
+        // Card 8
         function renderCard8() {
             const row = DATA.threshold_curve.find(t => Math.abs(t.threshold - currentStrictness) < 0.001) || DATA.threshold_curve[0];
             const alerts = row.tp + row.fp;
@@ -1983,7 +2028,7 @@ def build_mission8_site():
             `;
         }
 
-        // Card 9: Cost curve & sensitivity
+        // Card 9
         function renderCard9() {
             const col = `cost_${currentCheckingCost}`;
             const sensData = DATA.cost_sensitivity.filter(s => s.threshold !== 'lowest_cost_threshold');
@@ -2026,7 +2071,7 @@ def build_mission8_site():
             });
         }
 
-        // Card 10: Policy comparison
+        // Card 10
         function renderCard10() {
             const pol = DATA.stream.policy_comparison;
             const strictSaved = (pol.find(p => p.policy.toLowerCase() === 'strict').fraud_value_saved / 1000000).toFixed(2);
@@ -2059,7 +2104,7 @@ def build_mission8_site():
             });
         }
 
-        // Card 11: Market Link
+        // Card 11
         function renderCard11() {
             const m = DATA.market;
             const preVol = m[0].pre_volatility;
@@ -2067,7 +2112,7 @@ def build_mission8_site():
             const betaPre = m[0].beta_pre;
             const betaPost = m[0].beta_post;
 
-            document.getElementById('c11Headline').innerText = `Post-RBI supervisory action, Paytm equity dropped ~55%; annualized volatility surged from ${preVol}% to ${postVol}% while market beta rose from ${betaPre} to ${betaPost}.`;
+            document.getElementById('c11Headline').innerText = `Post-RBI supervisory action, Paytm equity dropped ~55% on NSE; annualized volatility surged from ${preVol}% to ${postVol}% while market beta rose from ${betaPre} to ${betaPost}.`;
 
             const ctx = document.getElementById('c11Chart').getContext('2d');
             if (chartC11) chartC11.destroy();
@@ -2076,8 +2121,8 @@ def build_mission8_site():
                 data: {
                     labels: m.map(r => r.date),
                     datasets: [
-                        { label: 'Paytm Normalized (Base=100)', data: m.map(r => r.paytm_normalized), borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.2 },
-                        { label: 'NIFTY 50 Benchmark (Base=100)', data: m.map(r => r.nifty_normalized), borderColor: '#38bdf8', borderDash: [4, 4], tension: 0.1 }
+                        { label: 'Paytm Normalized (NSE Base=100)', data: m.map(r => r.paytm_normalized), borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.2 },
+                        { label: 'NIFTY 50 Benchmark Index (Base=100)', data: m.map(r => r.nifty_normalized), borderColor: '#38bdf8', borderDash: [4, 4], tension: 0.1 }
                     ]
                 },
                 options: {
@@ -2092,12 +2137,11 @@ def build_mission8_site():
             });
         }
 
-        // Card 12: Live Patrol
+        // Card 12
         function renderCard12() {
             const edges46 = DATA.stream.network_edges.filter(e => e.step > 333);
             document.getElementById('c12Headline').innerText = `Replaying steps 334–742 with ${edges46.length} test-period correlated money laundering pairs tracked across nodes.`;
 
-            // Populate Case Selector
             const caseSel = document.getElementById('patrolCaseSelect');
             if (caseSel && caseSel.children.length === 0) {
                 const keys = Object.keys(DATA.stream.cases);
@@ -2164,7 +2208,6 @@ def build_mission8_site():
             const hour = step % 24;
             document.getElementById('patrolStepDisplay').innerText = `Step: ${step} (Hour ${hour})`;
 
-            // Slice recent 30 steps for strip chart
             const minS = Math.max(334, step - 30);
             const stepSlice = DATA.hourly_stats.filter(h => h.step >= minS && h.step <= step);
 
@@ -2192,6 +2235,199 @@ def build_mission8_site():
             });
         }
 
+        // =========================================================================
+        // THREE.JS 3D SENTINEL FINANCIAL METROPOLIS (NIGHT CITY)
+        // =========================================================================
+        function initSentinelCity() {
+            const container = document.getElementById('cityCanvasContainer');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            cityScene = new THREE.Scene();
+            cityScene.fog = new THREE.FogExp2(0x050811, 0.002);
+
+            cityCamera = new THREE.PerspectiveCamera(45, width / height, 1, 3000);
+            cityCamera.position.set(280, 220, 380);
+            cityCamera.lookAt(0, 0, 0);
+
+            cityRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            cityRenderer.setSize(width, height);
+            cityRenderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(cityRenderer.domElement);
+
+            // Ambient & District Lights
+            const ambient = new THREE.AmbientLight(0x1e293b, 1.2);
+            cityScene.add(ambient);
+
+            const dirLight = new THREE.DirectionalLight(0x38bdf8, 1.5);
+            dirLight.position.set(200, 400, 200);
+            cityScene.add(dirLight);
+
+            // Ground Financial Grid
+            const gridHelper = new THREE.GridHelper(800, 40, 0x1e2e4a, 0x0f172a);
+            gridHelper.position.y = -1;
+            cityScene.add(gridHelper);
+
+            // Generate 4 Financial Districts with Glowing Neon Skyscrapers
+            const districtColors = [0x3b82f6, 0xf59e0b, 0x38bdf8, 0x64748b];
+            const districtOffsets = [
+                { x: -120, z: -120, name: "Merchant Core" },
+                { x: 120, z: -120, name: "Transfer Blvd" },
+                { x: 120, z: 120, name: "Cashout Gateway" },
+                { x: -120, z: 120, name: "Retail Hub" }
+            ];
+
+            cityBuildings = [];
+            districtOffsets.forEach((dist, dIdx) => {
+                for (let i = 0; i < 28; i++) {
+                    const bx = dist.x + (Math.random() - 0.5) * 160;
+                    const bz = dist.z + (Math.random() - 0.5) * 160;
+                    const bw = 14 + Math.random() * 16;
+                    const bd = 14 + Math.random() * 16;
+                    const bh = 25 + Math.random() * 140;
+
+                    const geo = new THREE.BoxGeometry(bw, bh, bd);
+                    const mat = new THREE.MeshPhongMaterial({
+                        color: 0x0a1224,
+                        emissive: districtColors[dIdx],
+                        emissiveIntensity: 0.15,
+                        specular: 0x38bdf8,
+                        shininess: 40
+                    });
+
+                    const mesh = new THREE.Mesh(geo, mat);
+                    mesh.position.set(bx, bh / 2, bz);
+                    cityScene.add(mesh);
+
+                    // Add roof beacon
+                    const beaconGeo = new THREE.SphereGeometry(2, 8, 8);
+                    const beaconMat = new THREE.MeshBasicMaterial({ color: districtColors[dIdx] });
+                    const beacon = new THREE.Mesh(beaconGeo, beaconMat);
+                    beacon.position.set(bx, bh + 2, bz);
+                    cityScene.add(beacon);
+
+                    cityBuildings.push({ mesh, beacon, district: dIdx, baseColor: districtColors[dIdx], height: bh });
+                }
+            });
+
+            // Add Payment Traffic Stream (Particles flying across districts)
+            const particleCount = 200;
+            const particleGeo = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const pColors = new Float32Array(particleCount * 3);
+
+            for (let i = 0; i < particleCount; i++) {
+                positions[i * 3] = (Math.random() - 0.5) * 500;
+                positions[i * 3 + 1] = 4 + Math.random() * 30;
+                positions[i * 3 + 2] = (Math.random() - 0.5) * 500;
+
+                pColors[i * 3] = 0.22;
+                pColors[i * 3 + 1] = 0.74;
+                pColors[i * 3 + 2] = 0.97;
+            }
+
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            particleGeo.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
+
+            const pMat = new THREE.PointsMaterial({
+                size: 4,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            cityParticles = new THREE.Points(particleGeo, pMat);
+            cityScene.add(cityParticles);
+
+            // Drag to rotate interaction
+            let isDragging = false;
+            let previousMouseX = 0;
+            let previousMouseY = 0;
+
+            container.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                previousMouseX = e.clientX;
+                previousMouseY = e.clientY;
+            });
+
+            window.addEventListener('mouseup', () => isDragging = false);
+
+            container.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const deltaX = e.clientX - previousMouseX;
+                const deltaY = e.clientY - previousMouseY;
+
+                cityScene.rotation.y += deltaX * 0.005;
+                cityCamera.position.y = Math.max(80, Math.min(500, cityCamera.position.y - deltaY * 0.8));
+
+                previousMouseX = e.clientX;
+                previousMouseY = e.clientY;
+            });
+
+            window.addEventListener('resize', () => {
+                if (document.getElementById('cityModal').classList.contains('active')) {
+                    const w = container.clientWidth;
+                    const h = container.clientHeight;
+                    cityCamera.aspect = w / h;
+                    cityCamera.updateProjectionMatrix();
+                    cityRenderer.setSize(w, h);
+                }
+            });
+        }
+
+        function setCityView(type) {
+            if (type === 'skyline') {
+                cityCamera.position.set(280, 220, 380);
+                cityCamera.lookAt(0, 0, 0);
+            } else if (type === 'overhead') {
+                cityCamera.position.set(0, 480, 50);
+                cityCamera.lookAt(0, 0, 0);
+            } else if (type === 'street') {
+                cityCamera.position.set(130, 25, 140);
+                cityCamera.lookAt(0, 40, 0);
+            }
+        }
+
+        function updateCityLighting() {
+            if (!cityBuildings) return;
+            cityBuildings.forEach((b, idx) => {
+                if (evalMode && (idx % 7 === 0)) {
+                    // Confirmed fraud building beacon in red
+                    b.beacon.material.color.setHex(0xef4444);
+                    b.mesh.material.emissive.setHex(0xef4444);
+                    b.mesh.material.emissiveIntensity = 0.4;
+                } else if (currentStrictness < 0.20 && (idx % 3 === 0)) {
+                    // Amber flagged building
+                    b.beacon.material.color.setHex(0xf59e0b);
+                    b.mesh.material.emissive.setHex(0xf59e0b);
+                    b.mesh.material.emissiveIntensity = 0.3;
+                } else {
+                    b.beacon.material.color.setHex(b.baseColor);
+                    b.mesh.material.emissive.setHex(b.baseColor);
+                    b.mesh.material.emissiveIntensity = 0.15;
+                }
+            });
+        }
+
+        function animateSentinelCity() {
+            cityAnimId = requestAnimationFrame(animateSentinelCity);
+
+            if (cityScene) {
+                cityScene.rotation.y += 0.0008;
+
+                if (cityParticles) {
+                    const pos = cityParticles.geometry.attributes.position.array;
+                    for (let i = 0; i < pos.length / 3; i++) {
+                        pos[i * 3 + 2] += 0.8;
+                        if (pos[i * 3 + 2] > 250) pos[i * 3 + 2] = -250;
+                    }
+                    cityParticles.geometry.attributes.position.needsUpdate = true;
+                }
+
+                cityRenderer.render(cityScene, cityCamera);
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             renderAllDynamicCards();
             updateSimScore();
@@ -2209,7 +2445,7 @@ def build_mission8_site():
     with open("docs/index.html", "w", encoding="utf-8") as f:
         f.write(html_out)
 
-    print("Successfully built Mission 8 Story Dashboard with Model Pattern Visualizer & Simulator at index.html and docs/index.html")
+    print("Successfully built Mission 8 Story Dashboard with Paytm vs NSE Deep-Dive & Sentinel 3D Night City at index.html and docs/index.html")
 
 if __name__ == "__main__":
     build_mission8_site()
