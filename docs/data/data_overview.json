@@ -1,9 +1,4 @@
 {
-  "raw_dataset": {
-    "total_transactions": 954393,
-    "total_frauds": 1201,
-    "overall_fraud_rate": 0.001258
-  },
   "filtered_dataset": {
     "total_transactions": 415562,
     "total_frauds": 1201,
@@ -34,5 +29,10 @@
     "strict_0_10": 2430,
     "balanced_0_50": 389,
     "lenient_0_90": 85
+  },
+  "sample_dataset": {
+    "total_transactions": 954393,
+    "total_frauds": 1201,
+    "overall_fraud_rate": 0.001258
   }
 }
