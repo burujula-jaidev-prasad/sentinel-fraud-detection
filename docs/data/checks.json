@@ -1,0 +1,19 @@
+{
+  "total_rows": 954393,
+  "total_frauds": 1201,
+  "filtered_rows": 415562,
+  "train_rows": 312371,
+  "train_frauds": 549,
+  "test_rows": 103191,
+  "test_frauds": 652,
+  "alerts_strict": 2430,
+  "alerts_balanced": 389,
+  "alerts_lenient": 85,
+  "lowest_cost_threshold_at_500_review_cost": 0.05,
+  "excluded_columns": [
+    "oldbalanceOrg",
+    "newbalanceOrig",
+    "oldbalanceDest",
+    "newbalanceDest"
+  ]
+}

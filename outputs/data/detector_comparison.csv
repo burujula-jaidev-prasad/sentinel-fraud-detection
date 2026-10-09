@@ -1,0 +1,5 @@
+detector,precision,recall,f1_score,pr_auc,threshold_rule
+"Rule Baseline (amount > 200,000)",0.01,0.6856,0.0197,0.0088,amount > 200000
+Logistic Regression (Balanced),0.0244,0.7117,0.0473,0.0607,probability >= 0.50
+Random Forest (Saved Model),0.5398,0.3221,0.4035,0.3371,probability >= 0.50
+Isolation Forest (Anomaly Detection),0.062,0.4908,0.1101,0.1089,anomaly_score >= 95th percentile

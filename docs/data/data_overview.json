@@ -1,0 +1,38 @@
+{
+  "raw_dataset": {
+    "total_transactions": 954393,
+    "total_frauds": 1201,
+    "overall_fraud_rate": 0.001258
+  },
+  "filtered_dataset": {
+    "total_transactions": 415562,
+    "total_frauds": 1201,
+    "transfer_count": 79932,
+    "transfer_frauds": 606,
+    "cashout_count": 335630,
+    "cashout_frauds": 595
+  },
+  "time_split": {
+    "split_percentile": 75.0,
+    "split_step": 333,
+    "train_steps": [
+      1,
+      333
+    ],
+    "train_rows": 312371,
+    "train_frauds": 549,
+    "train_fraud_rate": 0.001758,
+    "test_steps": [
+      334,
+      742
+    ],
+    "test_rows": 103191,
+    "test_frauds": 652,
+    "test_fraud_rate": 0.006318
+  },
+  "policy_alerts_test": {
+    "strict_0_10": 2430,
+    "balanced_0_50": 389,
+    "lenient_0_90": 85
+  }
+}

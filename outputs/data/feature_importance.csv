@@ -1,0 +1,5 @@
+feature,importance
+amount,0.3212
+log_amount,0.3113
+hour,0.2605
+is_transfer,0.107
