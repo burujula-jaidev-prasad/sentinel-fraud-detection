@@ -1464,11 +1464,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
             <!-- City Interactive Controls Bar -->
             <div class="city-controls-bar">
-                <button class="btn btn-secondary" onclick="setCityView('skyline')">🌆 Overview (Cinematic)</button>
-                <button class="btn btn-secondary" onclick="setCityView('overhead')">🛰️ Tactical Map (2D/3D)</button>
-                <button class="btn btn-secondary" onclick="setCityView('street')">🚶 Street Level</button>
+                <button class="btn btn-primary" onclick="setCityView('birdseye')">🦅 Top Bird's Eye (3D Aerial)</button>
+                <button class="btn btn-secondary" onclick="setCityView('overhead')">🛰️ Top-Down Radar (90° Top)</button>
+                <button class="btn btn-secondary" onclick="setCityView('skyline')">🌆 Cinematic Angle</button>
+                <button class="btn btn-secondary" onclick="setCityView('street')">🚶 Avenue Street Cam</button>
                 <button class="btn btn-secondary" onclick="setCityView('tower')">🗼 Sentinel Spire Cam</button>
-                <button class="btn btn-primary" onclick="focusOnNextThreat()">🚨 Focus Active Threat</button>
+                <button class="btn btn-secondary" style="background:rgba(239,68,68,0.25); color:#fca5a5; border-color:#ef4444;" onclick="focusOnNextThreat()">🚨 Focus Active Threat</button>
             </div>
         </div>
     </div>
@@ -1575,10 +1576,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         // Camera Smooth Navigation State
         let isOrbiting = false, isPanning = false;
         let mousePrevX = 0, mousePrevY = 0;
-        let currentCamPos = new THREE.Vector3(0, 230, 420);
-        let targetCamPos = new THREE.Vector3(0, 230, 420);
-        let currentLookTarget = new THREE.Vector3(0, 15, 0);
-        let targetLookTarget = new THREE.Vector3(0, 15, 0);
+        let currentCamPos = new THREE.Vector3(0, 360, 280);
+        let targetCamPos = new THREE.Vector3(0, 360, 280);
+        let currentLookTarget = new THREE.Vector3(0, 0, 0);
+        let targetLookTarget = new THREE.Vector3(0, 0, 0);
 
         // 3x3 District Coordinates
         const DISTRICT_POSITIONS = {
@@ -2793,12 +2794,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         }
 
         function setCityView(type) {
-            if (type === 'skyline') {
-                targetLookTarget.set(0, 15, 0);
-                targetCamPos.set(0, 230, 420);
+            if (type === 'birdseye') {
+                targetLookTarget.set(0, 0, 0);
+                targetCamPos.set(0, 360, 280);
             } else if (type === 'overhead') {
                 targetLookTarget.set(0, 0, 0);
-                targetCamPos.set(0, 480, 5);
+                targetCamPos.set(0, 540, 20);
+            } else if (type === 'skyline') {
+                targetLookTarget.set(0, 15, 0);
+                targetCamPos.set(240, 200, 320);
             } else if (type === 'street') {
                 targetLookTarget.set(0, 8, -60);
                 targetCamPos.set(0, 12, 170);
