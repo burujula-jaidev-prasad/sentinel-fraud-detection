@@ -2622,56 +2622,7 @@ ightarrow 	ext{CASH\_OUT}$) and locks both destination nodes in tandem.
         </div>
     </div>
 
-    <!-- 3D Ledger City Modal -->
-    <div id="cityModal" class="city-modal">
-        <div class="city-modal-header">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <span style="font-size:18px;">🏙️</span>
-                <span style="font-size:16px; font-weight:700; color:#f8fafc;">3D Real-Time Ledger City Simulation</span>
-                <span id="cityStepDisplay" style="font-size:12px; background:rgba(56,189,248,0.15); color:#38bdf8; padding:3px 8px; border-radius:4px; font-family:var(--font-mono);">Step: 334</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <button class="btn btn-secondary" onclick="setCameraPreset('top')" style="font-size:12px;">🔭 Top Bird's Eye</button>
-                <button class="btn btn-secondary" onclick="setCameraPreset('radar')" style="font-size:12px;">🛰️ 90° Radar</button>
-                <button class="btn btn-secondary" onclick="setCameraPreset('iso')" style="font-size:12px;">📐 Isometric</button>
-                <button class="btn btn-secondary" onclick="setCameraPreset('street')" style="font-size:12px;">🚶 Street</button>
-                
-            <!-- Flow & Timing Intelligence Guide Button in City Header -->
-            <button class="btn btn-secondary" onclick="toggleCityFlowGuide()" style="font-size:11.5px; padding:4px 10px; border-color:rgba(56,189,248,0.4); color:#38bdf8;">
-                ℹ️ How & Why Funds Flow
-            </button>
     
-                <button class="btn btn-primary" onclick="closeSentinelCity()" style="font-size:12px;">✕ Close City</button>
-            </div>
-        </div>
-        <div class="city-modal-body">
-            <div id="cityCanvasContainer"></div>
-            
-            <div class="city-hud">
-                <div style="font-size:13px; font-weight:700; color:#38bdf8; margin-bottom:6px;">City Ledger Radar</div>
-                <div style="font-size:11.5px; color:#cbd5e1; line-height:1.4;">
-                    Visualizing PaySim transfer flows, humanoid mule agents, and autonomous Sentinel drone patrols across 9 financial districts.
-                </div>
-                <div style="margin-top:10px; display:flex; gap:6px;">
-                    <button class="btn btn-secondary" id="cityPlayBtn" onclick="togglePatrolPlay()" style="padding:4px 10px; font-size:11px;">⏸ Pause</button>
-                    <button class="btn btn-secondary" onclick="patrolCurrentStep=334; renderPatrolStep(334);" style="padding:4px 10px; font-size:11px;">⏮ Reset</button>
-                </div>
-            </div>
-
-            <!-- Evidence Dossier Board inside City -->
-            <div id="cityEvidenceBoard" style="display:none; position:absolute; bottom:24px; left:24px; background:rgba(13,21,39,0.95); border:1px solid #ef4444; border-radius:10px; padding:16px; max-width:380px; z-index:20; backdrop-filter:blur(10px);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                    <span id="evidenceTitle" style="font-weight:700; color:#fca5a5; font-size:13px;">🚨 Intercepted Fraud Evidence</span>
-                    <button onclick="closeEvidenceBoard()" style="background:transparent; border:none; color:#94a3b8; cursor:pointer;">✕</button>
-                </div>
-                <div id="evidenceType" style="font-size:12px; color:#e2e8f0; margin-bottom:4px;"></div>
-                <div id="evidenceAmt" style="font-size:12px; font-weight:700; color:#38bdf8; margin-bottom:4px;"></div>
-                <div id="evidenceRoute" style="font-size:11px; color:#94a3b8; margin-bottom:4px;"></div>
-                <div id="evidenceScore" style="font-size:11px; color:#f59e0b; margin-bottom:4px;"></div>
-                <div id="evidenceAgents" style="font-size:11px; color:#cbd5e1; margin-bottom:4px;"></div>
-                <div id="evidenceStatus" style="font-size:11px; font-weight:700; color:#10b981; margin-top:8px;"></div>
-            </div>
-        </div>
     </div>
     
 
@@ -3221,34 +3172,69 @@ function onStrictnessChange(idx) {
 
         function togglePatrolPlay() {
             patrolPlaying = !patrolPlaying;
-            const playBtn = document.getElementById('patrolPlayBtn');
-            if (playBtn) playBtn.innerText = patrolPlaying ? "⏸️ Pause" : "▶️ Play";
-            if (patrolPlaying) startPatrolLoop();
-            else clearInterval(patrolInterval);
+            
+            // Update all play/pause buttons across the entire document
+            const allPlayBtns = document.querySelectorAll('#patrolPlayBtn, #cityPlayBtn, .play-toggle-btn');
+            allPlayBtns.forEach(btn => {
+                btn.innerHTML = patrolPlaying ? "⏸️ Pause" : "▶️ Play";
+            });
+
+            if (patrolPlaying) {
+                startPatrolLoop();
+            } else {
+                if (patrolInterval) {
+                    clearInterval(patrolInterval);
+                    patrolInterval = null;
+                }
+            }
         }
 
         function scrubPatrol(step) {
             patrolCurrentStep = parseInt(step);
+            
+            // Sync all sliders
+            const s1 = document.getElementById('patrolScrubber');
+            if (s1) s1.value = patrolCurrentStep;
+            const s2 = document.getElementById('cityStepSlider');
+            if (s2) s2.value = patrolCurrentStep;
+
             renderPatrolStep(patrolCurrentStep);
         }
 
         function changePatrolSpeed(ms) {
             patrolSpeed = parseInt(ms);
             if (patrolPlaying) {
-                clearInterval(patrolInterval);
+                if (patrolInterval) clearInterval(patrolInterval);
                 startPatrolLoop();
             }
         }
 
         function startPatrolLoop() {
-            clearInterval(patrolInterval);
+            if (patrolInterval) clearInterval(patrolInterval);
             patrolInterval = setInterval(() => {
-                if (patrolCurrentStep >= 742) patrolCurrentStep = 334;
-                else patrolCurrentStep++;
-                const scrub = document.getElementById('patrolScrubber');
-                if (scrub) scrub.value = patrolCurrentStep;
+                if (!patrolPlaying) {
+                    clearInterval(patrolInterval);
+                    patrolInterval = null;
+                    return;
+                }
+                if (patrolCurrentStep >= 742) {
+                    patrolCurrentStep = 334;
+                } else {
+                    patrolCurrentStep++;
+                }
+
+                const s1 = document.getElementById('patrolScrubber');
+                if (s1) s1.value = patrolCurrentStep;
+                const s2 = document.getElementById('cityStepSlider');
+                if (s2) s2.value = patrolCurrentStep;
+
                 renderPatrolStep(patrolCurrentStep);
             }, patrolSpeed);
+        }
+
+        function cityStepChange(delta) {
+            patrolCurrentStep = Math.max(334, Math.min(742, patrolCurrentStep + delta));
+            scrubPatrol(patrolCurrentStep);
         }
 
         function renderPatrolStep(step) {
