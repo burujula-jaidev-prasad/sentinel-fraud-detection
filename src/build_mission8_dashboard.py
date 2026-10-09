@@ -1575,8 +1575,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         // Camera Smooth Navigation State
         let isOrbiting = false, isPanning = false;
         let mousePrevX = 0, mousePrevY = 0;
-        let currentCamPos = new THREE.Vector3(220, 140, 220);
-        let targetCamPos = new THREE.Vector3(220, 140, 220);
+        let currentCamPos = new THREE.Vector3(0, 230, 420);
+        let targetCamPos = new THREE.Vector3(0, 230, 420);
         let currentLookTarget = new THREE.Vector3(0, 15, 0);
         let targetLookTarget = new THREE.Vector3(0, 15, 0);
 
@@ -2795,16 +2795,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         function setCityView(type) {
             if (type === 'skyline') {
                 targetLookTarget.set(0, 15, 0);
-                targetCamPos.set(220, 140, 220);
+                targetCamPos.set(0, 230, 420);
             } else if (type === 'overhead') {
                 targetLookTarget.set(0, 0, 0);
-                targetCamPos.set(0, 360, 5);
+                targetCamPos.set(0, 480, 5);
             } else if (type === 'street') {
-                targetLookTarget.set(0, 6, 0);
-                targetCamPos.set(50, 12, 50);
+                targetLookTarget.set(0, 8, -60);
+                targetCamPos.set(0, 12, 170);
             } else if (type === 'tower') {
-                targetLookTarget.set(100, 10, 100);
-                targetCamPos.set(0, 180, 0);
+                targetLookTarget.set(0, 10, 180);
+                targetCamPos.set(0, 170, 0);
             }
         }
 
@@ -2819,7 +2819,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             const targetMesh = cityPeopleMeshes.find(m => m.txData && m.txData.id === txId);
             if (targetMesh && targetMesh.txData) {
                 targetLookTarget.copy(targetMesh.group.position).add(new THREE.Vector3(0, 6, 0));
-                targetCamPos.copy(targetMesh.group.position).add(new THREE.Vector3(26, 14, 26));
+                targetCamPos.copy(targetMesh.group.position).add(new THREE.Vector3(0, 18, 36));
                 displayEvidenceBoard(targetMesh.txData);
             }
         }
