@@ -1,4 +1,4 @@
-"""Mission 8 Story Dashboard Builder: Left-hand story navigation, 12 dynamic cards, Paytm vs NSE deep-dive, Sentinel 3D Night City, and live patrol."""
+"""Mission 8 & 9: Story Dashboard Builder with 3D Ledger City Phase A & District Data."""
 
 import os
 import json
@@ -15,10 +15,14 @@ def build_mission8_site():
     with open("docs/data/checks.json", "r", encoding="utf-8") as f:
         checks_data = json.load(f)
 
+    with open("docs/data/city_people.json", "r", encoding="utf-8") as f:
+        city_people = json.load(f)
+
     df_cost_curve = pd.read_csv("docs/data/cost_curve.csv")
     df_cost_sens = pd.read_csv("docs/data/cost_sensitivity.csv")
     df_detector = pd.read_csv("docs/data/detector_comparison.csv")
     df_hourly = pd.read_csv("docs/data/hourly_stats.csv")
+    df_district_hourly = pd.read_csv("docs/data/district_hourly.csv")
     df_amount_hist = pd.read_csv("docs/data/amount_hist.csv")
     df_score_hist = pd.read_csv("docs/data/score_hist.csv")
     df_threshold_curve = pd.read_csv("docs/data/threshold_curve.csv")
@@ -29,6 +33,8 @@ def build_mission8_site():
         "stream": stream_data,
         "overview": data_overview,
         "checks": checks_data,
+        "city_people": city_people,
+        "district_hourly": df_district_hourly.to_dict(orient="records"),
         "cost_curve": df_cost_curve.to_dict(orient="records"),
         "cost_sensitivity": df_cost_sens.to_dict(orient="records"),
         "detector_comparison": df_detector.to_dict(orient="records"),
@@ -45,9 +51,9 @@ def build_mission8_site():
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinel | Financial Fraud Intelligence & Market Link</title>
-    <!-- Chart.js & Three.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Sentinel | Financial Fraud Intelligence & 3D Ledger City</title>
+    <!-- Chart.js & Pinned Three.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
@@ -64,6 +70,7 @@ def build_mission8_site():
             --alert-amber: #f59e0b;
             --fraud-red: #ef4444;
             --honest-grey: #64748b;
+            --violet-coat: #a855f7;
         }
 
         * {
@@ -185,27 +192,6 @@ def build_mission8_site():
             margin-bottom: 16px;
         }
 
-        .sidebar-guide-btn {
-            background: linear-gradient(135deg, #1e293b, #0f172a);
-            border: 1px solid #38bdf8;
-            color: #38bdf8;
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.2s;
-        }
-        .sidebar-guide-btn:hover {
-            background: rgba(56, 189, 248, 0.15);
-            box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
-            color: #ffffff;
-        }
-
         .sidebar-city-btn {
             background: linear-gradient(135deg, #1e1b4b, #0f172a);
             border: 1px solid #818cf8;
@@ -224,6 +210,27 @@ def build_mission8_site():
         .sidebar-city-btn:hover {
             background: rgba(129, 140, 248, 0.2);
             box-shadow: 0 0 14px rgba(129, 140, 248, 0.4);
+            color: #ffffff;
+        }
+
+        .sidebar-guide-btn {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid #38bdf8;
+            color: #38bdf8;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .sidebar-guide-btn:hover {
+            background: rgba(56, 189, 248, 0.15);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
             color: #ffffff;
         }
 
@@ -329,7 +336,6 @@ def build_mission8_site():
             box-shadow: 0 0 14px rgba(239, 68, 68, 0.35);
         }
 
-        /* Info Badge & Interactive Popover */
         .info-btn {
             background: rgba(56, 189, 248, 0.12);
             color: var(--primary-cyan);
@@ -644,7 +650,7 @@ def build_mission8_site():
             overflow-y: auto;
         }
 
-        /* 3D City Modal Overlay */
+        /* 3D Ledger City Modal Overlay (Phase A Core) */
         .city-modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -655,7 +661,7 @@ def build_mission8_site():
         }
         .city-modal-overlay.active { display: flex; }
         .city-header {
-            padding: 14px 24px;
+            padding: 12px 24px;
             background: #0d1527;
             border-bottom: 1px solid var(--border-color);
             display: flex;
@@ -664,46 +670,63 @@ def build_mission8_site():
             z-index: 1010;
         }
         .city-header-title {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 700;
             color: #38bdf8;
             display: flex;
             align-items: center;
             gap: 10px;
         }
+        .city-disclaimer-banner {
+            background: rgba(245, 158, 11, 0.12);
+            border-bottom: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fde68a;
+            font-size: 11.5px;
+            text-align: center;
+            padding: 6px 14px;
+            z-index: 1008;
+        }
         .city-canvas-container {
             flex: 1;
             position: relative;
-            background: radial-gradient(circle at center, #0d162a 0%, #050811 100%);
+            background: radial-gradient(circle at center, #0b1329 0%, #03060f 100%);
             overflow: hidden;
         }
         .city-hud-panel {
             position: absolute;
-            top: 20px; left: 20px;
-            background: rgba(13, 21, 39, 0.88);
+            top: 16px; left: 16px;
+            background: rgba(13, 21, 39, 0.92);
             border: 1px solid var(--border-color);
             border-radius: 10px;
-            padding: 16px;
+            padding: 14px 16px;
             width: 320px;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
             color: white;
             font-size: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
             z-index: 1005;
         }
         .city-controls-bar {
             position: absolute;
-            bottom: 20px; left: 50%;
+            bottom: 16px; left: 50%;
             transform: translateX(-50%);
-            background: rgba(13, 21, 39, 0.9);
+            background: rgba(13, 21, 39, 0.92);
             border: 1px solid var(--border-color);
             border-radius: 30px;
-            padding: 8px 18px;
+            padding: 8px 20px;
             display: flex;
             align-items: center;
             gap: 12px;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
             z-index: 1005;
+        }
+
+        /* 2D Fallback Canvas */
+        #cityFallback2D {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: none;
+            z-index: 1002;
         }
 
         /* Terminology Modal */
@@ -753,7 +776,7 @@ def build_mission8_site():
 
         <div class="sidebar-btn-stack">
             <button class="sidebar-city-btn" onclick="openSentinelCity()">
-                <span>🏙️</span> Sentinel 3D Night City
+                <span>🏙️</span> Sentinel Mode (3D City)
             </button>
             <button class="sidebar-guide-btn" onclick="openGlossaryModal()">
                 <span>📖</span> Beginner's Cheat Sheet
@@ -882,7 +905,7 @@ def build_mission8_site():
 
             <!-- Quick 3D City Mode Button -->
             <button class="btn btn-secondary" onclick="openSentinelCity()" style="font-size:12px; gap:6px; border-color:#818cf8; color:#c7d2fe;">
-                <span>🏙️ 3D Night City</span>
+                <span>🏙️ Sentinel Mode (3D City)</span>
             </button>
         </header>
 
@@ -1034,7 +1057,7 @@ def build_mission8_site():
                 <p class="step-sub">Visualizing what features the AI looks at, how 200 decision trees vote, and how strictness flags alerts.</p>
             </div>
 
-            <!-- Step 3 Interactive Visualizer: How Sentinel Finds Fraud -->
+            <!-- Step 3 Interactive Visualizer -->
             <div class="story-card" style="margin-bottom:20px;">
                 <div class="card-header-bar">
                     <div class="card-question">How does Sentinel find patterns and flag fraud? (Visual Pipeline)</div>
@@ -1073,7 +1096,7 @@ def build_mission8_site():
                     </div>
                 </div>
 
-                <!-- Interactive Try-It-Yourself Scoring Simulator -->
+                <!-- Interactive Scoring Simulator -->
                 <div class="simulator-box">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <strong style="color:var(--primary-cyan); font-size:13px;">🧪 Interactive Simulator: Test How a Transaction Gets Scored & Flagged</strong>
@@ -1276,7 +1299,7 @@ def build_mission8_site():
         </section>
 
         <!-- ========================================================================= -->
-        <!-- STEP 6: THE MARKET LINK (DEEP DIVE: PAYTM vs NSE / NIFTY 50) -->
+        <!-- STEP 6: THE MARKET LINK (PAYTM vs NSE / NIFTY 50) -->
         <!-- ========================================================================= -->
         <section id="step6" class="step-section">
             <div class="step-header">
@@ -1285,7 +1308,7 @@ def build_mission8_site():
                 <p class="step-sub">Forensic case study analyzing how weak AML transaction monitoring led to regulatory intervention, NSE trading circuits, and ₹27,000 Crore equity destruction.</p>
             </div>
 
-            <!-- Deep Dive Context Card: The Real Story -->
+            <!-- Deep Dive Context Card -->
             <div class="story-card" style="margin-bottom:20px;">
                 <div class="card-header-bar">
                     <div class="card-question">What happened between Paytm, the RBI, and the National Stock Exchange (NSE)?</div>
@@ -1470,43 +1493,52 @@ def build_mission8_site():
     </main>
 
     <!-- ========================================================================= -->
-    <!-- SENTINEL 3D FINANCIAL METROPOLIS (3D NIGHT CITY) -->
+    <!-- SENTINEL MODE (3D LEDGER CITY - PHASE A) -->
     <!-- ========================================================================= -->
     <div class="city-modal-overlay" id="cityModal">
         <div class="city-header">
             <div class="city-header-title">
-                <span>🏙️</span> Sentinel 3D Financial Metropolis (Night City Patrol)
+                <span>🏙️</span> Sentinel Mode: 3D Ledger City
             </div>
             <div style="display:flex; align-items:center; gap:12px;">
                 <button class="btn btn-secondary" onclick="toggleAnswerKey()">
                     <span id="cityEvalBtnText">👁️ Ground Truth: OFF</span>
                 </button>
-                <button class="btn btn-primary" onclick="closeSentinelCity()">✕ Exit 3D City</button>
+                <button class="btn btn-primary" onclick="closeSentinelCity()">✕ Exit City</button>
             </div>
         </div>
 
+        <div class="city-disclaimer-banner">
+            ⚠️ <strong>Simulated live stream:</strong> replay of fake PaySim payments. People are a sample. Districts are account groups, not real places.
+        </div>
+
         <div class="city-canvas-container" id="cityCanvasContainer">
-            <!-- City HUD Overlay -->
+            <canvas id="cityFallback2D"></canvas>
+
+            <!-- 3D City HUD -->
             <div class="city-hud-panel">
-                <div style="font-size:14px; font-weight:700; color:#38bdf8; margin-bottom:8px;">📡 Live City District Patrol</div>
-                <div style="display:flex; flex-direction:column; gap:6px; color:#cbd5e1;">
-                    <div>• <strong>District 1 (Blue):</strong> Commercial & Merchant Hub</div>
-                    <div>• <strong>District 2 (Amber):</strong> Outbound Transfer Boulevard</div>
-                    <div>• <strong>District 3 (Cyan):</strong> Cash Liquidation Gateway</div>
-                    <div>• <strong>District 4 (Grey):</strong> Retail & Personal Sector</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <strong style="color:var(--primary-cyan); font-size:13px;">📡 3x3 Urban District Matrix</strong>
+                    <span id="cityStepClock" style="font-size:11px; background:#192744; padding:2px 6px; border-radius:4px; font-weight:700; color:#38bdf8;">Step 334 | 22:00</span>
+                </div>
+                <div style="font-size:11.5px; color:#cbd5e1; display:flex; flex-direction:column; gap:4px;">
+                    <div>• <strong>Districts 1–8:</strong> Account Hash Clusters (MD5 mod 8)</div>
+                    <div>• <strong>Center:</strong> Sentinel Intelligence Spire</div>
+                    <div>• <strong>People:</strong> <span style="color:var(--primary-cyan);">Cyan = Transfer</span> | <span style="color:var(--violet-coat);">Violet = Cash-out</span></div>
+                    <div>• <strong>Bags:</strong> Scaled by training amount percentile</div>
                 </div>
                 <div style="margin-top:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.1); font-size:11px; color:#94a3b8;">
-                    <strong>Patrol Radar:</strong><br>
-                    <span style="color:#f59e0b;">● Amber Pulses:</span> AI Flagged (Score ≥ θ)<br>
-                    <span style="color:#ef4444;">● Red Beacons:</span> Confirmed Fraud (Ground Truth ON)
+                    <strong>Building Dynamics:</strong><br>
+                    • Height = Recent hourly payment density<br>
+                    • Lit Windows = Flags in last 24 steps
                 </div>
             </div>
 
             <!-- City Interactive Controls -->
             <div class="city-controls-bar">
-                <button class="btn btn-secondary" onclick="setCityView('skyline')">🌆 Skyline View</button>
-                <button class="btn btn-secondary" onclick="setCityView('overhead')">🛰️ District Map</button>
-                <button class="btn btn-secondary" onclick="setCityView('street')">🚗 Street Patrol</button>
+                <button class="btn btn-secondary" onclick="setCityView('skyline')">🌆 Skyline</button>
+                <button class="btn btn-secondary" onclick="setCityView('overhead')">🛰️ 3x3 Grid Map</button>
+                <button class="btn btn-secondary" onclick="setCityView('street')">🚶 Street Level</button>
                 <span style="font-size:11px; color:#94a3b8; margin-left:6px;">🖱️ Drag to rotate | Scroll to zoom</span>
             </div>
         </div>
@@ -1606,9 +1638,23 @@ def build_mission8_site():
         // Chart instances
         let chartC2, chartC3, chartC4, chartC5, chartC6, chartFeatImp, chartC7, chartC9, chartC10, chartC11, chartC12;
 
-        // 3D City State
-        let cityScene, cityCamera, cityRenderer, cityBuildings = [], cityParticles, cityAnimId;
-        let cityInitialized = false;
+        // 3D Ledger City State (Phase A)
+        let cityScene, cityCamera, cityRenderer, cityTower, cityBuildings = [], cityPeopleMeshes = [];
+        let cityInitialized = false, cityAnimId = null, cityIs2DFallback = false;
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // 3x3 District Coordinates (Center is Sentinel Tower)
+        const DISTRICT_POSITIONS = {
+            1: { x: -160, z: -160, name: "District 1" },
+            2: { x:    0, z: -160, name: "District 2" },
+            3: { x:  160, z: -160, name: "District 3" },
+            4: { x:  160, z:    0, name: "District 4" },
+            5: { x:  160, z:  160, name: "District 5" },
+            6: { x:    0, z:  160, name: "District 6" },
+            7: { x: -160, z:  160, name: "District 7" },
+            8: { x: -160, z:    0, name: "District 8" },
+            center: { x: 0, z: 0, name: "Sentinel Tower" }
+        };
 
         function openGlossaryModal() {
             document.getElementById('glossaryModal').classList.add('active');
@@ -1623,10 +1669,11 @@ def build_mission8_site():
         function openSentinelCity() {
             document.getElementById('cityModal').classList.add('active');
             if (!cityInitialized) {
-                initSentinelCity();
+                init3DLedgerCity();
                 cityInitialized = true;
             }
-            animateSentinelCity();
+            updateCityForStep(patrolCurrentStep);
+            animate3DCity();
         }
 
         function closeSentinelCity() {
@@ -1647,7 +1694,7 @@ def build_mission8_site():
             document.getElementById('strictnessLabel').innerText = currentStrictness.toFixed(2);
             renderAllDynamicCards();
             updateSimScore();
-            if (cityInitialized) updateCityLighting();
+            if (cityInitialized) updateCityForStep(patrolCurrentStep);
         }
 
         function onCheckingCostChange(val) {
@@ -1662,7 +1709,7 @@ def build_mission8_site():
             const cityBtn = document.getElementById('cityEvalBtnText');
             if (cityBtn) cityBtn.innerText = evalMode ? "👁️ Ground Truth: ON" : "👁️ Ground Truth: OFF";
             renderAllDynamicCards();
-            if (cityInitialized) updateCityLighting();
+            if (cityInitialized) updateCityForStep(patrolCurrentStep);
         }
 
         function updateSimScore() {
@@ -1678,9 +1725,9 @@ def build_mission8_site():
             if (type === 'PAYMENT') {
                 score = 0.005;
             } else {
-                const logA = Math.log10(amt + 1);
+                const logA = Math.log1p(amt);
                 if (amt > 200000) score += 0.35 * Math.min(1.0, (amt - 200000) / 600000);
-                if (logA > 5.0) score += 0.25;
+                if (logA > 12.0) score += 0.25;
                 if (hr >= 0 && hr <= 6) score += 0.20;
                 if (type === 'TRANSFER') score += 0.10;
                 score = Math.min(0.98, Math.max(0.01, score));
@@ -2184,6 +2231,7 @@ def build_mission8_site():
         function scrubPatrol(step) {
             patrolCurrentStep = parseInt(step);
             renderPatrolStep(patrolCurrentStep);
+            if (cityInitialized) updateCityForStep(patrolCurrentStep);
         }
 
         function changePatrolSpeed(ms) {
@@ -2201,12 +2249,15 @@ def build_mission8_site():
                 else patrolCurrentStep++;
                 document.getElementById('patrolScrubber').value = patrolCurrentStep;
                 renderPatrolStep(patrolCurrentStep);
+                if (cityInitialized) updateCityForStep(patrolCurrentStep);
             }, patrolSpeed);
         }
 
         function renderPatrolStep(step) {
             const hour = step % 24;
             document.getElementById('patrolStepDisplay').innerText = `Step: ${step} (Hour ${hour})`;
+            const cityClock = document.getElementById('cityStepClock');
+            if (cityClock) cityClock.innerText = `Step ${step} | Hour ${hour}:00`;
 
             const minS = Math.max(334, step - 30);
             const stepSlice = DATA.hourly_stats.filter(h => h.step >= minS && h.step <= step);
@@ -2236,136 +2287,190 @@ def build_mission8_site():
         }
 
         // =========================================================================
-        // THREE.JS 3D SENTINEL FINANCIAL METROPOLIS (NIGHT CITY)
+        // MISSION 9b - PHASE A: 3D LEDGER CITY CORE ENGINE
         // =========================================================================
-        function initSentinelCity() {
+        function init3DLedgerCity() {
             const container = document.getElementById('cityCanvasContainer');
             const width = container.clientWidth;
             const height = container.clientHeight;
 
-            cityScene = new THREE.Scene();
-            cityScene.fog = new THREE.FogExp2(0x050811, 0.002);
+            // Check WebGL support
+            if (!window.WebGLRenderingContext) {
+                init2DCityFallback(container);
+                return;
+            }
 
-            cityCamera = new THREE.PerspectiveCamera(45, width / height, 1, 3000);
-            cityCamera.position.set(280, 220, 380);
-            cityCamera.lookAt(0, 0, 0);
+            try {
+                cityScene = new THREE.Scene();
+                cityScene.fog = new THREE.FogExp2(0x050811, 0.0018);
 
-            cityRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            cityRenderer.setSize(width, height);
-            cityRenderer.setPixelRatio(window.devicePixelRatio);
-            container.appendChild(cityRenderer.domElement);
+                cityCamera = new THREE.PerspectiveCamera(45, width / height, 1, 4000);
+                cityCamera.position.set(340, 260, 420);
+                cityCamera.lookAt(0, 30, 0);
 
-            // Ambient & District Lights
-            const ambient = new THREE.AmbientLight(0x1e293b, 1.2);
+                cityRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                cityRenderer.setSize(width, height);
+                cityRenderer.setPixelRatio(window.devicePixelRatio);
+                container.appendChild(cityRenderer.domElement);
+            } catch (e) {
+                console.warn("WebGL initialization failed, falling back to 2D Canvas:", e);
+                init2DCityFallback(container);
+                return;
+            }
+
+            // Lighting
+            const ambient = new THREE.AmbientLight(0x1e293b, 1.4);
             cityScene.add(ambient);
 
-            const dirLight = new THREE.DirectionalLight(0x38bdf8, 1.5);
-            dirLight.position.set(200, 400, 200);
-            cityScene.add(dirLight);
+            const sunLight = new THREE.DirectionalLight(0x38bdf8, 1.6);
+            sunLight.position.set(200, 500, 200);
+            cityScene.add(sunLight);
 
-            // Ground Financial Grid
-            const gridHelper = new THREE.GridHelper(800, 40, 0x1e2e4a, 0x0f172a);
-            gridHelper.position.y = -1;
-            cityScene.add(gridHelper);
+            // Ground 3x3 Urban Grid
+            const grid = new THREE.GridHelper(900, 45, 0x1e2e4a, 0x0a1020);
+            grid.position.y = 0;
+            cityScene.add(grid);
 
-            // Generate 4 Financial Districts with Glowing Neon Skyscrapers
-            const districtColors = [0x3b82f6, 0xf59e0b, 0x38bdf8, 0x64748b];
-            const districtOffsets = [
-                { x: -120, z: -120, name: "Merchant Core" },
-                { x: 120, z: -120, name: "Transfer Blvd" },
-                { x: 120, z: 120, name: "Cashout Gateway" },
-                { x: -120, z: 120, name: "Retail Hub" }
-            ];
+            // CENTRAL SENTINEL TOWER (At Center 0, 0)
+            const towerGeo = new THREE.CylinderGeometry(14, 22, 160, 8);
+            const towerMat = new THREE.MeshPhongMaterial({
+                color: 0x0d1527,
+                emissive: 0x38bdf8,
+                emissiveIntensity: 0.25,
+                specular: 0x38bdf8,
+                shininess: 60
+            });
+            cityTower = new THREE.Mesh(towerGeo, towerMat);
+            cityTower.position.set(0, 80, 0);
+            cityScene.add(cityTower);
 
+            // Sentinel Golden Spire & Shield-Eye Beacon
+            const spireGeo = new THREE.ConeGeometry(5, 40, 8);
+            const spireMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
+            const spire = new THREE.Mesh(spireGeo, spireMat);
+            spire.position.set(0, 180, 0);
+            cityScene.add(spire);
+
+            const eyeGeo = new THREE.SphereGeometry(6, 12, 12);
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+            const eye = new THREE.Mesh(eyeGeo, eyeMat);
+            eye.position.set(0, 162, 0);
+            cityScene.add(eye);
+
+            // BUILD 8 SURROUNDING DISTRICTS (3x3 Grid Layout)
             cityBuildings = [];
-            districtOffsets.forEach((dist, dIdx) => {
-                for (let i = 0; i < 28; i++) {
-                    const bx = dist.x + (Math.random() - 0.5) * 160;
-                    const bz = dist.z + (Math.random() - 0.5) * 160;
-                    const bw = 14 + Math.random() * 16;
-                    const bd = 14 + Math.random() * 16;
-                    const bh = 25 + Math.random() * 140;
+            for (let d = 1; d <= 8; d++) {
+                const pos = DISTRICT_POSITIONS[d];
+                // District Plaza Base
+                const plazaGeo = new THREE.BoxGeometry(110, 2, 110);
+                const plazaMat = new THREE.MeshBasicMaterial({ color: 0x101b33, wireframe: true });
+                const plaza = new THREE.Mesh(plazaGeo, plazaMat);
+                plaza.position.set(pos.x, 1, pos.z);
+                cityScene.add(plaza);
 
-                    const geo = new THREE.BoxGeometry(bw, bh, bd);
-                    const mat = new THREE.MeshPhongMaterial({
-                        color: 0x0a1224,
-                        emissive: districtColors[dIdx],
-                        emissiveIntensity: 0.15,
+                // District Skyscrapers
+                for (let b = 0; b < 10; b++) {
+                    const bx = pos.x + (Math.random() - 0.5) * 85;
+                    const bz = pos.z + (Math.random() - 0.5) * 85;
+                    const bw = 12 + Math.random() * 14;
+                    const bd = 12 + Math.random() * 14;
+                    const bh = 25 + Math.random() * 75;
+
+                    const bGeo = new THREE.BoxGeometry(bw, bh, bd);
+                    const bMat = new THREE.MeshPhongMaterial({
+                        color: 0x080f20,
+                        emissive: 0x1e2e4a,
+                        emissiveIntensity: 0.1,
                         specular: 0x38bdf8,
-                        shininess: 40
+                        shininess: 30
                     });
 
-                    const mesh = new THREE.Mesh(geo, mat);
-                    mesh.position.set(bx, bh / 2, bz);
-                    cityScene.add(mesh);
+                    const bMesh = new THREE.Mesh(bGeo, bMat);
+                    bMesh.position.set(bx, bh / 2, bz);
+                    cityScene.add(bMesh);
 
-                    // Add roof beacon
-                    const beaconGeo = new THREE.SphereGeometry(2, 8, 8);
-                    const beaconMat = new THREE.MeshBasicMaterial({ color: districtColors[dIdx] });
-                    const beacon = new THREE.Mesh(beaconGeo, beaconMat);
-                    beacon.position.set(bx, bh + 2, bz);
-                    cityScene.add(beacon);
+                    // Procedural Lit Windows (Emissive point on building facade)
+                    const winGeo = new THREE.PlaneGeometry(3, 4);
+                    const winMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.8 });
+                    const win = new THREE.Mesh(winGeo, winMat);
+                    win.position.set(bx, bh * 0.7, bz + bd / 2 + 0.2);
+                    cityScene.add(win);
 
-                    cityBuildings.push({ mesh, beacon, district: dIdx, baseColor: districtColors[dIdx], height: bh });
+                    cityBuildings.push({
+                        mesh: bMesh,
+                        window: win,
+                        district: d,
+                        baseHeight: bh,
+                        x: bx, z: bz, width: bw, depth: bd
+                    });
+                }
+            }
+
+            // PEOPLE MESH POOL (Instanced Low-Poly Humanoids with Amount Bags)
+            cityPeopleMeshes = [];
+            const bodyGeo = new THREE.CylinderGeometry(1.2, 1.5, 6, 6);
+            const headGeo = new THREE.SphereGeometry(1.2, 6, 6);
+            const bagGeo = new THREE.BoxGeometry(2, 2, 2);
+
+            for (let i = 0; i < 300; i++) {
+                const group = new THREE.Group();
+                const coatMat = new THREE.MeshLambertMaterial({ color: 0x38bdf8 });
+                const headMat = new THREE.MeshLambertMaterial({ color: 0xf1f5f9 });
+                const bagMat = new THREE.MeshLambertMaterial({ color: 0x64748b });
+
+                const body = new THREE.Mesh(bodyGeo, coatMat);
+                body.position.y = 3;
+                group.add(body);
+
+                const head = new THREE.Mesh(headGeo, headMat);
+                head.position.y = 7;
+                group.add(head);
+
+                const bag = new THREE.Mesh(bagGeo, bagMat);
+                bag.position.set(2, 2.5, 0);
+                group.add(bag);
+
+                group.position.set(0, -50, 0); // hidden initially
+                cityScene.add(group);
+
+                cityPeopleMeshes.push({
+                    group, body, head, bag,
+                    coatMat, headMat, bagMat,
+                    active: false,
+                    startPos: { x: 0, z: 0 },
+                    endPos: { x: 0, z: 0 },
+                    progress: 0,
+                    speed: 0.005,
+                    txData: null
+                });
+            }
+
+            // Drag to rotate interaction
+            let isDragging = false, prevX = 0, prevY = 0;
+            container.addEventListener('mousedown', (e) => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
+            window.addEventListener('mouseup', () => isDragging = false);
+            container.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - prevX;
+                const dy = e.clientY - prevY;
+                cityScene.rotation.y += dx * 0.005;
+                cityCamera.position.y = Math.max(60, Math.min(500, cityCamera.position.y - dy * 0.8));
+                prevX = e.clientX;
+                prevY = e.clientY;
+            });
+
+            // Pause on tab hidden & Reduced Motion
+            document.addEventListener("visibilitychange", () => {
+                if (document.hidden && cityAnimId) {
+                    cancelAnimationFrame(cityAnimId);
+                    cityAnimId = null;
+                } else if (!document.hidden && document.getElementById('cityModal').classList.contains('active')) {
+                    animate3DCity();
                 }
             });
 
-            // Add Payment Traffic Stream (Particles flying across districts)
-            const particleCount = 200;
-            const particleGeo = new THREE.BufferGeometry();
-            const positions = new Float32Array(particleCount * 3);
-            const pColors = new Float32Array(particleCount * 3);
-
-            for (let i = 0; i < particleCount; i++) {
-                positions[i * 3] = (Math.random() - 0.5) * 500;
-                positions[i * 3 + 1] = 4 + Math.random() * 30;
-                positions[i * 3 + 2] = (Math.random() - 0.5) * 500;
-
-                pColors[i * 3] = 0.22;
-                pColors[i * 3 + 1] = 0.74;
-                pColors[i * 3 + 2] = 0.97;
-            }
-
-            particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            particleGeo.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
-
-            const pMat = new THREE.PointsMaterial({
-                size: 4,
-                vertexColors: true,
-                transparent: true,
-                opacity: 0.8
-            });
-
-            cityParticles = new THREE.Points(particleGeo, pMat);
-            cityScene.add(cityParticles);
-
-            // Drag to rotate interaction
-            let isDragging = false;
-            let previousMouseX = 0;
-            let previousMouseY = 0;
-
-            container.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                previousMouseX = e.clientX;
-                previousMouseY = e.clientY;
-            });
-
-            window.addEventListener('mouseup', () => isDragging = false);
-
-            container.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                const deltaX = e.clientX - previousMouseX;
-                const deltaY = e.clientY - previousMouseY;
-
-                cityScene.rotation.y += deltaX * 0.005;
-                cityCamera.position.y = Math.max(80, Math.min(500, cityCamera.position.y - deltaY * 0.8));
-
-                previousMouseX = e.clientX;
-                previousMouseY = e.clientY;
-            });
-
             window.addEventListener('resize', () => {
-                if (document.getElementById('cityModal').classList.contains('active')) {
+                if (cityRenderer && document.getElementById('cityModal').classList.contains('active')) {
                     const w = container.clientWidth;
                     const h = container.clientHeight;
                     cityCamera.aspect = w / h;
@@ -2375,54 +2480,129 @@ def build_mission8_site():
             });
         }
 
+        function init2DCityFallback(container) {
+            cityIs2DFallback = true;
+            const canvas = document.getElementById('cityFallback2D');
+            canvas.style.display = 'block';
+            const ctx = canvas.getContext('2d');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            ctx.fillStyle = '#050811';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = '14px sans-serif';
+            ctx.fillText('2D Radar Mode Active (WebGL Hardware Acceleration Unavailable)', 30, 40);
+        }
+
         function setCityView(type) {
+            if (!cityCamera) return;
             if (type === 'skyline') {
-                cityCamera.position.set(280, 220, 380);
-                cityCamera.lookAt(0, 0, 0);
+                cityCamera.position.set(340, 260, 420);
+                cityCamera.lookAt(0, 30, 0);
             } else if (type === 'overhead') {
-                cityCamera.position.set(0, 480, 50);
+                cityCamera.position.set(0, 560, 60);
                 cityCamera.lookAt(0, 0, 0);
             } else if (type === 'street') {
-                cityCamera.position.set(130, 25, 140);
+                cityCamera.position.set(160, 20, 160);
                 cityCamera.lookAt(0, 40, 0);
             }
         }
 
-        function updateCityLighting() {
-            if (!cityBuildings) return;
-            cityBuildings.forEach((b, idx) => {
-                if (evalMode && (idx % 7 === 0)) {
-                    // Confirmed fraud building beacon in red
-                    b.beacon.material.color.setHex(0xef4444);
-                    b.mesh.material.emissive.setHex(0xef4444);
-                    b.mesh.material.emissiveIntensity = 0.4;
-                } else if (currentStrictness < 0.20 && (idx % 3 === 0)) {
-                    // Amber flagged building
-                    b.beacon.material.color.setHex(0xf59e0b);
-                    b.mesh.material.emissive.setHex(0xf59e0b);
-                    b.mesh.material.emissiveIntensity = 0.3;
+        function updateCityForStep(step) {
+            if (!DATA.district_hourly || !DATA.city_people) return;
+
+            // 1. Update District Buildings based on recent hourly data
+            const stepDistData = DATA.district_hourly.filter(d => d.step === step);
+            const distMap = {};
+            stepDistData.forEach(d => distMap[d.district] = d);
+
+            cityBuildings.forEach(b => {
+                const info = distMap[b.district] || { payments: 10, alerts_strict: 0 };
+                // Scale height by recent payments
+                const heightMult = 0.6 + Math.min(2.0, (info.payments / 30.0));
+                b.mesh.scale.y = heightMult;
+                b.mesh.position.y = (b.baseHeight * heightMult) / 2;
+
+                // Lit windows if alerts present
+                if (info.alerts_strict > 0) {
+                    b.window.visible = true;
+                    b.window.material.color.setHex(0xf59e0b);
+                    b.mesh.material.emissive.setHex(0x1e2e4a);
                 } else {
-                    b.beacon.material.color.setHex(b.baseColor);
-                    b.mesh.material.emissive.setHex(b.baseColor);
-                    b.mesh.material.emissiveIntensity = 0.15;
+                    b.window.visible = (Math.random() < 0.25);
+                    b.window.material.color.setHex(0x38bdf8);
                 }
             });
+
+            // 2. Spawn / Update People on screen (max 300 active)
+            const activeStepPeople = DATA.city_people.filter(p => Math.abs(p.step - step) <= 1);
+            const spawnCount = Math.min(300, activeStepPeople.length);
+
+            for (let i = 0; i < 300; i++) {
+                const pMesh = cityPeopleMeshes[i];
+                if (!pMesh) continue;
+
+                if (i < spawnCount) {
+                    const pData = activeStepPeople[i];
+                    pMesh.active = true;
+                    pMesh.txData = pData;
+
+                    const fromPos = DISTRICT_POSITIONS[pData.district_from] || DISTRICT_POSITIONS[1];
+                    const toPos = DISTRICT_POSITIONS[pData.district_to] || DISTRICT_POSITIONS[2];
+
+                    pMesh.startPos = { x: fromPos.x + (Math.random() - 0.5) * 40, z: fromPos.z + (Math.random() - 0.5) * 40 };
+                    pMesh.endPos = { x: toPos.x + (Math.random() - 0.5) * 40, z: toPos.z + (Math.random() - 0.5) * 40 };
+                    pMesh.progress = Math.random();
+                    pMesh.speed = 0.003 + Math.random() * 0.005;
+
+                    // Coat color: Cyan (Transfer) vs Violet (Cash-out)
+                    if (pData.type === 'TRANSFER') {
+                        pMesh.coatMat.color.setHex(0x38bdf8); // Cyan
+                    } else {
+                        pMesh.coatMat.color.setHex(0xa855f7); // Violet
+                    }
+
+                    // Bag size based on training amount percentile (0.05 to 1.0)
+                    const bagScale = 0.4 + (pData.amount_pct * 1.8);
+                    pMesh.bag.scale.set(bagScale, bagScale, bagScale);
+
+                    // Answer key check: if ON and true fraud, highlight head/coat
+                    if (evalMode && pData.is_fraud === 1) {
+                        pMesh.headMat.color.setHex(0xef4444); // Red head beacon
+                    } else if (pData.score >= currentStrictness) {
+                        pMesh.headMat.color.setHex(0xf59e0b); // Amber head flag
+                    } else {
+                        pMesh.headMat.color.setHex(0xf1f5f9); // Normal grey
+                    }
+
+                    // Position in 3D space
+                    pMesh.group.position.x = pMesh.startPos.x + (pMesh.endPos.x - pMesh.startPos.x) * pMesh.progress;
+                    pMesh.group.position.z = pMesh.startPos.z + (pMesh.endPos.z - pMesh.startPos.z) * pMesh.progress;
+                    pMesh.group.position.y = 0;
+                } else {
+                    pMesh.active = false;
+                    pMesh.group.position.set(0, -50, 0); // Hide
+                }
+            }
         }
 
-        function animateSentinelCity() {
-            cityAnimId = requestAnimationFrame(animateSentinelCity);
+        function animate3DCity() {
+            cityAnimId = requestAnimationFrame(animate3DCity);
 
-            if (cityScene) {
-                cityScene.rotation.y += 0.0008;
-
-                if (cityParticles) {
-                    const pos = cityParticles.geometry.attributes.position.array;
-                    for (let i = 0; i < pos.length / 3; i++) {
-                        pos[i * 3 + 2] += 0.8;
-                        if (pos[i * 3 + 2] > 250) pos[i * 3 + 2] = -250;
-                    }
-                    cityParticles.geometry.attributes.position.needsUpdate = true;
+            if (cityScene && !cityIs2DFallback) {
+                if (!prefersReducedMotion) {
+                    cityScene.rotation.y += 0.0006;
                 }
+
+                // Animate people walking along district vectors
+                cityPeopleMeshes.forEach(p => {
+                    if (p.active) {
+                        p.progress += p.speed;
+                        if (p.progress > 1.0) p.progress = 0.0;
+                        p.group.position.x = p.startPos.x + (p.endPos.x - p.startPos.x) * p.progress;
+                        p.group.position.z = p.startPos.z + (p.endPos.z - p.startPos.z) * p.progress;
+                    }
+                });
 
                 cityRenderer.render(cityScene, cityCamera);
             }
@@ -2445,7 +2625,7 @@ def build_mission8_site():
     with open("docs/index.html", "w", encoding="utf-8") as f:
         f.write(html_out)
 
-    print("Successfully built Mission 8 Story Dashboard with Paytm vs NSE Deep-Dive & Sentinel 3D Night City at index.html and docs/index.html")
+    print("Successfully built Mission 8 & 9 Story Dashboard with 3D Ledger City Phase A at index.html and docs/index.html")
 
 if __name__ == "__main__":
     build_mission8_site()
