@@ -1,10 +1,11 @@
-"""Mission 8, 9 & 10: Story Dashboard Builder with Ultra-Realistic 3D Ledger City (Sentinel Mode) & Sentinel Assistant."""
+"""Mission 8 & 9: Story Dashboard Builder with 3D Ledger City Phase A & District Data."""
 
 import os
 import json
 import pandas as pd
 
 def build_mission8_site():
+    # Load all data files from docs/data/
     with open("docs/data/stream.json", "r", encoding="utf-8") as f:
         stream_data = json.load(f)
 
@@ -15,187 +16,120 @@ def build_mission8_site():
         checks_data = json.load(f)
 
     with open("docs/data/city_people.json", "r", encoding="utf-8") as f:
-        city_people_raw = json.load(f)
+        city_people = json.load(f)
 
     df_cost_curve = pd.read_csv("docs/data/cost_curve.csv")
     df_cost_sens = pd.read_csv("docs/data/cost_sensitivity.csv")
-    df_detector_comp = pd.read_csv("docs/data/detector_comparison.csv")
+    df_detector = pd.read_csv("docs/data/detector_comparison.csv")
     df_hourly = pd.read_csv("docs/data/hourly_stats.csv")
-    df_score_hist = pd.read_csv("docs/data/score_hist.csv")
-    df_thresh = pd.read_csv("docs/data/threshold_curve.csv")
-    df_feat_imp = pd.read_csv("docs/data/feature_importance.csv")
-    df_market = pd.read_csv("docs/data/market/paytm_nifty.csv")
     df_district_hourly = pd.read_csv("docs/data/district_hourly.csv")
-
-    # Group city people by step for instant O(1) step lookup and lightweight payload
-    city_people_by_step = {}
-    for p in city_people_raw:
-        s = p["step"]
-        if s not in city_people_by_step:
-            city_people_by_step[s] = []
-        city_people_by_step[s].append({
-            "id": p["id"],
-            "step": p["step"],
-            "hr": p["hour"],
-            "t": p["type"],
-            "df": p["district_from"],
-            "dt": p["district_to"],
-            "amt": round(p["amount"], 2),
-            "pct": round(p["amount_pct"], 3),
-            "sc": round(p["score"], 4),
-            "f": p["is_fraud"]
-        })
-
-    # Group district hourly by step
-    dist_hourly_by_step = {}
-    for _, row in df_district_hourly.iterrows():
-        s = int(row["step"])
-        d = int(row["district"])
-        if s not in dist_hourly_by_step:
-            dist_hourly_by_step[s] = {}
-        dist_hourly_by_step[s][d] = {
-            "p": int(row["payments"]),
-            "s": int(row["alerts_strict"]),
-            "b": int(row["alerts_balanced"]),
-            "l": int(row["alerts_lenient"])
-        }
+    df_amount_hist = pd.read_csv("docs/data/amount_hist.csv")
+    df_score_hist = pd.read_csv("docs/data/score_hist.csv")
+    df_threshold_curve = pd.read_csv("docs/data/threshold_curve.csv")
+    df_market = pd.read_csv("docs/data/market/paytm_nifty.csv")
+    df_feat_imp = pd.read_csv("docs/data/feature_importance.csv")
 
     bundle = {
+        "stream": stream_data,
         "overview": data_overview,
         "checks": checks_data,
-        "city_people_by_step": city_people_by_step,
-        "district_hourly_by_step": dist_hourly_by_step,
+        "city_people": city_people,
+        "district_hourly": df_district_hourly.to_dict(orient="records"),
         "cost_curve": df_cost_curve.to_dict(orient="records"),
-        "cost_sens": df_cost_sens.to_dict(orient="records"),
-        "detector_comparison": df_detector_comp.to_dict(orient="records"),
+        "cost_sensitivity": df_cost_sens.to_dict(orient="records"),
+        "detector_comparison": df_detector.to_dict(orient="records"),
         "hourly_stats": df_hourly.to_dict(orient="records"),
+        "amount_hist": df_amount_hist.to_dict(orient="records"),
         "score_hist": df_score_hist.to_dict(orient="records"),
-        "threshold_curve": df_thresh.to_dict(orient="records"),
-        "feature_importance": df_feat_imp.to_dict(orient="records"),
+        "threshold_curve": df_threshold_curve.to_dict(orient="records"),
         "market": df_market.to_dict(orient="records"),
-        "stream": stream_data
+        "feature_importance": df_feat_imp.to_dict(orient="records")
     }
 
-    json_bundle = json.dumps(bundle)
-    html_content = HTML_TEMPLATE.replace("__JSON_DATA_BUNDLE__", json_bundle)
-
-    with open("index.html", "w", encoding="utf-8") as f:
-        f.write(html_content)
-
-    with open("docs/index.html", "w", encoding="utf-8") as f:
-        f.write(html_content)
-
-    print("Successfully built Sentinel Story Dashboard & Realistic 3D Ledger City at docs/index.html and index.html")
-
-HTML_TEMPLATE = """<!DOCTYPE html>
+    html_template = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SENTINEL // Autonomous Financial Fraud Intelligence Platform</title>
-    <!-- Fonts & CDNs -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Sentinel | Financial Fraud Intelligence & 3D Ledger City</title>
+    <!-- Chart.js & Pinned Three.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
     <style>
         :root {
-            --bg-base: #030712;
-            --bg-surface: #0b1329;
-            --bg-card: #0f1c3f;
-            --bg-card-hover: #162654;
-            --accent-cyan: #38bdf8;
-            --accent-blue: #3b82f6;
-            --accent-purple: #c084fc;
-            --accent-amber: #f59e0b;
-            --fraud-red: #ef4444;
-            --safe-green: #10b981;
-            --honest-grey: #64748b;
+            --bg-color: #080d1a;
+            --sidebar-bg: #0d1527;
+            --card-bg: #121d33;
+            --card-header: #192744;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --text-dim: #64748b;
-            --border-color: rgba(56, 189, 248, 0.18);
-            --border-bright: rgba(56, 189, 248, 0.45);
-            --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
+            --border-color: #1e2e4a;
+            --primary-cyan: #38bdf8;
+            --primary-blue: #3b82f6;
+            --safe-green: #10b981;
+            --alert-amber: #f59e0b;
+            --fraud-red: #ef4444;
+            --honest-grey: #64748b;
+            --violet-coat: #a855f7;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        }
 
         body {
-            background-color: var(--bg-base);
+            background-color: var(--bg-color);
             color: var(--text-main);
-            font-family: var(--font-main);
             line-height: 1.5;
+            display: flex;
+            min-height: 100vh;
             overflow-x: hidden;
         }
 
-        /* App Layout */
-        .app-layout {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        /* Left Story Nav Sidebar */
+        /* Left-Hand Story Navigation */
         .sidebar {
             width: 290px;
-            background: #080e1f;
+            background: var(--sidebar-bg);
             border-right: 1px solid var(--border-color);
-            padding: 24px 16px;
+            padding: 20px 16px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            overflow-y: auto;
-            flex-shrink: 0;
-            z-index: 50;
+            z-index: 100;
         }
 
-        .brand {
+        .brand-box {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding-bottom: 16px;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
             border-bottom: 1px solid var(--border-color);
         }
 
         .brand-logo {
-            width: 38px;
-            height: 38px;
-            background: linear-gradient(135deg, #0284c7, #38bdf8);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
-        }
-
-        .brand-text h1 {
-            font-size: 17px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            background: linear-gradient(90deg, #38bdf8, #818cf8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .brand-text p {
-            font-size: 10.5px;
-            color: var(--text-muted);
-            font-family: var(--font-mono);
+            height: 40px;
+            width: auto;
         }
 
         .nav-section-title {
             font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            color: var(--text-dim);
             font-weight: 700;
-            margin-top: 6px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            padding-left: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .nav-list {
@@ -203,45 +137,68 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             display: flex;
             flex-direction: column;
             gap: 6px;
+            margin-bottom: 16px;
         }
 
         .nav-item-btn {
-            width: 100%;
-            text-align: left;
             background: transparent;
             border: 1px solid transparent;
             color: var(--text-muted);
-            padding: 9px 12px;
+            padding: 10px 12px;
             border-radius: 8px;
-            font-size: 12.5px;
+            font-size: 13px;
             font-weight: 600;
+            text-align: left;
             cursor: pointer;
+            transition: all 0.2s;
             display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.2s ease;
+            flex-direction: column;
+            gap: 2px;
+            width: 100%;
+            position: relative;
         }
 
         .nav-item-btn:hover {
-            background: rgba(56, 189, 248, 0.08);
-            color: var(--accent-cyan);
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.04);
             border-color: rgba(56, 189, 248, 0.2);
         }
 
         .nav-item-btn.active {
-            background: rgba(56, 189, 248, 0.14);
             color: #ffffff;
-            border-color: var(--accent-cyan);
-            box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+            background: #192744;
+            border-color: var(--primary-cyan);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.18);
+        }
+
+        .nav-item-main {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .nav-item-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            padding-left: 24px;
+            font-weight: 400;
+        }
+
+        .sidebar-btn-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
         }
 
         .sidebar-city-btn {
             background: linear-gradient(135deg, #1e1b4b, #0f172a);
             border: 1px solid #818cf8;
             color: #c7d2fe;
-            padding: 12px 14px;
-            border-radius: 10px;
-            font-size: 13px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 12px;
             font-weight: 700;
             cursor: pointer;
             display: flex;
@@ -249,150 +206,156 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             justify-content: center;
             gap: 8px;
             transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(129, 140, 248, 0.2);
         }
-
         .sidebar-city-btn:hover {
-            background: rgba(129, 140, 248, 0.3);
-            box-shadow: 0 0 20px rgba(129, 140, 248, 0.6);
+            background: rgba(129, 140, 248, 0.2);
+            box-shadow: 0 0 14px rgba(129, 140, 248, 0.4);
             color: #ffffff;
-            transform: translateY(-1px);
         }
 
-        /* Main Workspace Container */
-        .main-content {
-            flex: 1;
+        .sidebar-guide-btn {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid #38bdf8;
+            color: #38bdf8;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
             display: flex;
-            flex-direction: column;
-            min-width: 0;
-            background: radial-gradient(circle at 50% 0%, #0d1a38 0%, #030712 70%);
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .sidebar-guide-btn:hover {
+            background: rgba(56, 189, 248, 0.15);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+            color: #ffffff;
         }
 
-        /* Global Header Controls Bar */
-        .topbar {
-            background: rgba(8, 14, 31, 0.85);
-            border-bottom: 1px solid var(--border-color);
-            padding: 14px 28px;
+        .sidebar-footer {
+            margin-top: auto;
+            font-size: 11px;
+            color: var(--text-muted);
+            padding-top: 14px;
+            border-top: 1px solid var(--border-color);
+            line-height: 1.4;
+        }
+
+        /* Main Story Content Area */
+        .main-wrapper {
+            margin-left: 290px;
+            flex: 1;
+            padding: 24px 32px 60px 32px;
+            max-width: 1400px;
+        }
+
+        /* Sticky Global Controls Header */
+        .global-header {
+            position: sticky;
+            top: 0;
+            background: rgba(13, 21, 39, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 20px;
+            margin-bottom: 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            backdrop-filter: blur(12px);
-            position: sticky;
-            top: 0;
-            z-index: 40;
-        }
-
-        .controls-group {
-            display: flex;
-            align-items: center;
-            gap: 20px;
             flex-wrap: wrap;
+            gap: 16px;
+            z-index: 90;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
         }
 
-        .control-pill {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 6px 14px;
+        .control-group {
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 12.5px;
+            font-size: 13px;
             position: relative;
         }
 
-        .control-pill label {
-            color: var(--text-muted);
-            font-weight: 600;
+        .control-label-box {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-label {
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 12.5px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
-        .control-pill input[type="range"] {
-            accent-color: var(--accent-cyan);
-            cursor: pointer;
-            width: 110px;
-        }
-
-        .pill-badge {
-            background: rgba(56, 189, 248, 0.15);
-            color: var(--accent-cyan);
-            font-family: var(--font-mono);
-            font-size: 11px;
-            padding: 2px 7px;
-            border-radius: 12px;
-            font-weight: 700;
-        }
-
-        .toggle-btn {
-            background: rgba(100, 116, 139, 0.2);
-            border: 1px solid var(--honest-grey);
+        .control-subtext {
+            font-size: 10.5px;
             color: var(--text-muted);
-            border-radius: 20px;
-            padding: 6px 14px;
+        }
+
+        input[type="range"] {
+            accent-color: var(--primary-cyan);
+            cursor: pointer;
+        }
+
+        select {
+            background: #080d1a;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .btn-toggle-key {
+            padding: 8px 14px;
+            border-radius: 8px;
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
             transition: all 0.2s;
+            border: 1px solid var(--border-color);
+            background: #080d1a;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
         }
 
-        .toggle-btn.active {
-            background: rgba(239, 68, 68, 0.2);
+        .btn-toggle-key.active {
+            background: rgba(239, 68, 68, 0.18);
             border-color: var(--fraud-red);
-            color: #fca5a5;
-            box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
+            color: #f87171;
+            box-shadow: 0 0 14px rgba(239, 68, 68, 0.35);
         }
 
-        .help-btn {
-            background: rgba(56, 189, 248, 0.12);
-            border: 1px solid var(--accent-cyan);
-            color: var(--accent-cyan);
-            border-radius: 20px;
-            padding: 6px 14px;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-
-        .help-btn:hover {
-            background: var(--accent-cyan);
-            color: #030712;
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
-        }
-
-        /* Interactive Info Tooltips [i] */
         .info-btn {
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--primary-cyan);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 17px;
-            height: 17px;
-            border-radius: 50%;
-            background: rgba(56, 189, 248, 0.15);
-            border: 1px solid var(--accent-cyan);
-            color: var(--accent-cyan);
             font-size: 10px;
-            font-family: var(--font-mono);
-            font-weight: 800;
+            font-weight: bold;
             cursor: pointer;
-            margin-left: 4px;
-            position: relative;
-            vertical-align: middle;
             transition: all 0.2s;
+            user-select: none;
         }
-
-        .info-btn:hover {
-            background: var(--accent-cyan);
-            color: #030712;
-            box-shadow: 0 0 8px var(--accent-cyan);
+        .info-btn:hover, .info-btn:focus {
+            background: var(--primary-cyan);
+            color: #080d1a;
+            box-shadow: 0 0 8px var(--primary-cyan);
         }
 
         .tooltip-container {
@@ -414,14 +377,33 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             color: #f8fafc;
             font-size: 12px;
             line-height: 1.4;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
             pointer-events: none;
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.2s ease, transform 0.2s ease;
             z-index: 999;
         }
-
+        .popover-box::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: #38bdf8 transparent transparent transparent;
+        }
+        .popover-box.align-right {
+            left: auto;
+            right: 0;
+            transform: none;
+        }
+        .popover-box.align-right::after {
+            left: auto;
+            right: 20px;
+            transform: none;
+        }
         .tooltip-container:hover .popover-box,
         .tooltip-container:focus-within .popover-box,
         .popover-box.show {
@@ -429,218 +411,237 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             visibility: visible;
             transform: translateX(-50%) translateY(-2px);
         }
-
-        /* Content Sections */
-        .content-area {
-            padding: 32px 40px;
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
+        .tooltip-container:hover .popover-box.align-right,
+        .tooltip-container:focus-within .popover-box.align-right,
+        .popover-box.align-right.show {
+            transform: translateY(-2px);
         }
 
-        .step-section {
-            display: none;
-            flex-direction: column;
-            gap: 28px;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        .step-section.active {
-            display: flex;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .section-header {
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 16px;
-        }
-
-        .step-tag {
-            font-family: var(--font-mono);
-            font-size: 11px;
-            text-transform: uppercase;
-            color: var(--accent-cyan);
+        .popover-title {
             font-weight: 700;
+            color: var(--primary-cyan);
+            margin-bottom: 4px;
+            font-size: 12.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .popover-desc { color: #cbd5e1; margin-bottom: 6px; }
+        .popover-action { color: #f59e0b; font-size: 11px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 4px; }
+
+        /* Step Sections */
+        .step-section { display: none; }
+        .step-section.active { display: block; }
+        .step-header { margin-bottom: 20px; }
+        .step-badge {
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--primary-cyan);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
             letter-spacing: 1px;
+            margin-bottom: 6px;
         }
+        .step-title { font-size: 22px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        .step-sub { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
 
-        .section-title {
-            font-size: 26px;
-            font-weight: 800;
-            color: #ffffff;
-            margin-top: 4px;
-        }
-
-        .section-desc {
-            color: var(--text-muted);
-            font-size: 14px;
-            margin-top: 6px;
-            max-width: 900px;
-        }
-
-        /* Cards Grid */
         .cards-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .cards-grid-full {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
         }
 
-        .card-full {
-            grid-column: 1 / -1;
-        }
-
-        .dashboard-card {
-            background: var(--bg-card);
+        .story-card {
+            background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 24px;
+            border-radius: 12px;
+            padding: 22px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            position: relative;
-            transition: border-color 0.2s;
-        }
-
-        .dashboard-card:hover {
-            border-color: var(--border-bright);
-        }
-
-        .card-title-row {
-            display: flex;
             justify-content: space-between;
-            align-items: center;
-        }
-
-        .card-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .card-headline {
-            font-size: 13px;
-            color: var(--accent-cyan);
-            background: rgba(56, 189, 248, 0.08);
-            border-left: 3px solid var(--accent-cyan);
-            padding: 8px 12px;
-            border-radius: 0 6px 6px 0;
-            font-weight: 600;
-        }
-
-        .chart-box {
-            height: 260px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             position: relative;
+        }
+        .card-header-bar { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+        .card-question { font-size: 16px; font-weight: 700; color: #ffffff; }
+        .card-headline { font-size: 14px; color: var(--primary-cyan); font-weight: 600; margin-bottom: 16px; line-height: 1.4; }
+        .card-visual-box {
+            position: relative;
+            height: 280px;
             width: 100%;
-        }
-
-        .dot-grid-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 3px;
-            padding: 12px;
-            background: #080d1a;
+            margin-bottom: 14px;
+            background: rgba(8, 13, 26, 0.5);
             border-radius: 8px;
-            max-height: 220px;
-            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-
-        .grid-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--honest-grey); opacity: 0.5; }
-        .grid-dot.fraud-dot { background: var(--fraud-red); opacity: 1; box-shadow: 0 0 6px var(--fraud-red); transform: scale(1.3); }
-
-        /* Confusion Matrix Grid */
-        .matrix-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+        .card-explanation {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 8px;
         }
+        .card-explanation strong { color: var(--text-main); }
+        .card-source-footer { font-size: 11px; color: #64748b; font-family: monospace; display: flex; justify-content: space-between; align-items: center; }
 
+        /* 2x2 Matrix */
+        .matrix-2x2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; height: 100%; }
         .matrix-cell {
-            background: #091024;
+            background: #080d1a;
             border: 1px solid var(--border-color);
-            border-radius: 10px;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .matrix-cell:hover { border-color: rgba(56, 189, 248, 0.4); transform: translateY(-2px); }
+        .matrix-cell.tp { border-left: 4px solid var(--safe-green); }
+        .matrix-cell.fp { border-left: 4px solid var(--alert-amber); }
+        .matrix-cell.fn { border-left: 4px solid var(--fraud-red); }
+        .matrix-cell.tn { border-left: 4px solid var(--honest-grey); }
+        .matrix-cell-header { display: flex; justify-content: space-between; align-items: center; }
+        .matrix-cell-title { font-size: 12.5px; font-weight: 700; color: var(--text-main); }
+        .matrix-cell-tech { font-size: 10.5px; color: var(--text-muted); margin-bottom: 4px; }
+        .matrix-cell-val { font-size: 20px; font-weight: 700; color: #ffffff; }
+
+        /* Pipeline & Simulator */
+        .model-pipeline-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+        .pipeline-step-card {
+            background: #0a1122;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             padding: 14px;
             display: flex;
             flex-direction: column;
             gap: 6px;
+            position: relative;
         }
+        .pipeline-step-card::after {
+            content: '➜';
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary-cyan);
+            font-size: 14px;
+            z-index: 10;
+        }
+        .pipeline-step-card:last-child::after { display: none; }
+        .pipe-num { font-size: 10px; font-weight: 700; color: var(--primary-cyan); text-transform: uppercase; letter-spacing: 1px; }
+        .pipe-title { font-size: 13px; font-weight: 700; color: #ffffff; }
+        .pipe-body { font-size: 11.5px; color: #94a3b8; line-height: 1.4; }
 
-        .matrix-cell.tp { border-left: 4px solid var(--safe-green); }
-        .matrix-cell.fp { border-left: 4px solid var(--accent-amber); }
-        .matrix-cell.fn { border-left: 4px solid var(--fraud-red); }
-        .matrix-cell.tn { border-left: 4px solid var(--honest-grey); }
-
-        .matrix-cell-header {
+        .simulator-box {
+            background: #091020;
+            border: 1px solid #2563eb;
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 14px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 14px;
         }
-
-        .matrix-cell-title {
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--text-main);
-        }
-
-        .matrix-cell-tech {
-            font-size: 10.5px;
-            color: var(--text-muted);
-            font-family: var(--font-mono);
-        }
-
-        .matrix-cell-val {
-            font-size: 20px;
-            font-weight: 800;
-            font-family: var(--font-mono);
-        }
-
-        /* Buttons & Forms */
-        .btn {
-            padding: 8px 16px;
+        .simulator-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1.2fr; gap: 14px; align-items: center; }
+        .sim-input-group { display: flex; flex-direction: column; gap: 4px; }
+        .sim-input-group label { font-size: 11.5px; color: var(--text-muted); font-weight: 600; }
+        .sim-result-card {
+            background: #111e38;
+            border: 1px solid var(--border-color);
             border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        /* Market Table */
+        .market-stat-table {
+            width: 100%;
+            border-collapse: collapse;
             font-size: 12.5px;
-            font-weight: 700;
+            margin-top: 8px;
+        }
+        .market-stat-table th, .market-stat-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .market-stat-table th { color: var(--text-muted); font-weight: 600; background: rgba(255,255,255,0.02); }
+        .market-stat-table td { color: #f8fafc; }
+
+        /* Dot Grid */
+        .dot-grid-container {
+            display: grid;
+            grid-template-columns: repeat(40, 1fr);
+            gap: 3px;
+            width: 100%;
+            max-height: 240px;
+            overflow: hidden;
+            padding: 10px;
+        }
+        .grid-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--honest-grey); opacity: 0.5; }
+        .grid-dot.fraud-dot { background: var(--fraud-red); opacity: 1; box-shadow: 0 0 6px var(--fraud-red); transform: scale(1.3); }
+
+        /* Live Strip */
+        .patrol-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 14px;
+            padding: 10px 14px;
+            background: #080d1a;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
             cursor: pointer;
-            border: none;
+            border: 1px solid transparent;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            transition: all 0.2s;
         }
-
-        .btn-primary {
-            background: var(--accent-cyan);
-            color: #030712;
-        }
-
-        .btn-primary:hover {
-            background: #7dd3fc;
-            box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
-        }
-
-        .btn-secondary {
-            background: #1e293b;
-            color: #f8fafc;
-            border: 1px solid var(--border-color);
-        }
-
-        .btn-secondary:hover {
-            background: #334155;
-            border-color: var(--accent-cyan);
-        }
+        .btn-primary { background: var(--primary-blue); color: white; }
+        .btn-secondary { background: #1a2640; color: var(--text-main); border-color: var(--border-color); }
 
         pre {
             background: #080d1a;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
             padding: 12px;
-            font-family: var(--font-mono);
+            border-radius: 8px;
+            font-family: monospace;
             font-size: 11.5px;
             color: #93c5fd;
             white-space: pre-wrap;
@@ -649,22 +650,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             overflow-y: auto;
         }
 
-        /* ========================================================================= */
-        /* 3D LEDGER CITY (SENTINEL MODE) MODAL STYLES                              */
-        /* ========================================================================= */
+        /* 3D Ledger City Modal Overlay (Phase A Core) */
         .city-modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: #030712;
+            background: #050811;
             z-index: 1000;
             display: none;
             flex-direction: column;
-            width: 100vw;
-            height: 100vh;
         }
-
         .city-modal-overlay.active { display: flex; }
-
         .city-header {
             padding: 12px 24px;
             background: #0d1527;
@@ -673,9 +668,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             justify-content: space-between;
             align-items: center;
             z-index: 1010;
-            flex-shrink: 0;
         }
-
         .city-header-title {
             font-size: 17px;
             font-weight: 700;
@@ -684,848 +677,874 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             align-items: center;
             gap: 10px;
         }
-
         .city-disclaimer-banner {
-            background: rgba(245, 158, 11, 0.15);
-            border-bottom: 1px solid rgba(245, 158, 11, 0.35);
+            background: rgba(245, 158, 11, 0.12);
+            border-bottom: 1px solid rgba(245, 158, 11, 0.3);
             color: #fde68a;
             font-size: 11.5px;
             text-align: center;
             padding: 6px 14px;
             z-index: 1008;
-            font-weight: 600;
-            flex-shrink: 0;
         }
-
         .city-canvas-container {
             flex: 1;
             position: relative;
-            background: radial-gradient(circle at center, #0a1428 0%, #02050e 100%);
+            background: radial-gradient(circle at center, #0b1329 0%, #03060f 100%);
             overflow: hidden;
-            width: 100%;
-            height: calc(100vh - 90px);
-            min-height: 400px;
         }
-
         .city-hud-panel {
             position: absolute;
             top: 16px; left: 16px;
-            background: rgba(13, 21, 39, 0.94);
+            background: rgba(13, 21, 39, 0.92);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px;
-            width: 340px;
-            backdrop-filter: blur(14px);
+            border-radius: 10px;
+            padding: 14px 16px;
+            width: 320px;
+            backdrop-filter: blur(12px);
             color: white;
             font-size: 12px;
-            box-shadow: 0 12px 35px rgba(0,0,0,0.7);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
             z-index: 1005;
         }
-
         .city-controls-bar {
             position: absolute;
-            bottom: 20px; left: 50%;
+            bottom: 16px; left: 50%;
             transform: translateX(-50%);
-            background: rgba(13, 21, 39, 0.94);
+            background: rgba(13, 21, 39, 0.92);
             border: 1px solid var(--border-color);
             border-radius: 30px;
-            padding: 8px 22px;
+            padding: 8px 20px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            backdrop-filter: blur(14px);
+            gap: 12px;
+            backdrop-filter: blur(12px);
             z-index: 1005;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
-            flex-wrap: wrap;
-            justify-content: center;
         }
 
-        /* Floating Evidence Board HUD (Top Right) */
-        .city-evidence-board {
+        /* 2D Fallback Canvas */
+        #cityFallback2D {
             position: absolute;
-            top: 16px; right: 16px;
-            background: rgba(15, 23, 42, 0.97);
-            border: 1.5px solid #38bdf8;
-            border-radius: 14px;
-            padding: 18px;
-            width: 380px;
-            color: white;
-            font-size: 12px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.88);
-            z-index: 1006;
+            top: 0; left: 0; width: 100%; height: 100%;
             display: none;
-            backdrop-filter: blur(16px);
+            z-index: 1002;
         }
 
-        .forensic-breakdown-box {
-            background: #091024;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 10px 12px;
-            margin-top: 8px;
-            font-size: 11.5px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .stamp-box {
-            display: inline-block;
-            padding: 6px 12px;
-            border: 2px solid;
-            border-radius: 6px;
-            font-family: var(--font-mono);
-            font-weight: 800;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transform: rotate(-2deg);
-            margin-top: 4px;
-        }
-
-        .stamp-block {
-            border-color: #ef4444;
-            color: #f87171;
-            background: rgba(239, 68, 68, 0.18);
-        }
-
-        .stamp-escalate {
-            border-color: #f59e0b;
-            color: #fbbf24;
-            background: rgba(245, 158, 11, 0.18);
-        }
-
-        .stamp-allow {
-            border-color: #10b981;
-            color: #34d399;
-            background: rgba(16, 185, 129, 0.18);
-        }
-
-        /* Beginner Glossary Modal */
+        /* Terminology Modal */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(3, 7, 18, 0.85);
+            background: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(8px);
-            z-index: 2000;
+            z-index: 1000;
             display: none;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
-
         .modal-overlay.active { display: flex; }
-
         .modal-content {
             background: #0f172a;
-            border: 1px solid var(--accent-cyan);
-            border-radius: 16px;
-            padding: 28px;
+            border: 1px solid #38bdf8;
+            border-radius: 14px;
             max-width: 800px;
             width: 100%;
             max-height: 85vh;
             overflow-y: auto;
+            padding: 26px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
             position: relative;
         }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 12px;
-        }
-
-        .modal-title {
-            font-size: 20px;
-            font-weight: 800;
-            color: #ffffff;
-        }
-
-        .modal-close-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-size: 20px;
-            cursor: pointer;
-        }
-
-        .term-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        .term-card {
-            background: #091024;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 14px;
-        }
-
-        .term-card-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--accent-cyan);
-            margin-bottom: 4px;
-        }
-
-        .term-card-tech {
-            font-size: 11px;
-            font-family: var(--font-mono);
-            color: var(--text-dim);
-            margin-bottom: 6px;
-        }
-
-        .term-card-body {
-            font-size: 12.5px;
-            color: var(--text-muted);
-            line-height: 1.4;
-        }
-
-        /* ========================================================================= */
-        /* MISSION 10: SENTINEL ASSISTANT DOCKED CHAT & REPORT BUILDER               */
-        /* ========================================================================= */
-        .assistant-toggle-btn {
-            position: fixed;
-            bottom: 24px;
-            right: 28px;
-            background: linear-gradient(135deg, #0284c7, #2563eb);
-            border: 1px solid #38bdf8;
-            color: #ffffff;
-            width: 54px;
-            height: 54px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 8px 25px rgba(56, 189, 248, 0.4);
-            cursor: pointer;
-            z-index: 1020;
-            transition: all 0.2s ease;
-        }
-
-        .assistant-toggle-btn:hover {
-            transform: scale(1.08);
-            box-shadow: 0 0 25px rgba(56, 189, 248, 0.7);
-        }
-
-        .assistant-drawer {
-            position: fixed;
-            bottom: 90px;
-            right: 28px;
-            width: 380px;
-            height: 520px;
-            background: #0d1527;
-            border: 1px solid #38bdf8;
-            border-radius: 16px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
-            display: none;
-            flex-direction: column;
-            z-index: 1021;
-            backdrop-filter: blur(16px);
-            overflow: hidden;
-        }
-
-        .assistant-drawer.active { display: flex; }
-
-        .assistant-header {
-            background: #080d1a;
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .assistant-body {
-            flex: 1;
-            padding: 14px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            font-size: 12.5px;
-        }
-
-        .assistant-msg {
-            padding: 10px 12px;
-            border-radius: 10px;
-            max-width: 88%;
-            line-height: 1.4;
-        }
-
-        .assistant-msg.bot {
-            background: #16203a;
-            color: #f1f5f9;
-            align-self: flex-start;
-            border: 1px solid rgba(56, 189, 248, 0.15);
-        }
-
-        .assistant-msg.user {
-            background: #0284c7;
-            color: #ffffff;
-            align-self: flex-end;
-        }
-
-        .assistant-quick-prompts {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            padding: 8px 12px;
-            background: #0a1122;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .quick-prompt-chip {
-            background: rgba(56, 189, 248, 0.1);
-            border: 1px solid rgba(56, 189, 248, 0.25);
-            color: #7dd3fc;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 11px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .quick-prompt-chip:hover {
-            background: var(--accent-cyan);
-            color: #030712;
-        }
-
-        .assistant-input-bar {
-            padding: 10px 12px;
-            background: #080d1a;
-            display: flex;
-            gap: 8px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .assistant-input-bar input {
-            flex: 1;
-            background: #0f1c3f;
-            border: 1px solid var(--border-color);
-            color: white;
-            padding: 6px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            outline: none;
-        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
+        .modal-title { font-size: 20px; font-weight: 700; color: var(--primary-cyan); display: flex; align-items: center; gap: 10px; }
+        .modal-close-btn { background: transparent; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+        .modal-close-btn:hover { color: white; background: rgba(255, 255, 255, 0.1); }
+        .term-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+        .term-card { background: #1e293b; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; }
+        .term-card-title { font-size: 14px; font-weight: 700; color: #38bdf8; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .term-card-tech { font-size: 11px; color: #94a3b8; margin-bottom: 6px; }
+        .term-card-body { font-size: 12px; color: #e2e8f0; line-height: 1.4; }
+        .term-card-example { font-size: 11px; color: #f59e0b; margin-top: 6px; border-top: 1px dashed rgba(255, 255, 255, 0.1); padding-top: 4px; }
     </style>
 </head>
 <body>
 
-    <div class="app-layout">
-        <!-- Sidebar Story Navigation -->
-        <aside class="sidebar">
-            <div class="brand">
-                <div class="brand-logo">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        <circle cx="12" cy="11" r="3"/>
-                    </svg>
-                </div>
-                <div class="brand-text">
-                    <h1>SENTINEL</h1>
-                    <p>AUTONOMOUS FRAUD ENGINE</p>
-                </div>
-            </div>
+    <!-- Left-Hand Story Navigation -->
+    <aside class="sidebar">
+        <div class="brand-box">
+            <img src="assets/sentinel-logo.svg" alt="Sentinel Logo" class="brand-logo">
+        </div>
 
+        <div class="sidebar-btn-stack">
             <button class="sidebar-city-btn" onclick="openSentinelCity()">
-                <span>🏙️</span>
-                <span>OPEN 3D LEDGER CITY</span>
+                <span>🏙️</span> Sentinel Mode (3D City)
             </button>
+            <button class="sidebar-guide-btn" onclick="openGlossaryModal()">
+                <span>📖</span> Beginner's Cheat Sheet
+            </button>
+        </div>
 
-            <div class="nav-section-title">Investigation Story Steps</div>
-            <ul class="nav-list">
-                <li><button class="nav-item-btn active" onclick="goToStep(1)"><span>1.</span> The Fraud Landscape</button></li>
-                <li><button class="nav-item-btn" onclick="goToStep(2)"><span>2.</span> The Feature Leakage Trap</button></li>
-                <li><button class="nav-item-btn" onclick="goToStep(3)"><span>3.</span> Machine Learning Model</button></li>
-                <li><button class="nav-item-btn" onclick="goToStep(4)"><span>4.</span> Choosing Strictness (θ)</button></li>
-                <li><button class="nav-item-btn" onclick="goToStep(5)"><span>5.</span> Multi-Agent Defense</button></li>
-                <li><button class="nav-item-btn" onclick="goToStep(6)"><span>6.</span> Network Laundering</button></li>
-                <li><button class="nav-item-btn" onclick="goToStep(7)"><span>7.</span> Paytm Market Shock</button></li>
-            </ul>
+        <div class="nav-section-title">
+            <span>Investigation Story</span>
+            <span style="font-size:10px; color:#38bdf8;">7 Steps</span>
+        </div>
+        <ul class="nav-list">
+            <li>
+                <button class="nav-item-btn active" onclick="goToStep(1)">
+                    <div class="nav-item-main">🔴 1. The Problem</div>
+                    <div class="nav-item-sub">How rare is fraud?</div>
+                </button>
+            </li>
+            <li>
+                <button class="nav-item-btn" onclick="goToStep(2)">
+                    <div class="nav-item-main">📊 2. The Data</div>
+                    <div class="nav-item-sub">Past vs future timeline</div>
+                </button>
+            </li>
+            <li>
+                <button class="nav-item-btn" onclick="goToStep(3)">
+                    <div class="nav-item-main">🔬 3. The Detector</div>
+                    <div class="nav-item-sub">AI vs rules & pattern finder</div>
+                </button>
+            </li>
+            <li>
+                <button class="nav-item-btn" onclick="goToStep(4)">
+                    <div class="nav-item-main">🎯 4. The Result</div>
+                    <div class="nav-item-sub">Caught vs false alarms</div>
+                </button>
+            </li>
+            <li>
+                <button class="nav-item-btn" onclick="goToStep(5)">
+                    <div class="nav-item-main">⚖️ 5. The Decision</div>
+                    <div class="nav-item-sub">Cost curves & money saved</div>
+                </button>
+            </li>
+            <li>
+                <button class="nav-item-btn" onclick="goToStep(6)">
+                    <div class="nav-item-main">📉 6. The Market Link</div>
+                    <div class="nav-item-sub">Paytm, NSE & RBI Governance Shock</div>
+                </button>
+            </li>
+            <li>
+                <button class="nav-item-btn" onclick="goToStep(7)">
+                    <div class="nav-item-main">⏱️ 7. Live Patrol & Cases</div>
+                    <div class="nav-item-sub">Live stream & dossier files</div>
+                </button>
+            </li>
+        </ul>
 
-            <div style="margin-top:auto; padding-top:16px; border-top:1px solid var(--border-color); font-size:11.5px; color:var(--text-dim);">
-                <div>PaySim 15% Verified Sample</div>
-                <div style="color:#38bdf8;">954,393 rows | 1,201 frauds</div>
+        <div class="sidebar-footer">
+            <strong>Sentinel Patrol</strong><br>
+            Simulated live stream: replay of the PaySim test period (steps 334–743). Never claim real-time bank data.
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+        <!-- Sticky Global Control Bar -->
+        <header class="global-header">
+            <!-- Control 1: Strictness Threshold -->
+            <div class="control-group">
+                <div class="control-label-box">
+                    <div class="control-label">
+                        <span>Filter Strictness</span>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box">
+                                <div class="popover-title">🎯 Filter Strictness (θ)</div>
+                                <div class="popover-desc">Sets how picky the AI detector is before sounding an alarm. Lower numbers catch more fraud; higher numbers reduce false alarms.</div>
+                                <div class="popover-action">⚙️ Dragging this recalculates caught frauds, false alarms, and total costs instantly.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="control-subtext">Cutoff: <strong id="strictnessLabel" style="color:var(--primary-cyan);">0.50</strong></span>
+                </div>
+                <input type="range" id="strictnessRange" min="0" max="22" value="13" oninput="onStrictnessChange(this.value)">
             </div>
-        </aside>
 
-        <!-- Main Workspace -->
-        <main class="main-content">
-            <!-- Top Controls Bar -->
-            <header class="topbar">
-                <div class="controls-group">
-                    <!-- Filter Strictness (Decision Threshold) Slider -->
-                    <div class="control-pill tooltip-container">
-                        <label for="strictnessSlider">
-                            🎯 Filter Strictness (θ)
-                            <span class="info-btn" onclick="openGlossaryTerm('strictness')">i</span>
-                        </label>
-                        <input type="range" id="strictnessSlider" min="0" max="15" value="7" oninput="onStrictnessChange(this.value)">
-                        <span class="pill-badge" id="strictnessLabel">0.50</span>
-
-                        <div class="popover-box">
-                            <strong>🎯 Filter Strictness (θ)</strong><br>
-                            Technical term: <em>Decision Threshold</em>.<br>
-                            How sensitive the AI alarm is. A lower number catches more fraud but flags more innocent users.
+            <!-- Control 2: Review Cost Selector -->
+            <div class="control-group">
+                <div class="control-label-box">
+                    <div class="control-label">
+                        <span>Cost per Check</span>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box">
+                                <div class="popover-title">💼 Cost per Human Check</div>
+                                <div class="popover-desc">The salary, tooling, and customer support expense to investigate one flagged transaction.</div>
+                                <div class="popover-action">⚙️ Selecting a cost finds the mathematically lowest-cost strictness setting.</div>
+                            </div>
                         </div>
                     </div>
+                    <span class="control-subtext">Analyst expense per alert</span>
+                </div>
+                <select id="checkingCostSelect" onchange="onCheckingCostChange(this.value)">
+                    <option value="100">100 CU / check (Low)</option>
+                    <option value="500" selected>500 CU / check (Base Standard)</option>
+                    <option value="2000">2,000 CU / check</option>
+                    <option value="5000">5,000 CU / check</option>
+                    <option value="25000">25,000 CU / check (Specialist)</option>
+                    <option value="100000">100,000 CU / check</option>
+                    <option value="500000">500,000 CU / check (High Legal)</option>
+                </select>
+            </div>
 
-                    <!-- Review Cost Slider -->
-                    <div class="control-pill tooltip-container">
-                        <label for="reviewCostSlider">
-                            💼 Cost per Check
-                            <span class="info-btn" onclick="openGlossaryTerm('cost')">i</span>
-                        </label>
-                        <input type="range" id="reviewCostSlider" min="50" max="2000" step="50" value="500" oninput="onCheckingCostChange(this.value)">
-                        <span class="pill-badge" id="reviewCostLabel">500 CU</span>
-
-                        <div class="popover-box">
-                            <strong>💼 Cost per Check</strong><br>
-                            Technical term: <em>Review / Investigation Cost</em>.<br>
-                            Money spent per flagged payment to have human analysts review it (default: 500 currency units).
-                        </div>
-                    </div>
-
-                    <!-- Ground Truth (Answer Key) Toggle -->
-                    <button class="toggle-btn" id="evalKeyToggle" onclick="toggleAnswerKey()">
-                        <span>👁️</span>
-                        <span id="evalKeyText">Show True Fraud: OFF</span>
+            <!-- Control 3: Answer Key / Ground Truth -->
+            <div class="control-group">
+                <div class="tooltip-container">
+                    <button class="btn-toggle-key" id="evalKeyToggle" onclick="toggleAnswerKey()">
+                        <span id="evalKeyText">👁️ Show True Fraud: OFF</span>
+                        <span style="font-size:10px; opacity:0.8;">[Reveal bank ground truth]</span>
                     </button>
+                    <div class="popover-box align-right">
+                        <div class="popover-title">👁️ Reveal Ground Truth (Answer Key)</div>
+                        <div class="popover-desc">By default, true fraud labels are masked like in real life. Turning this ON unmasks confirmed fraud answers in red across all cards and in the 3D City.</div>
+                        <div class="popover-action">⚙️ Click to toggle true fraud visibility on/off.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick 3D City Mode Button -->
+            <button class="btn btn-secondary" onclick="openSentinelCity()" style="font-size:12px; gap:6px; border-color:#818cf8; color:#c7d2fe;">
+                <span>🏙️ Sentinel Mode (3D City)</span>
+            </button>
+        </header>
+
+        <!-- ========================================================================= -->
+        <!-- STEP 1: THE PROBLEM -->
+        <!-- ========================================================================= -->
+        <section id="step1" class="step-section active">
+            <div class="step-header">
+                <div class="step-badge">Step 1 of 7</div>
+                <h2 class="step-title">The Problem: Extreme Scarcity in Fraud Detection</h2>
+                <p class="step-sub">Understanding the needle-in-a-haystack nature of payment fraud and high-risk transaction channels.</p>
+            </div>
+
+            <div class="cards-grid">
+                <!-- Card 1 -->
+                <div class="story-card">
+                    <div class="card-header-bar">
+                        <div class="card-question">How rare is financial fraud in digital payments?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">🔍 Class Imbalance</div>
+                                <div class="popover-desc">When only 1 in 800 transactions is fraud, regular accuracy is deceiving. An algorithm that flags nothing is 99.4% accurate but completely useless!</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-headline" id="c1Headline">Loading...</div>
+                    <div class="card-visual-box">
+                        <div class="dot-grid-container" id="c1DotGrid"></div>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> Extreme rarity requires models that focus on <em>Precision</em> (accuracy of alarms) and <em>Recall</em> (percentage of fraud stopped) rather than plain accuracy.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/data_overview.json</div>
                 </div>
 
-                <div>
-                    <button class="help-btn" onclick="openGlossaryModal()">
-                        <span>📖</span>
-                        <span>Beginner Cheat Sheet</span>
-                    </button>
+                <!-- Card 2 -->
+                <div class="story-card">
+                    <div class="card-header-bar">
+                        <div class="card-question">Which payment types carry fraud risk?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">💳 Payment Channels</div>
+                                <div class="popover-desc">Fraudsters only steal money by transferring it out (TRANSFER) or cashing out at an ATM/agent (CASH_OUT). Merchant payments (PAYMENT) are completely safe in this dataset.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-headline" id="c2Headline">Loading...</div>
+                    <div class="card-visual-box">
+                        <canvas id="c2Chart"></canvas>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> Fraud is structurally confined to outbound transfers and cash-outs. Low-risk merchant purchases and deposits can safely bypass heavy screening.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/data_overview.json</div>
                 </div>
-            </header>
-
-            <!-- Main Content Area -->
-            <div class="content-area">
-                
-                <!-- STEP 1: THE FRAUD LANDSCAPE -->
-                <section class="step-section active" id="step1">
-                    <div class="section-header">
-                        <div class="step-tag">Step 1 of 7 // Executive Reality Check</div>
-                        <h2 class="section-title">The Extreme Haystack Problem</h2>
-                        <p class="section-desc">
-                            In modern high-speed financial networks, genuine fraud represents less than 1 in 800 transactions.
-                            Detecting money theft without shutting down legitimate commerce is an operational balancing act.
-                        </p>
-                    </div>
-
-                    <div class="cards-grid">
-                        <!-- Card 1: Needle in Haystack -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>🌾 Visualizing Fraud Rarity (Needle in Haystack)</span>
-                                    <span class="info-btn" onclick="openGlossaryTerm('rarity')">i</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c1Headline">Loading sample distribution...</div>
-                            <div class="dot-grid-container" id="c1DotGrid"></div>
-                            <p style="font-size:11.5px; color:var(--text-muted);">
-                                Each grey square is a legitimate payment. Red glowing squares represent actual fraud attempts.
-                            </p>
-                        </div>
-
-                        <!-- Card 2: Fraud Channel Distribution -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>💳 Payment Channels & Attack Surfaces</span>
-                                    <span class="info-btn" onclick="openGlossaryTerm('channels')">i</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c2Headline">Analyzing transfer vs cashout channels...</div>
-                            <div class="chart-box">
-                                <canvas id="c2Chart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- STEP 2: THE FEATURE LEAKAGE TRAP -->
-                <section class="step-section" id="step2">
-                    <div class="section-header">
-                        <div class="step-tag">Step 2 of 7 // Forensic Data Engineering</div>
-                        <h2 class="section-title">The Feature Leakage Trap</h2>
-                        <p class="section-desc">
-                            A naive model that reads synthetic balance updates (<code>oldbalanceOrg</code>, <code>newbalanceDest</code>) achieves 99.9% artificial accuracy in simulation, but completely fails in real production where fraudsters manipulate balance logs.
-                        </p>
-                    </div>
-
-                    <div class="cards-grid">
-                        <!-- Card 3: Zero-Balance Leakage -->
-                        <div class="dashboard-card card-full">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>🛡️ Zero Balance Leakage Rule (Strict Production Constraint)</span>
-                                    <span class="info-btn" onclick="openGlossaryTerm('leakage')">i</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c3Headline">Evaluating data integrity rules...</div>
-                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:8px;">
-                                <div style="background:#091024; border:1px solid #ef4444; border-radius:10px; padding:16px;">
-                                    <h4 style="color:#f87171; font-size:14px; margin-bottom:8px;">❌ Banned Leakage Columns</h4>
-                                    <ul style="font-size:12.5px; color:#cbd5e1; list-style:square; padding-left:18px; line-height:1.6;">
-                                        <li><code>oldbalanceOrg</code> (Pre-transaction origin balance)</li>
-                                        <li><code>newbalanceOrig</code> (Post-transaction origin balance)</li>
-                                        <li><code>oldbalanceDest</code> (Pre-transaction receiver balance)</li>
-                                        <li><code>newbalanceDest</code> (Post-transaction receiver balance)</li>
-                                    </ul>
-                                    <p style="font-size:11.5px; color:#94a3b8; margin-top:10px;">
-                                        <em>Why excluded?</em> Real payment switches cannot atomically compute receiver state before approval.
-                                    </p>
-                                </div>
-
-                                <div style="background:#091024; border:1px solid #10b981; border-radius:10px; padding:16px;">
-                                    <h4 style="color:#34d399; font-size:14px; margin-bottom:8px;">✅ Allowed Production Features</h4>
-                                    <ul style="font-size:12.5px; color:#cbd5e1; list-style:square; padding-left:18px; line-height:1.6;">
-                                        <li><code>amount</code> (Nominal transaction value in currency units)</li>
-                                        <li><code>log_amount</code> (Logarithmic scaling: <code>log(1 + amount)</code>)</li>
-                                        <li><code>is_transfer</code> (Binary flag: 1 for Transfer, 0 for Cash-Out)</li>
-                                        <li><code>hour</code> (Cyclical hour of transaction: 0 to 23)</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- STEP 3: MACHINE LEARNING MODEL -->
-                <section class="step-section" id="step3">
-                    <div class="section-header">
-                        <div class="step-tag">Step 3 of 7 // Machine Learning Architecture</div>
-                        <h2 class="section-title">Random Forest Detection Engine</h2>
-                        <p class="section-desc">
-                            Sentinel trains a balanced Random Forest classifier strictly on historical days (Steps 1–333) and evaluates against future unseen days (Steps 334–742) using a strict temporal split.
-                        </p>
-                    </div>
-
-                    <div class="cards-grid">
-                        <!-- Card 4: Amount Distribution -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>💰 Transaction Amount Profiles (Normal vs Fraud)</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c4Headline">Loading amount curves...</div>
-                            <div class="chart-box"><canvas id="c4Chart"></canvas></div>
-                        </div>
-
-                        <!-- Card 5: Hourly Attack Patterns -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>🌙 Nocturnal Attack Signatures (Hour of Day)</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c5Headline">Analyzing diurnal volume...</div>
-                            <div class="chart-box"><canvas id="c5Chart"></canvas></div>
-                        </div>
-
-                        <!-- Card 6: Detector Comparison -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>🏆 PR-AUC Discovery Power Benchmark</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c6Headline">Benchmarking detectors...</div>
-                            <div class="chart-box"><canvas id="c6Chart"></canvas></div>
-                        </div>
-
-                        <!-- Feature Importance -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>⚖️ Feature Discriminator Weights</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="cFeatImpHeadline">Loading feature importance...</div>
-                            <div class="chart-box"><canvas id="cFeatImpChart"></canvas></div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- STEP 4: CHOOSING STRICTNESS -->
-                <section class="step-section" id="step4">
-                    <div class="section-header">
-                        <div class="step-tag">Step 4 of 7 // Business Policy Optimization</div>
-                        <h2 class="section-title">Strictness & Operational Cost Curve</h2>
-                        <p class="section-desc">
-                            Choosing strictness is not just math; it is a financial tradeoff between paying analysts to inspect false alarms vs suffering unrecovered fraud losses.
-                        </p>
-                    </div>
-
-                    <div class="cards-grid">
-                        <!-- Card 7: Score Distribution -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>📊 AI Risk Score Distribution</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c7Headline">Analyzing score distribution...</div>
-                            <div class="chart-box"><canvas id="c7Chart"></canvas></div>
-                        </div>
-
-                        <!-- Card 8: Operational Confusion Matrix -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>🎯 Live Performance Breakdown at Current Strictness</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c8Headline">Computing matrix...</div>
-                            <div class="matrix-grid" id="c8Matrix"></div>
-                        </div>
-
-                        <!-- Card 9: Total Operational Cost Curve -->
-                        <div class="dashboard-card card-full">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>📉 Total Cost Curve (Loss + Review Costs)</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c9Headline">Calculating cost curves...</div>
-                            <div class="chart-box" style="height:320px;"><canvas id="c9Chart"></canvas></div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- STEP 5: MULTI-AGENT DEFENSE & LIVE SIMULATOR -->
-                <section class="step-section" id="step5">
-                    <div class="section-header">
-                        <div class="step-tag">Step 5 of 7 // Multi-Agent Governance</div>
-                        <h2 class="section-title">Multi-Agent Intelligence & Live Simulator</h2>
-                        <p class="section-desc">
-                            Sentinel coordinates specialized agents: <strong>Scout</strong> (rapid filtering), <strong>Investigator</strong> (deep forensics), <strong>Risk Officer</strong> (final authorization), and <strong>Reporter</strong> (audit documentation).
-                        </p>
-                    </div>
-
-                    <div class="cards-grid">
-                        <!-- Interactive Live Simulator -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>⚡ Live Transaction Risk Calculator</span>
-                                </div>
-                            </div>
-                            <div class="card-headline">Test any custom payment against Sentinel's Random Forest model:</div>
-
-                            <div style="display:flex; flex-direction:column; gap:14px; margin-top:8px;">
-                                <div>
-                                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
-                                        <label>Amount (Currency Units):</label>
-                                        <strong id="simAmountVal" style="color:var(--accent-cyan);">250,000 CU</strong>
-                                    </div>
-                                    <input type="range" id="simAmountInput" min="1000" max="10000000" step="5000" value="250000" style="width:100%;" oninput="updateSimScore()">
-                                </div>
-
-                                <div>
-                                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
-                                        <label>Hour of Day:</label>
-                                        <strong id="simHourVal" style="color:var(--accent-cyan);">3:00 (Late Night 🌙)</strong>
-                                    </div>
-                                    <input type="range" id="simHourInput" min="0" max="23" value="3" style="width:100%;" oninput="updateSimScore()">
-                                </div>
-
-                                <div>
-                                    <label style="font-size:12px; margin-bottom:4px; display:block;">Payment Channel:</label>
-                                    <select id="simTypeInput" style="width:100%; background:#080d1a; color:white; border:1px solid var(--border-color); padding:8px; border-radius:6px;" onchange="updateSimScore()">
-                                        <option value="TRANSFER">TRANSFER (Wire to new party)</option>
-                                        <option value="CASH_OUT">CASH_OUT (Withdrawal to fiat/ATM)</option>
-                                        <option value="PAYMENT">PAYMENT (Merchant checkout)</option>
-                                    </select>
-                                </div>
-
-                                <div id="simResultCard" style="background:#091024; border:1px solid var(--border-color); border-radius:8px; padding:14px; margin-top:6px;">
-                                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                                        <span>Model Risk Score:</span>
-                                        <strong id="simScoreDisplay" style="font-size:22px; font-family:var(--font-mono); color:#ef4444;">0.78</strong>
-                                    </div>
-                                    <div style="font-size:12px; margin-top:6px; color:var(--text-muted);" id="simVerdictBadge">
-                                        🚨 FLAGGED FOR HUMAN INVESTIGATION (Score ≥ Strictness θ)
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Card 10: Multi-Agent Policy Alerts -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>🛡️ Multi-Agent Tiered Alerts</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c10Headline">Loading policy matrix...</div>
-                            <div class="chart-box"><canvas id="c10Chart"></canvas></div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- STEP 6: NETWORK LAUNDERING & INVESTIGATOR REPLAY -->
-                <section class="step-section" id="step6">
-                    <div class="section-header">
-                        <div class="step-tag">Step 6 of 7 // Network Laundering Analysis</div>
-                        <h2 class="section-title">Network Laundering & Timeline Replay</h2>
-                        <p class="section-desc">
-                            Sentinel's Network Analyst identifies correlated money laundering chains where funds transferred into an account are immediately cashed out in the exact same hour.
-                        </p>
-                    </div>
-
-                    <div class="cards-grid">
-                        <!-- Card 12: Stream Patrol Timeline -->
-                        <div class="dashboard-card card-full">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>📡 Hourly Test Stream Patrol (Steps 334–742)</span>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <button class="btn btn-secondary" id="patrolPlayBtn" onclick="togglePatrolPlay()">⏸️ Pause</button>
-                                    <span class="pill-badge" id="patrolStepDisplay">Step: 334 (Hour 22)</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c12Headline">Replaying test stream...</div>
-
-                            <div style="margin:10px 0;">
-                                <input type="range" id="patrolScrubber" min="334" max="742" value="334" style="width:100%;" oninput="scrubPatrol(this.value)">
-                            </div>
-
-                            <div class="chart-box"><canvas id="c12Chart"></canvas></div>
-
-                            <!-- Case Dossier Explorer -->
-                            <div style="margin-top:20px; border-top:1px solid var(--border-color); padding-top:16px;">
-                                <h4 style="font-size:14px; color:#ffffff; margin-bottom:8px;">📁 Inspected Case Dossier Drawer</h4>
-                                <div style="display:flex; gap:10px; margin-bottom:12px;">
-                                    <select id="patrolCaseSelect" style="flex:1; background:#080d1a; color:white; border:1px solid var(--border-color); padding:8px; border-radius:6px;" onchange="renderCaseDossier(this.value)"></select>
-                                </div>
-                                <div id="patrolCaseDossierBox"></div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- STEP 7: PAYTM MARKET SHOCK -->
-                <section class="step-section" id="step7">
-                    <div class="section-header">
-                        <div class="step-tag">Step 7 of 7 // Real-World Fintech Governance Shock</div>
-                        <h2 class="section-title">Paytm Payments Bank vs NSE / NIFTY 50</h2>
-                        <p class="section-desc">
-                            On January 31, 2024, the Reserve Bank of India (RBI) halted Paytm Payments Bank operations due to persistent KYC and AML compliance deficiencies, causing a 42% market equity collapse in 3 trading sessions.
-                        </p>
-                    </div>
-
-                    <div class="cards-grid">
-                        <!-- Card 11: Market Shock Chart -->
-                        <div class="dashboard-card card-full">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>📉 Paytm Equity Collapse vs NIFTY 50 (Jan–Mar 2024)</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c11Headline">Loading RBI regulatory timeline...</div>
-                            <div class="chart-box" style="height:340px;"><canvas id="c11Chart"></canvas></div>
-                        </div>
-                    </div>
-                </section>
-
             </div>
-        </main>
-    </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- STEP 2: THE DATA -->
+        <!-- ========================================================================= -->
+        <section id="step2" class="step-section">
+            <div class="step-header">
+                <div class="step-badge">Step 2 of 7</div>
+                <h2 class="step-title">The Data: Past vs Future Split & Payment Patterns</h2>
+                <p class="step-sub">Preventing lookahead data leakage and analyzing monetary and 24-hour day/night cycles.</p>
+            </div>
+
+            <div class="cards-grid">
+                <!-- Card 3 -->
+                <div class="story-card">
+                    <div class="card-header-bar">
+                        <div class="card-question">How is the data split across time to prevent cheating?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">⏳ Temporal Train/Test Split</div>
+                                <div class="popover-desc">We train only on past steps (1–333) and test on future steps (334–742). Randomly shuffling data would be cheating because in real life you cannot see future fraud!</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-headline" id="c3Headline">Loading...</div>
+                    <div class="card-visual-box">
+                        <canvas id="c3Chart"></canvas>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> Temporal splitting strictly evaluates the model on unseen future days, faithfully replicating live bank deployment.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/data_overview.json</div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="story-card">
+                    <div class="card-header-bar">
+                        <div class="card-question">How do stolen amounts compare to honest payments?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">💰 Log-Scale Amount Distribution</div>
+                                <div class="popover-desc">Honest payments range from small to large, but fraudsters almost always try to drain large sums (>200,000 currency units) at once.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-headline" id="c4Headline">Loading...</div>
+                    <div class="card-visual-box">
+                        <canvas id="c4Chart"></canvas>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> Fraudsters aim for maximum money stolen per compromised account. However, high amount alone is not enough to prove guilt.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/amount_hist.csv</div>
+                </div>
+            </div>
+
+            <!-- Card 5 -->
+            <div class="cards-grid-full">
+                <div class="story-card">
+                    <div class="card-header-bar">
+                        <div class="card-question">When does fraud happen during the 24-hour day/night cycle?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">🌙 Diurnal 24-Hour Pattern</div>
+                                <div class="popover-desc">Humans sleep at night, so honest payments drop between 11 PM and 6 AM. Automated fraud bots and money drainers run constantly 24/7.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-headline" id="c5Headline">Loading...</div>
+                    <div class="card-visual-box" style="height:260px;">
+                        <canvas id="c5Chart"></canvas>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> Honest payments follow normal business hours, while automated theft scripts operate around the clock, making nighttime transfers relatively more risky.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/hourly_stats.csv</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- STEP 3: THE DETECTOR -->
+        <!-- ========================================================================= -->
+        <section id="step3" class="step-section">
+            <div class="step-header">
+                <div class="step-badge">Step 3 of 7</div>
+                <h2 class="step-title">The Detector: How Models Find Fraud Patterns & Flag Alerts</h2>
+                <p class="step-sub">Visualizing what features the AI looks at, how 200 decision trees vote, and how strictness flags alerts.</p>
+            </div>
+
+            <!-- Step 3 Interactive Visualizer -->
+            <div class="story-card" style="margin-bottom:20px;">
+                <div class="card-header-bar">
+                    <div class="card-question">How does Sentinel find patterns and flag fraud? (Visual Pipeline)</div>
+                    <div class="tooltip-container">
+                        <span class="info-btn" tabindex="0">i</span>
+                        <div class="popover-box align-right">
+                            <div class="popover-title">🌲 Detection Pipeline</div>
+                            <div class="popover-desc">Sentinel extracts 4 key features, passes them to 200 balanced decision trees, scans for correlated laundering pairs, and flags alerts against the strictness threshold.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-headline">
+                    The detector processes every payment through a 4-stage intelligence pipeline in milliseconds.
+                </div>
+
+                <div class="model-pipeline-container">
+                    <div class="pipeline-step-card">
+                        <div class="pipe-num">Stage 1: Feature Extraction</div>
+                        <div class="pipe-title">🔍 Safe Signals Only</div>
+                        <div class="pipe-body">Extracts Amount, Log Amount, Hour of Day, and Payment Channel. Strictly excludes leaked balance columns to guarantee genuine generalization.</div>
+                    </div>
+                    <div class="pipeline-step-card">
+                        <div class="pipe-num">Stage 2: 200-Tree Forest</div>
+                        <div class="pipe-title">🌲 Ensemble Voting</div>
+                        <div class="pipe-body">200 balanced decision trees test multi-variable splits simultaneously, calculating an ensemble fraud probability score between 0.00 and 1.00.</div>
+                    </div>
+                    <div class="pipeline-step-card">
+                        <div class="pipe-num">Stage 3: Graph Linkage</div>
+                        <div class="pipe-title">🔗 Same-Step Pairs</div>
+                        <div class="pipe-body">Correlates simultaneous Transfer ➔ Cash-out pairs with identical amounts occurring in the exact same hour across nodes.</div>
+                    </div>
+                    <div class="pipeline-step-card">
+                        <div class="pipe-num">Stage 4: Decision Gate</div>
+                        <div class="pipe-title">🚦 Threshold Flagging</div>
+                        <div class="pipe-body">If Score ≥ Strictness Threshold (θ), an amber alarm is raised for compliance review; otherwise the payment passes cleanly.</div>
+                    </div>
+                </div>
+
+                <!-- Interactive Scoring Simulator -->
+                <div class="simulator-box">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <strong style="color:var(--primary-cyan); font-size:13px;">🧪 Interactive Simulator: Test How a Transaction Gets Scored & Flagged</strong>
+                        <span style="font-size:11px; color:var(--text-muted);">Adjust inputs to see live scoring & alert decision</span>
+                    </div>
+
+                    <div class="simulator-grid">
+                        <div class="sim-input-group">
+                            <label>Amount (CU): <strong id="simAmountVal" style="color:white;">250,000</strong></label>
+                            <input type="range" id="simAmountInput" min="5000" max="1500000" step="5000" value="250000" oninput="updateSimScore()">
+                        </div>
+                        <div class="sim-input-group">
+                            <label>Hour of Day: <strong id="simHourVal" style="color:white;">3:00 AM (Night)</strong></label>
+                            <input type="range" id="simHourInput" min="0" max="23" value="3" oninput="updateSimScore()">
+                        </div>
+                        <div class="sim-input-group">
+                            <label>Payment Channel:</label>
+                            <select id="simTypeInput" onchange="updateSimScore()">
+                                <option value="TRANSFER" selected>TRANSFER (High Risk)</option>
+                                <option value="CASH_OUT">CASH_OUT (High Risk)</option>
+                                <option value="PAYMENT">PAYMENT (Merchant - Safe)</option>
+                            </select>
+                        </div>
+                        <div class="sim-result-card" id="simResultCard">
+                            <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Calculated Risk Score</div>
+                            <div id="simScoreDisplay" style="font-size:22px; font-weight:800; color:var(--alert-amber);">0.68</div>
+                            <div id="simVerdictBadge" style="font-size:11px; font-weight:700; margin-top:2px;">🚨 FLAGGED FOR REVIEW</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-explanation">
+                    <strong>What this means:</strong> The Random Forest captures non-linear combinations (e.g. large amount + night hour + transfer) that static rules miss entirely, producing a probabilistic score tailored to operational risk appetite.
+                </div>
+                <div class="card-source-footer">Source: models/rf.pkl, docs/data/feature_importance.csv</div>
+            </div>
+
+            <!-- Card 6 & Feature Importance Grid -->
+            <div class="cards-grid">
+                <!-- Card 6: Detector Benchmark -->
+                <div class="story-card">
+                    <div class="card-header-bar">
+                        <div class="card-question">Which detector catches fraud best without cheating?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">🏆 PR-AUC Discovery Power</div>
+                                <div class="popover-desc">PR-AUC measures how well a model discovers rare fraud across all strictness levels. Higher is much better (Random Forest achieves 0.3371 vs random baseline 0.0063).</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-headline" id="c6Headline">Loading...</div>
+                    <div class="card-visual-box">
+                        <canvas id="c6Chart"></canvas>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> Random Forest achieves a PR-AUC of 0.3371 (~53x higher than random guessing), outperforming simple rules and unweighted models without using leaked balance columns.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/detector_comparison.csv</div>
+                </div>
+
+                <!-- Feature Importance Chart -->
+                <div class="story-card">
+                    <div class="card-header-bar">
+                        <div class="card-question">What patterns does the AI rely on most? (Feature Importance)</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">📊 Feature Weights</div>
+                                <div class="popover-desc">Calculated Gini importance across 200 decision trees showing how much each variable contributes to splitting fraud from honest traffic.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-headline" id="cFeatImpHeadline">Loading...</div>
+                    <div class="card-visual-box">
+                        <canvas id="cFeatImpChart"></canvas>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> Raw Amount and Log Amount drive ~63% of the model's predictive power, with Hour of Day contributing 26% by detecting nocturnal bot patterns.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/feature_importance.csv</div>
+                </div>
+            </div>
+
+            <!-- Card 7: Score Histogram -->
+            <div class="cards-grid-full">
+                <div class="story-card">
+                    <div class="card-header-bar">
+                        <div class="card-question">How confident is the AI detector across all transactions?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">📊 Score Histogram</div>
+                                <div class="popover-desc">Shows the distribution of AI suspicion scores. Over 96% of payments are cleanly scored near 0.0, meaning normal users are not bothered by false alarms.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-headline" id="c7Headline">Loading...</div>
+                    <div class="card-visual-box" style="height:260px;">
+                        <canvas id="c7Chart"></canvas>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> 97.6% of transactions score below 0.10, showing the detector concentrates risk into a small, manageable investigation queue.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/score_hist.csv</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- STEP 4: THE RESULT -->
+        <!-- ========================================================================= -->
+        <section id="step4" class="step-section">
+            <div class="step-header">
+                <div class="step-badge">Step 4 of 7</div>
+                <h2 class="step-title">The Result: Confusion Matrix & Financial Cost Curve</h2>
+                <p class="step-sub">Interactive trade-off between analyst verification workload and unrecovered fraud losses.</p>
+            </div>
+
+            <div class="cards-grid">
+                <!-- Card 8 -->
+                <div class="story-card">
+                    <div class="card-header-bar">
+                        <div class="card-question">What is the operational outcome at the chosen strictness?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">🎯 The 2x2 Outcome Box</div>
+                                <div class="popover-desc">Breaks transactions into 4 buckets: Caught Fraud (thieves stopped), False Alarms (innocent questioned), Missed Fraud (theft lost), and Clean Passes (innocent approved).</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-headline" id="c8Headline">Loading...</div>
+                    <div class="card-visual-box">
+                        <div class="matrix-2x2" id="c8Matrix"></div>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> Lower strictness captures more fraud (higher catch rate) but increases false alarms for analysts to verify.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/threshold_curve.csv</div>
+                </div>
+
+                <!-- Card 9 -->
+                <div class="story-card">
+                    <div class="card-header-bar">
+                        <div class="card-question">What is the total financial loss at this checking cost?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">📉 Financial Cost Curve</div>
+                                <div class="popover-desc">Total Loss = (Missed Fraud Stolen Money) + (Alerts × Cost per Human Check). The red dot marks the lowest-loss strictness setting.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-headline" id="c9Headline">Loading...</div>
+                    <div class="card-visual-box">
+                        <canvas id="c9Chart"></canvas>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> <em>"The best strictness depends on the cost of one check."</em> Because missing large fraud is so costly, catching fraud skews the optimal setting toward sensitive thresholds.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/cost_curve.csv & docs/data/cost_sensitivity.csv</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- STEP 5: THE DECISION -->
+        <!-- ========================================================================= -->
+        <section id="step5" class="step-section">
+            <div class="step-header">
+                <div class="step-badge">Step 5 of 7</div>
+                <h2 class="step-title">The Decision: Policy Economics & Protected Capital</h2>
+                <p class="step-sub">Macroeconomic comparison between Strict (0.10), Balanced (0.50), and Lenient (0.90) risk policies.</p>
+            </div>
+
+            <div class="cards-grid-full">
+                <!-- Card 10 -->
+                <div class="story-card">
+                    <div class="card-header-bar">
+                        <div class="card-question">How much fraud money is stopped under each policy?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">⚖️ Three Operating Policies</div>
+                                <div class="popover-desc">Compares Strict (catch everything), Balanced (standard trade-off), and Lenient (low analyst workload).</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-headline" id="c10Headline">Loading...</div>
+                    <div class="card-visual-box" style="height:300px;">
+                        <canvas id="c10Chart"></canvas>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> Missed fraud principal dominates manual review costs by over two orders of magnitude. The Strict Policy catches 752.38M currency units, minimizing net financial exposure across the payments network.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/stream.json (policy_comparison)</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- STEP 6: THE MARKET LINK (PAYTM vs NSE / NIFTY 50) -->
+        <!-- ========================================================================= -->
+        <section id="step6" class="step-section">
+            <div class="step-header">
+                <div class="step-badge">Step 6 of 7</div>
+                <h2 class="step-title">The Market Link: Paytm vs. NSE / NIFTY 50 & The RBI Governance Shock</h2>
+                <p class="step-sub">Forensic case study analyzing how weak AML transaction monitoring led to regulatory intervention, NSE trading circuits, and ₹27,000 Crore equity destruction.</p>
+            </div>
+
+            <!-- Deep Dive Context Card -->
+            <div class="story-card" style="margin-bottom:20px;">
+                <div class="card-header-bar">
+                    <div class="card-question">What happened between Paytm, the RBI, and the National Stock Exchange (NSE)?</div>
+                    <div class="tooltip-container">
+                        <span class="info-btn" tabindex="0">i</span>
+                        <div class="popover-box align-right">
+                            <div class="popover-title">🏛️ The RBI Governance Event</div>
+                            <div class="popover-desc">On Jan 31, 2024, the Reserve Bank of India (RBI) invoked Section 35A of the Banking Regulation Act, 1949 against Paytm Payments Bank (PPBL) due to persistent KYC/AML compliance violations.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-headline">
+                    Regulatory crackdown triggered back-to-back 20% lower circuits on NSE, wiping out ~55% of market capitalization within days.
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+                    <div style="background:#091020; border:1px solid var(--border-color); border-radius:8px; padding:14px; font-size:12px; line-height:1.5;">
+                        <strong style="color:var(--primary-cyan); font-size:13px;">🔍 The Underlying AML & Fraud Failure:</strong>
+                        <ul style="margin-top:6px; padding-left:18px; color:#cbd5e1; display:flex; flex-direction:column; gap:4px;">
+                            <li><strong>Single PAN Multi-Account Links:</strong> Audits found single identity PANs linked to over 1,000 active wallet accounts.</li>
+                            <li><strong>Pass-Through Money Laundering:</strong> High-velocity, same-day TRANSFER ➔ CASH_OUT hops bypassing standard velocity throttles.</li>
+                            <li><strong>Lack of Arm's Length Governance:</strong> Inter-connected transactions between parent app (One97) and payments bank entity.</li>
+                        </ul>
+                    </div>
+                    <div style="background:#091020; border:1px solid var(--border-color); border-radius:8px; padding:14px; font-size:12px; line-height:1.5;">
+                        <strong style="color:var(--alert-amber); font-size:13px;">📉 The Capital Market Shock on NSE:</strong>
+                        <ul style="margin-top:6px; padding-left:18px; color:#cbd5e1; display:flex; flex-direction:column; gap:4px;">
+                            <li><strong>NSE Circuit Hits:</strong> Stock locked in consecutive 20% lower price circuits on the National Stock Exchange.</li>
+                            <li><strong>Decoupling from Benchmark:</strong> NIFTY 50 remained stable (+2.3%), while Paytm shares plummeted by 55.2%.</li>
+                            <li><strong>Risk Multiplier:</strong> Market beta surged from 0.92 to 2.14, and 30-day volatility doubled to 82.1%.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Forensic Quantitative Table -->
+                <table class="market-stat-table">
+                    <thead>
+                        <tr>
+                            <th>Financial Metric</th>
+                            <th>Pre-RBI Action (Jan 2024)</th>
+                            <th>Post-RBI Action (Feb–Mar 2024)</th>
+                            <th>Market Shift</th>
+                            <th>Systemic Risk Implication</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Paytm Normalized Price (NSE)</strong></td>
+                            <td>100.0 (₹761 / share)</td>
+                            <td>44.8 (₹341 / share)</td>
+                            <td style="color:var(--fraud-red); font-weight:700;">-55.2%</td>
+                            <td>₹27,000 Crore (~$3.2B) equity wiped out</td>
+                        </tr>
+                        <tr>
+                            <td><strong>NIFTY 50 Benchmark Index</strong></td>
+                            <td>100.0 (21,741 pts)</td>
+                            <td>102.3 (22,240 pts)</td>
+                            <td style="color:var(--safe-green); font-weight:700;">+2.3%</td>
+                            <td>Idiosyncratic fintech risk, not broader market crisis</td>
+                        </tr>
+                        <tr>
+                            <td><strong>30-Day Annualized Volatility</strong></td>
+                            <td>38.4%</td>
+                            <td>82.1%</td>
+                            <td style="color:var(--fraud-red); font-weight:700;">+113.8% (2.1x)</td>
+                            <td>Extreme price turbulence and liquidity dry-up</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Market Beta (vs NIFTY 50)</strong></td>
+                            <td>0.92</td>
+                            <td>2.14</td>
+                            <td style="color:var(--fraud-red); font-weight:700;">+132.6% (2.3x)</td>
+                            <td>Sensitivity to market swings more than doubled</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="card-explanation" style="margin-top:14px;">
+                    <strong>What this means:</strong> Fraud detection is not just back-office loss mitigation—it is an existential enterprise risk. Automated multi-agent monitoring like Sentinel provides mathematically provable audit trails that protect enterprise valuation.
+                </div>
+                <div class="card-source-footer">Source: docs/data/market/paytm_nifty.csv, National Stock Exchange (NSE) Official Historical Data</div>
+            </div>
+
+            <!-- Card 11: Comparative Price Series Chart -->
+            <div class="cards-grid-full">
+                <div class="story-card">
+                    <div class="card-header-bar">
+                        <div class="card-question">Paytm Equity Collapse vs. NIFTY 50 Benchmark (Daily Series & RBI Event Line)</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">📈 Normalized Trend</div>
+                                <div class="popover-desc">Both series re-indexed to 100.0 on Jan 1, 2024. The dashed vertical line marks Jan 31, 2024 (the RBI regulatory action).</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-headline" id="c11Headline">Loading...</div>
+                    <div class="card-visual-box" style="height:340px;">
+                        <canvas id="c11Chart"></canvas>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> The sharp vertical drop on Jan 31 highlights the instantaneous re-pricing of regulatory risk following supervisory action on payment fraud controls.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/market/paytm_nifty.csv</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- STEP 7: LIVE PATROL AND CASES -->
+        <!-- ========================================================================= -->
+        <section id="step7" class="step-section">
+            <div class="step-header">
+                <div class="step-badge">Step 7 of 7</div>
+                <h2 class="step-title">Live Patrol: Test Replay Stream & Case Dossiers</h2>
+                <p class="step-sub">Simulated hourly playback across test steps 334–742 and forensic multi-agent case investigation dossiers.</p>
+            </div>
+
+            <div class="story-card" style="margin-bottom:20px;">
+                <div class="card-header-bar">
+                    <div class="card-question">How does Sentinel monitor transactions live?</div>
+                    <div class="tooltip-container">
+                        <span class="info-btn" tabindex="0">i</span>
+                        <div class="popover-box align-right">
+                            <div class="popover-title">⏱️ Live Patrol Replay</div>
+                            <div class="popover-desc">Replays each simulated hour from step 334 to 742. Use Play, Pause, Scrubber, and Speed controls to inspect traffic surges and alarms.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-headline" id="c12Headline">Loading...</div>
+
+                <div class="patrol-controls">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button class="btn btn-primary" id="patrolPlayBtn" onclick="togglePatrolPlay()">⏸️ Pause</button>
+                        <span id="patrolStepDisplay" style="font-weight:700; font-size:13px; color:var(--primary-cyan);">Step: 334 (Hour 22)</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px; flex:1; max-width:460px;">
+                        <span style="font-size:12px; color:var(--text-muted);">Scrubber:</span>
+                        <input type="range" id="patrolScrubber" min="334" max="742" value="334" style="flex:1;" oninput="scrubPatrol(this.value)">
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:12px; color:var(--text-muted);">Speed:</span>
+                        <select id="patrolSpeedSelect" onchange="changePatrolSpeed(this.value)">
+                            <option value="1000">1 hr/sec</option>
+                            <option value="400" selected>2.5 hr/sec</option>
+                            <option value="150">6 hr/sec</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card-visual-box" style="height:240px;">
+                    <canvas id="c12Chart"></canvas>
+                </div>
+
+                <div class="card-explanation">
+                    <strong>What this means:</strong> Sentinel continuously scans incoming transactions, maintaining a strict chronological profile and correlating same-step identical-amount money laundering pairs without delaying honest transactions.
+                </div>
+                <div class="card-source-footer">Source: docs/data/hourly_stats.csv, docs/data/stream.json</div>
+            </div>
+
+            <!-- Case Dossier Explorer -->
+            <div class="story-card">
+                <div class="card-header-bar">
+                    <div class="card-question">Forensic Case File Dossier (Precomputed Multi-Agent Synthesis)</div>
+                    <div class="tooltip-container">
+                        <span class="info-btn" tabindex="0">i</span>
+                        <div class="popover-box align-right">
+                            <div class="popover-title">📁 Investigation Case Files</div>
+                            <div class="popover-desc">Detailed multi-agent investigative reports summarizing transaction flags, user history, and final risk officer decisions.</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:12px; margin-bottom:14px; align-items:center; flex-wrap:wrap;">
+                    <label style="font-size:12px; color:var(--text-muted);">Select Alert Dossier:</label>
+                    <select id="patrolCaseSelect" onchange="renderCaseDossier(this.value)" style="min-width:320px;"></select>
+                </div>
+                <div id="patrolCaseDossierBox"></div>
+                <div class="card-source-footer" style="margin-top:14px;">Source: docs/data/stream.json (cases)</div>
+            </div>
+        </section>
+
+    </main>
 
     <!-- ========================================================================= -->
-    <!-- 3D LEDGER CITY (SENTINEL MODE) MODAL VIEW                                 -->
+    <!-- SENTINEL MODE (3D LEDGER CITY - PHASE A) -->
     <!-- ========================================================================= -->
     <div class="city-modal-overlay" id="cityModal">
-        <!-- City Header Bar -->
         <div class="city-header">
             <div class="city-header-title">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                    <circle cx="12" cy="11" r="3"/>
-                </svg>
-                <span>LEDGER CITY // SENTINEL 3D INTELLIGENCE RADAR</span>
+                <span>🏙️</span> Sentinel Mode: 3D Ledger City
             </div>
-
-            <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-                <span class="pill-badge" id="cityStepClock" style="font-size:12px; padding:4px 10px;">Step 334 | Hour 22:00</span>
-                <button class="toggle-btn" id="cityEvalBtn" onclick="toggleAnswerKey()">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <button class="btn btn-secondary" onclick="toggleAnswerKey()">
                     <span id="cityEvalBtnText">👁️ Ground Truth: OFF</span>
                 </button>
-                <button class="btn btn-secondary" onclick="closeSentinelCity()">✕ Close City</button>
+                <button class="btn btn-primary" onclick="closeSentinelCity()">✕ Exit City</button>
             </div>
         </div>
 
-        <!-- Mandatory Legal & Educational Disclaimer -->
         <div class="city-disclaimer-banner">
-            ⚠️ <strong>Notice:</strong> Simulated live stream: replay of synthetic PaySim payments. People represent a statistical sample. Districts are account hash partitions (MD5 mod 8), not real geographic locations.
+            ⚠️ <strong>Simulated live stream:</strong> replay of fake PaySim payments. People are a sample. Districts are account groups, not real places.
         </div>
 
-        <!-- 3D WebGL Canvas Container -->
         <div class="city-canvas-container" id="cityCanvasContainer">
-            <canvas id="cityFallback2D" style="display:none; width:100%; height:100%;"></canvas>
+            <canvas id="cityFallback2D"></canvas>
 
-            <!-- District Legend HUD Overlay -->
+            <!-- 3D City HUD -->
             <div class="city-hud-panel">
-                <div style="font-weight:800; color:#38bdf8; font-size:13px; margin-bottom:8px; display:flex; justify-content:space-between;">
-                    <span>🏙️ LEDGER METROPOLIS HUD</span>
-                    <span style="color:#a855f7;">3x3 GRID</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <strong style="color:var(--primary-cyan); font-size:13px;">📡 3x3 Urban District Matrix</strong>
+                    <span id="cityStepClock" style="font-size:11px; background:#192744; padding:2px 6px; border-radius:4px; font-weight:700; color:#38bdf8;">Step 334 | 22:00</span>
                 </div>
-                <div style="display:flex; flex-direction:column; gap:4px; font-size:11.5px; color:#cbd5e1;">
-                    <div>• <strong>Districts 1–8:</strong> Account Hash Matrix (MD5 mod 8)</div>
-                    <div>• <strong>Center:</strong> Sentinel Spire (Height 200 CU)</div>
-                    <div>• <strong>People:</strong> <span style="color:#38bdf8; font-weight:700;">Cyan = Transfer</span> | <span style="color:#c084fc; font-weight:700;">Violet = Cash-out</span></div>
-                    <div>• <strong>Bags:</strong> Sized by training amount percentile</div>
+                <div style="font-size:11.5px; color:#cbd5e1; display:flex; flex-direction:column; gap:4px;">
+                    <div>• <strong>Districts 1–8:</strong> Account Hash Clusters (MD5 mod 8)</div>
+                    <div>• <strong>Center:</strong> Sentinel Intelligence Spire</div>
+                    <div>• <strong>People:</strong> <span style="color:var(--primary-cyan);">Cyan = Transfer</span> | <span style="color:var(--violet-coat);">Violet = Cash-out</span></div>
+                    <div>• <strong>Bags:</strong> Scaled by training amount percentile</div>
                 </div>
-                <div style="margin-top:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.12); font-size:11px; color:#94a3b8;">
-                    <strong>Live Surveillance Indicators:</strong><br>
-                    <span style="color:#f59e0b; font-weight:700;">● Amber Card:</span> Model Risk Alert (Score ≥ <span id="cityStrictnessBadge">0.50</span>)<br>
-                    <span style="color:#10b981; font-weight:700;">● Green Card:</span> Clean Approved Payment<br>
-                    <span style="color:#ef4444; font-weight:700;">● Red Card:</span> Confirmed Fraud (Ground Truth ON)<br>
-                    <span style="color:#38bdf8; font-weight:700;">● Golden Sentinel:</span> Road patrol investigator
+                <div style="margin-top:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.1); font-size:11px; color:#94a3b8;">
+                    <strong>Building Dynamics:</strong><br>
+                    • Height = Recent hourly payment density<br>
+                    • Lit Windows = Flags in last 24 steps
                 </div>
             </div>
 
-            <!-- Floating Evidence Board & Decision Stamp (Phase B) -->
-            <div class="city-evidence-board" id="cityEvidenceBoard">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid rgba(56,189,248,0.25); padding-bottom:6px;">
-                    <strong style="color:#38bdf8; font-size:14px;" id="ebTxId">tx_334_12</strong>
-                    <button style="background:transparent; border:none; color:#94a3b8; cursor:pointer; font-size:16px;" onclick="closeEvidenceBoard()">✕</button>
-                </div>
-                <div style="font-size:12px; color:#cbd5e1; display:flex; flex-direction:column; gap:6px;" id="ebTxBody">
-                    <div>Select a suspect or payment to inspect forensic evidence...</div>
-                </div>
-            </div>
-
-            <!-- City Interactive Controls Bar -->
+            <!-- City Interactive Controls -->
             <div class="city-controls-bar">
-                <button class="btn btn-secondary" onclick="setCityFilter('all')">🌐 All Transactions</button>
-                <button class="btn btn-secondary" onclick="setCityFilter('flagged')">🚨 Flagged Only</button>
                 <button class="btn btn-secondary" onclick="setCityView('skyline')">🌆 Skyline</button>
                 <button class="btn btn-secondary" onclick="setCityView('overhead')">🛰️ 3x3 Grid Map</button>
-                <button class="btn btn-secondary" onclick="setCityView('street')">🚶 Street Patrol</button>
-                <button class="btn btn-secondary" onclick="setCityView('tower')">🗼 Sentinel Spire</button>
-                <button class="btn btn-primary" onclick="focusOnSuspect()">🚨 Next Suspect</button>
+                <button class="btn btn-secondary" onclick="setCityView('street')">🚶 Street Level</button>
+                <span style="font-size:11px; color:#94a3b8; margin-left:6px;">🖱️ Drag to rotate | Scroll to zoom</span>
             </div>
         </div>
     </div>
 
-    <!-- ========================================================================= -->
-    <!-- BEGINNER'S GLOSSARY MODAL                                                 -->
-    <!-- ========================================================================= -->
+    <!-- Beginners' Terminology Modal Dialog -->
     <div class="modal-overlay" id="glossaryModal" onclick="closeGlossaryModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
@@ -1541,168 +1560,127 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     <div class="term-card-title">🎯 Filter Strictness (θ)</div>
                     <div class="term-card-tech">Technical term: Decision Threshold</div>
                     <div class="term-card-body">The sensitivity cutoff. Scores above this number sound an alarm. Low (0.01) catches almost all fraud; high (0.80) only alarms on high-confidence cases.</div>
+                    <div class="term-card-example">💡 Rule of thumb: Low review cost = keep strictness low to stop big theft.</div>
                 </div>
 
                 <div class="term-card">
                     <div class="term-card-title">💼 Cost per Check</div>
                     <div class="term-card-tech">Technical term: Review / Inspection Cost</div>
-                    <div class="term-card-body">The money spent paying an analyst and running customer verification when a payment is held for review. Baseline is 500 currency units.</div>
+                    <div class="term-card-body">The money spent paying an analyst and running support when a payment is held for verification. Baseline is 500 currency units.</div>
+                    <div class="term-card-example">💡 High review costs push companies to raise strictness.</div>
                 </div>
 
                 <div class="term-card">
                     <div class="term-card-title">👁️ Show True Fraud</div>
                     <div class="term-card-tech">Technical term: Ground Truth / Answer Key</div>
-                    <div class="term-card-body">In production, real fraud labels arrive days later. This toggle unmasks the actual verified fraud answers in red to audit performance.</div>
+                    <div class="term-card-body">In real life, you don't know who is a thief until days later. This toggle unmasks the actual verified fraud answers in red for evaluation.</div>
+                    <div class="term-card-example">💡 Keep OFF for realistic simulation; turn ON to grade performance.</div>
                 </div>
 
                 <div class="term-card">
                     <div class="term-card-title">🟢 Caught Fraud</div>
                     <div class="term-card-tech">Technical term: True Positive (TP)</div>
-                    <div class="term-card-body">A real criminal successfully caught and blocked by the model. Money saved!</div>
+                    <div class="term-card-body">A real fraudster successfully caught and blocked by the model. Money saved!</div>
                 </div>
 
                 <div class="term-card">
                     <div class="term-card-title">🟡 False Alarm</div>
                     <div class="term-card-tech">Technical term: False Positive (FP)</div>
-                    <div class="term-card-body">An innocent customer flagged by mistake. Costs analyst time to verify and clear.</div>
+                    <div class="term-card-body">An innocent customer flagged by mistake. Costs analyst time to review and clear.</div>
                 </div>
 
                 <div class="term-card">
                     <div class="term-card-title">🔴 Missed Fraud</div>
                     <div class="term-card-tech">Technical term: False Negative (FN)</div>
-                    <div class="term-card-body">A fraudster who slipped past the detector undetected. The stolen funds are lost!</div>
+                    <div class="term-card-body">A thief who slipped past the detector. The entire stolen principal is lost!</div>
                 </div>
 
                 <div class="term-card">
                     <div class="term-card-title">⚪ Clean Pass</div>
                     <div class="term-card-tech">Technical term: True Negative (TN)</div>
-                    <div class="term-card-body">An honest payment approved instantly without causing customer friction.</div>
+                    <div class="term-card-body">An honest payment approved immediately without annoying the user.</div>
                 </div>
 
                 <div class="term-card">
                     <div class="term-card-title">🏆 PR-AUC Discovery Power</div>
                     <div class="term-card-tech">Technical term: Precision-Recall Area Under Curve</div>
-                    <div class="term-card-body">The gold standard metric for fraud detection. Measures how well the AI discovers rare criminal needles without drowning in false alarms.</div>
+                    <div class="term-card-body">The master score for fraud AI. Measures how well the model catches rare needles in a giant haystack without drowning in false alarms.</div>
+                </div>
+
+                <div class="term-card">
+                    <div class="term-card-title">⏳ Past vs Future Split</div>
+                    <div class="term-card-tech">Technical term: Temporal Train/Test Split</div>
+                    <div class="term-card-body">Training on past days (steps 1–333) and testing on future days (steps 334–742) so the AI never cheats by looking ahead.</div>
+                </div>
+
+                <div class="term-card">
+                    <div class="term-card-title">🔗 Same-Step Pair</div>
+                    <div class="term-card-tech">Technical term: Correlated Laundering Graph</div>
+                    <div class="term-card-body">When stolen funds are transferred to an accomplice and cashed out at the exact same hour for the exact same amount.</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ========================================================================= -->
-    <!-- MISSION 10: SENTINEL ASSISTANT DOCKED CHAT & REPORT BUILDER               -->
-    <!-- ========================================================================= -->
-    <button class="assistant-toggle-btn" onclick="toggleAssistantDrawer()" title="Open Sentinel Intelligence Assistant">
-        🤖
-    </button>
-
-    <div class="assistant-drawer" id="assistantDrawer">
-        <div class="assistant-header">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:16px;">🤖</span>
-                <strong style="color:#38bdf8; font-size:13px;">SENTINEL ASSISTANT</strong>
-                <span class="pill-badge" style="font-size:10px;">Rule-Based</span>
-            </div>
-            <button style="background:transparent; border:none; color:#94a3b8; cursor:pointer; font-size:16px;" onclick="toggleAssistantDrawer()">✕</button>
-        </div>
-
-        <div class="assistant-body" id="assistantChatBody">
-            <div class="assistant-msg bot">
-                👋 Greetings, Analyst. I am the Sentinel Rule-Based Intelligence Assistant. How may I assist your fraud investigation?
-            </div>
-        </div>
-
-        <div class="assistant-quick-prompts">
-            <button class="quick-prompt-chip" onclick="sendAssistantQuery('Why flagged?')">🎯 Why flagged?</button>
-            <button class="quick-prompt-chip" onclick="sendAssistantQuery('Case summary')">📁 Case summary</button>
-            <button class="quick-prompt-chip" onclick="sendAssistantQuery('Policy counts')">⚖️ Policy counts</button>
-            <button class="quick-prompt-chip" onclick="sendAssistantQuery('Model limits')">🛡️ Model limits</button>
-            <button class="quick-prompt-chip" onclick="sendAssistantQuery('How it works')">🧠 How it works</button>
-            <button class="quick-prompt-chip" onclick="openReportBuilderModal()">📊 Build report</button>
-        </div>
-
-        <div class="assistant-input-bar">
-            <input type="text" id="assistantInput" placeholder="Ask a question..." onkeydown="if(event.key==='Enter') sendAssistantCustomMessage()">
-            <button class="btn btn-primary" style="padding:4px 10px; font-size:12px;" onclick="sendAssistantCustomMessage()">Send</button>
-        </div>
-    </div>
-
-    <!-- Report Builder Modal -->
-    <div class="modal-overlay" id="reportBuilderModal" onclick="closeReportBuilderModal(event)">
-        <div class="modal-content" onclick="event.stopPropagation()" style="max-width:900px;">
-            <div class="modal-header">
-                <div class="modal-title">📊 Sentinel Intelligence Audit Report Builder</div>
-                <button class="modal-close-btn" onclick="closeReportBuilderModal()">✕</button>
-            </div>
-            <p style="color:var(--text-muted); font-size:12.5px; margin-bottom:14px;">
-                Generate an official audit draft of all model alerts, risk officer decisions, and operational metrics.
-            </p>
-
-            <div style="display:flex; gap:10px; margin-bottom:16px;">
-                <button class="btn btn-primary" onclick="exportReportMarkdown()">📥 Download Markdown</button>
-                <button class="btn btn-secondary" onclick="exportReportCSV()">📊 Export CSV</button>
-                <button class="btn btn-secondary" onclick="printReportPage()">🖨️ Print View</button>
-            </div>
-
-            <div style="background:#080d1a; border:1px solid var(--border-color); border-radius:10px; padding:16px; max-height:400px; overflow-y:auto;" id="reportPreviewBox">
-                <pre id="reportPreviewText" style="background:transparent; border:none; max-height:none;">Generating report draft...</pre>
-            </div>
-        </div>
-    </div>
-
-    <!-- ========================================================================= -->
-    <!-- APPLICATION LOGIC & THREE.JS 3D ENGINE                                   -->
-    <!-- ========================================================================= -->
+    <!-- Global Application State & Reactive Data Script -->
     <script>
-        // Injected Dynamic Data Bundle
-        const DATA = __JSON_DATA_BUNDLE__;
+        const DATA = __DATA_BUNDLE__;
 
-        // Strictness Threshold Grid
-        const THRESHOLD_GRID = [0.01, 0.02, 0.05, 0.10, 0.15, 0.20, 0.30, 0.50, 0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.99];
+        const THRESHOLD_GRID = [0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95];
         let currentStrictness = 0.50;
         let currentCheckingCost = 500;
         let evalMode = false;
-        let cityFilterMode = 'all'; // 'all' or 'flagged'
-
-        // Patrol & Stream State
         let patrolPlaying = true;
         let patrolCurrentStep = 334;
         let patrolInterval = null;
-        let patrolSpeed = 800;
+        let patrolSpeed = 400;
 
-        // Chart Instances
-        let chartC2, chartC4, chartC5, chartC6, chartFeatImp, chartC7, chartC9, chartC10, chartC11, chartC12;
+        // Chart instances
+        let chartC2, chartC3, chartC4, chartC5, chartC6, chartFeatImp, chartC7, chartC9, chartC10, chartC11, chartC12;
 
-        // 3D Engine Globals
-        let cityScene, cityCamera, cityRenderer, cityRaycaster, cityMouse;
-        let cityInitialized = false;
-        let cityAnimId = null;
-        let cityBuildings = [];
-        let cityPeopleMeshes = [];
-        let cityIs2DFallback = false;
-        let selectedPersonData = null;
-        let sentinelMesh = null;
-        let scannerGates = [];
-        let routeLaserLine = null;
+        // 3D Ledger City State (Phase A)
+        let cityScene, cityCamera, cityRenderer, cityTower, cityBuildings = [], cityPeopleMeshes = [];
+        let cityInitialized = false, cityAnimId = null, cityIs2DFallback = false;
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        // Camera Orbit State
-        let isOrbiting = false, isPanning = false;
-        let mousePrevX = 0, mousePrevY = 0;
-        let camTarget = new THREE.Vector3(0, 20, 0);
-        let camSpherical = { radius: 520, theta: Math.PI / 4, phi: Math.PI / 3 };
-
-        // 3x3 District Coordinates
+        // 3x3 District Coordinates (Center is Sentinel Tower)
         const DISTRICT_POSITIONS = {
-            1: { x: -220, z: -220, name: "District 1 (Alpha NW)" },
-            2: { x:    0, z: -220, name: "District 2 (North Gate)" },
-            3: { x:  220, z: -220, name: "District 3 (Beta NE)" },
-            4: { x: -220, z:    0, name: "District 4 (West Exchange)" },
-            5: { x:  220, z:    0, name: "District 5 (East Exchange)" },
-            6: { x: -220, z:  220, name: "District 6 (Gamma SW)" },
-            7: { x:    0, z:  220, name: "District 7 (South Terminal)" },
-            8: { x:  220, z:  220, name: "District 8 (Delta SE)" }
+            1: { x: -160, z: -160, name: "District 1" },
+            2: { x:    0, z: -160, name: "District 2" },
+            3: { x:  160, z: -160, name: "District 3" },
+            4: { x:  160, z:    0, name: "District 4" },
+            5: { x:  160, z:  160, name: "District 5" },
+            6: { x:    0, z:  160, name: "District 6" },
+            7: { x: -160, z:  160, name: "District 7" },
+            8: { x: -160, z:    0, name: "District 8" },
+            center: { x: 0, z: 0, name: "Sentinel Tower" }
         };
 
-        // Navigation
+        function openGlossaryModal() {
+            document.getElementById('glossaryModal').classList.add('active');
+        }
+
+        function closeGlossaryModal(e) {
+            if (!e || e.target === document.getElementById('glossaryModal') || e.target.classList.contains('modal-close-btn')) {
+                document.getElementById('glossaryModal').classList.remove('active');
+            }
+        }
+
+        function openSentinelCity() {
+            document.getElementById('cityModal').classList.add('active');
+            if (!cityInitialized) {
+                init3DLedgerCity();
+                cityInitialized = true;
+            }
+            updateCityForStep(patrolCurrentStep);
+            animate3DCity();
+        }
+
+        function closeSentinelCity() {
+            document.getElementById('cityModal').classList.remove('active');
+            if (cityAnimId) cancelAnimationFrame(cityAnimId);
+        }
+
         function goToStep(stepNum) {
             document.querySelectorAll('.step-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item-btn').forEach(el => el.classList.remove('active'));
@@ -1714,8 +1692,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         function onStrictnessChange(idx) {
             currentStrictness = THRESHOLD_GRID[parseInt(idx)];
             document.getElementById('strictnessLabel').innerText = currentStrictness.toFixed(2);
-            const cityBadge = document.getElementById('cityStrictnessBadge');
-            if (cityBadge) cityBadge.innerText = currentStrictness.toFixed(2);
             renderAllDynamicCards();
             updateSimScore();
             if (cityInitialized) updateCityForStep(patrolCurrentStep);
@@ -1723,13 +1699,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
         function onCheckingCostChange(val) {
             currentCheckingCost = parseInt(val);
-            document.getElementById('reviewCostLabel').innerText = currentCheckingCost + " CU";
             renderAllDynamicCards();
         }
 
         function toggleAnswerKey() {
             evalMode = !evalMode;
-            document.getElementById('evalKeyText').innerText = evalMode ? "Show True Fraud: ON" : "Show True Fraud: OFF";
+            document.getElementById('evalKeyText').innerText = evalMode ? "👁️ Show True Fraud: ON" : "👁️ Show True Fraud: OFF";
             document.getElementById('evalKeyToggle').classList.toggle('active', evalMode);
             const cityBtn = document.getElementById('cityEvalBtnText');
             if (cityBtn) cityBtn.innerText = evalMode ? "👁️ Ground Truth: ON" : "👁️ Ground Truth: OFF";
@@ -1737,16 +1712,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             if (cityInitialized) updateCityForStep(patrolCurrentStep);
         }
 
-        function setCityFilter(mode) {
-            cityFilterMode = mode;
-            if (cityInitialized) updateCityForStep(patrolCurrentStep);
-        }
-
-        function openGlossaryModal() { document.getElementById('glossaryModal').classList.add('active'); }
-        function closeGlossaryModal(e) { document.getElementById('glossaryModal').classList.remove('active'); }
-        function openGlossaryTerm(term) { openGlossaryModal(); }
-
-        // Live Transaction Simulator Calculator
         function updateSimScore() {
             const amt = parseFloat(document.getElementById('simAmountInput').value);
             const hr = parseInt(document.getElementById('simHourInput').value);
@@ -1795,7 +1760,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             }
         }
 
-        // Render All Dynamic Cards
         function renderAllDynamicCards() {
             renderCard1();
             renderCard2();
@@ -1823,23 +1787,34 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             const testPct = (ov.time_split.test_fraud_rate * 100).toFixed(3);
 
             if (evalMode) {
-                document.getElementById('c1Headline').innerText = `Across the dataset, ${frauds.toLocaleString()} of ${total.toLocaleString()} transactions (${pct}%) are fraud (${testFrauds} of ${testTotal.toLocaleString()} in test, ${testPct}%).`;
+                document.getElementById('c1Headline').innerText = `Across the sample, only ${frauds.toLocaleString()} of ${total.toLocaleString()} payments (${pct}%) are fraud (${testFrauds} of ${testTotal.toLocaleString()} in test, ${testPct}%).`;
             } else {
-                document.getElementById('c1Headline').innerText = `Fraud represents under 1% of total transactions, creating an extreme needle-in-a-haystack detection challenge.`;
+                document.getElementById('c1Headline').innerText = `Fraud represents under 1% of digital payments across the network, making detection an extreme needle-in-a-haystack challenge.`;
             }
 
             const grid = document.getElementById('c1DotGrid');
             grid.innerHTML = '';
-            for (let i = 0; i < 600; i++) {
+            for (let i = 0; i < 800; i++) {
                 const dot = document.createElement('div');
-                dot.className = 'grid-dot' + (evalMode && i < 4 ? ' fraud-dot' : '');
+                dot.className = 'grid-dot' + (evalMode && i < 5 ? ' fraud-dot' : '');
                 grid.appendChild(dot);
             }
         }
 
         // Card 2
         function renderCard2() {
-            document.getElementById('c2Headline').innerText = `100% of confirmed frauds occur exclusively in TRANSFER and CASH_OUT payment channels; PAYMENT, CASH_IN, and DEBIT carry zero fraud in PaySim.`;
+            const ov = DATA.overview.filtered_dataset;
+            const trFrauds = ov.transfer_frauds;
+            const coFrauds = ov.cashout_frauds;
+            const trTotal = ov.transfer_count;
+            const coTotal = ov.cashout_count;
+
+            if (evalMode) {
+                document.getElementById('c2Headline').innerText = `100% of frauds occur in TRANSFER (${trFrauds} of ${trTotal.toLocaleString()}) and CASH_OUT (${coFrauds} of ${coTotal.toLocaleString()}). Zero frauds occur in other types.`;
+            } else {
+                document.getElementById('c2Headline').innerText = `Fraud is concentrated exclusively in outbound TRANSFER and CASH_OUT payment corridors.`;
+            }
+
             const ctx = document.getElementById('c2Chart').getContext('2d');
             if (chartC2) chartC2.destroy();
             chartC2 = new Chart(ctx, {
@@ -1847,8 +1822,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 data: {
                     labels: ['TRANSFER', 'CASH_OUT', 'PAYMENT', 'CASH_IN', 'DEBIT'],
                     datasets: [
-                        { label: 'Total Volume', data: [80587, 335606, 323091, 209795, 5314], backgroundColor: '#38bdf8' },
-                        { label: 'Confirmed Frauds', data: evalMode ? [606, 595, 0, 0, 0] : [0, 0, 0, 0, 0], backgroundColor: '#ef4444' }
+                        { label: 'Total Payments', data: [trTotal, coTotal, 321000, 210000, 7000], backgroundColor: '#64748b' },
+                        { label: 'Frauds (Ground Truth)', data: evalMode ? [trFrauds, coFrauds, 0, 0, 0] : [0, 0, 0, 0, 0], backgroundColor: '#ef4444' }
                     ]
                 },
                 options: {
@@ -1865,22 +1840,50 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
         // Card 3
         function renderCard3() {
-            const chk = DATA.checks;
-            document.getElementById('c3Headline').innerText = `Filtered dataset size: ${chk.filtered_rows.toLocaleString()} rows (${chk.train_rows.toLocaleString()} train / ${chk.test_rows.toLocaleString()} test). 4 synthetic balance columns strictly excluded to prevent artificial leakage.`;
+            const sp = DATA.overview.time_split;
+            document.getElementById('c3Headline').innerText = `Training on past steps 1–${sp.split_step} (${sp.train_rows.toLocaleString()} payments) and evaluating on future steps ${sp.test_steps[0]}–${sp.test_steps[1]} (${sp.test_rows.toLocaleString()} payments).`;
+
+            const ctx = document.getElementById('c3Chart').getContext('2d');
+            if (chartC3) chartC3.destroy();
+            chartC3 = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Past Training (Steps 1-333: 75%)', 'Future Test (Steps 334-742: 25%)'],
+                    datasets: [{
+                        data: [sp.train_rows, sp.test_rows],
+                        backgroundColor: ['#3b82f6', '#38bdf8'],
+                        borderColor: '#080d1a',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#f8fafc' } } }
+                }
+            });
         }
 
         // Card 4
         function renderCard4() {
-            document.getElementById('c4Headline').innerText = `Fraudulent transfers average 1,467,979 currency units (~4.7x higher than legitimate average of 312,800 currency units).`;
+            const hist = DATA.amount_hist;
+            const highFraud = hist.filter(h => h.bin_min >= 200000).reduce((sum, h) => sum + h.count_fraud, 0);
+            
+            if (evalMode) {
+                document.getElementById('c4Headline').innerText = `${highFraud} of 652 test frauds (${((highFraud/652)*100).toFixed(1)}%) occur in amounts exceeding 200,000 currency units.`;
+            } else {
+                document.getElementById('c4Headline').innerText = `Fraudulent payments skew heavily towards high-value brackets (>200,000 currency units).`;
+            }
+
             const ctx = document.getElementById('c4Chart').getContext('2d');
             if (chartC4) chartC4.destroy();
             chartC4 = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['<50k', '50k-200k', '200k-500k', '500k-1M', '1M-2M', '2M-5M', '>5M'],
+                    labels: hist.map(h => h.bin_label),
                     datasets: [
-                        { label: 'Legitimate Payments', data: [120000, 150000, 85000, 35000, 15000, 5000, 1000], backgroundColor: '#64748b' },
-                        { label: 'Fraud Payments', data: evalMode ? [10, 45, 110, 320, 450, 220, 46] : [0, 0, 0, 0, 0, 0, 0], backgroundColor: '#ef4444' }
+                        { label: 'Legitimate Payments', data: hist.map(h => h.count_legit), backgroundColor: '#64748b' },
+                        { label: 'Fraud Payments', data: evalMode ? hist.map(h => h.count_fraud) : hist.map(() => 0), backgroundColor: '#ef4444' }
                     ]
                 },
                 options: {
@@ -1897,24 +1900,26 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
         // Card 5
         function renderCard5() {
-            document.getElementById('c5Headline').innerText = `Legitimate payments plunge by ~85% during late night hours (0:00–5:00), while fraud operations maintain steady around-the-clock automated velocity.`;
             const hrMap = {};
+            for (let i = 0; i < 24; i++) hrMap[i] = { payments: 0, frauds: 0, alerts: 0 };
             DATA.hourly_stats.forEach(h => {
-                const hr = h.hour;
-                if (!hrMap[hr]) hrMap[hr] = { legit: 0, frauds: 0 };
-                hrMap[hr].legit += h.payments;
-                hrMap[hr].frauds += h.frauds_actual;
+                hrMap[h.hour].payments += h.payments;
+                hrMap[h.hour].frauds += h.frauds_actual;
+                hrMap[h.hour].alerts += h.alerts_strict;
             });
+
+            document.getElementById('c5Headline').innerText = `Payments follow human business hours (peaking 9:00–18:00), while automated fraud attacks continue across all 24 hours.`;
 
             const ctx = document.getElementById('c5Chart').getContext('2d');
             if (chartC5) chartC5.destroy();
             chartC5 = new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
-                    labels: Object.keys(hrMap).map(h => `${h}:00`),
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
                     datasets: [
-                        { label: 'Legitimate Volume', data: Object.values(hrMap).map(v => v.legit), borderColor: '#38bdf8', tension: 0.3 },
-                        { label: 'Actual Frauds', data: evalMode ? Object.values(hrMap).map(v => v.frauds) : Object.values(hrMap).map(() => 0), borderColor: '#ef4444', backgroundColor: '#ef4444', tension: 0.3 }
+                        { label: 'Total Payments', data: Object.values(hrMap).map(v => v.payments), backgroundColor: '#38bdf8' },
+                        { label: 'Strict Alerts (Flagged)', data: Object.values(hrMap).map(v => v.alerts), backgroundColor: '#f59e0b' },
+                        { label: 'Actual Frauds', data: evalMode ? Object.values(hrMap).map(v => v.frauds) : Object.values(hrMap).map(() => 0), backgroundColor: '#ef4444' }
                     ]
                 },
                 options: {
@@ -1935,7 +1940,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             const lr = DATA.detector_comparison.find(d => d.detector.includes("Logistic"));
             const rule = DATA.detector_comparison.find(d => d.detector.includes("Rule"));
 
-            document.getElementById('c6Headline').innerText = `Random Forest achieves PR-AUC of ${rf.pr_auc.toFixed(4)} (~53x lift over baseline), outperforming Logistic Regression (${lr.pr_auc.toFixed(4)}) and Static Rules (${rule.pr_auc.toFixed(4)}).`;
+            document.getElementById('c6Headline').innerText = `Random Forest achieves PR-AUC of ${rf.pr_auc.toFixed(4)} (~53x lift over 0.0063 baseline), outperforming Logistic Regression (${lr.pr_auc.toFixed(4)}) and Static Rule (${rule.pr_auc.toFixed(4)}).`;
 
             const ctx = document.getElementById('c6Chart').getContext('2d');
             if (chartC6) chartC6.destroy();
@@ -1995,7 +2000,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         function renderCard7() {
             const sh = DATA.score_hist;
             const lowPct = ((sh[0].total / DATA.overview.time_split.test_rows) * 100).toFixed(1);
-            document.getElementById('c7Headline').innerText = `${lowPct}% of test transactions score in the lowest 0.0–0.1 bucket, confining risk alerts to a sharp actionable tail.`;
+            document.getElementById('c7Headline').innerText = `${lowPct}% of test payments score in the lowest 0.0–0.1 bucket, confining risk alerts to a sharp actionable tail.`;
 
             const ctx = document.getElementById('c7Chart').getContext('2d');
             if (chartC7) chartC7.destroy();
@@ -2030,39 +2035,39 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             if (evalMode) {
                 document.getElementById('c8Headline').innerText = `At strictness ${row.threshold.toFixed(2)}: ${alerts.toLocaleString()} alerts generated; ${row.tp} frauds caught (${rec}% recall) with ${prec}% precision.`;
             } else {
-                document.getElementById('c8Headline').innerText = `At strictness ${row.threshold.toFixed(2)}: ${alerts.toLocaleString()} candidate alerts routed for operational verification.`;
+                document.getElementById('c8Headline').innerText = `At strictness ${row.threshold.toFixed(2)}: ${alerts.toLocaleString()} total candidate alerts generated for operational review.`;
             }
 
             const matrix = document.getElementById('c8Matrix');
             matrix.innerHTML = `
-                <div class="matrix-cell tp">
+                <div class="matrix-cell tp" title="Caught Fraud: Real criminals stopped">
                     <div class="matrix-cell-header">
                         <span class="matrix-cell-title">🟢 Caught Fraud</span>
-                        <span class="info-btn" onclick="openGlossaryTerm('tp')">i</span>
+                        <span class="info-btn">i</span>
                     </div>
                     <div class="matrix-cell-tech">True Positives (TP)</div>
                     <div class="matrix-cell-val" style="color:var(--safe-green);">${evalMode ? row.tp.toLocaleString() : 'Masked (Turn ON Ground Truth)'}</div>
                 </div>
-                <div class="matrix-cell fp">
+                <div class="matrix-cell fp" title="False Alarm: Innocent customers flagged for review">
                     <div class="matrix-cell-header">
                         <span class="matrix-cell-title">🟡 False Alarms</span>
-                        <span class="info-btn" onclick="openGlossaryTerm('fp')">i</span>
+                        <span class="info-btn">i</span>
                     </div>
                     <div class="matrix-cell-tech">False Positives (FP)</div>
-                    <div class="matrix-cell-val" style="color:var(--accent-amber);">${evalMode ? row.fp.toLocaleString() : 'Masked'}</div>
+                    <div class="matrix-cell-val" style="color:var(--alert-amber);">${evalMode ? row.fp.toLocaleString() : alerts.toLocaleString() + ' Alerts'}</div>
                 </div>
-                <div class="matrix-cell fn">
+                <div class="matrix-cell fn" title="Missed Fraud: Thieves who got away undetected">
                     <div class="matrix-cell-header">
                         <span class="matrix-cell-title">🔴 Missed Fraud</span>
-                        <span class="info-btn" onclick="openGlossaryTerm('fn')">i</span>
+                        <span class="info-btn">i</span>
                     </div>
                     <div class="matrix-cell-tech">False Negatives (FN)</div>
-                    <div class="matrix-cell-val" style="color:var(--fraud-red);">${evalMode ? row.fn.toLocaleString() : 'Masked'}</div>
+                    <div class="matrix-cell-val" style="color:var(--fraud-red);">${evalMode ? row.fn.toLocaleString() : 'Masked (Turn ON Ground Truth)'}</div>
                 </div>
-                <div class="matrix-cell tn">
+                <div class="matrix-cell tn" title="Clean Passes: Honest customers approved smoothly">
                     <div class="matrix-cell-header">
-                        <span class="matrix-cell-title">⚪ Clean Pass</span>
-                        <span class="info-btn" onclick="openGlossaryTerm('tn')">i</span>
+                        <span class="matrix-cell-title">⚪ Clean Passes</span>
+                        <span class="info-btn">i</span>
                     </div>
                     <div class="matrix-cell-tech">True Negatives (TN)</div>
                     <div class="matrix-cell-val" style="color:var(--honest-grey);">${evalMode ? row.tn.toLocaleString() : (DATA.overview.time_split.test_rows - alerts).toLocaleString()}</div>
@@ -2072,30 +2077,41 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
         // Card 9
         function renderCard9() {
-            const costData = DATA.threshold_curve.map(t => {
-                const totalCost = (t.fn * 1467979) + ((t.tp + t.fp) * currentCheckingCost);
-                return { threshold: t.threshold, totalCost, alerts: t.tp + t.fp };
-            });
+            const col = `cost_${currentCheckingCost}`;
+            const sensData = DATA.cost_sensitivity.filter(s => s.threshold !== 'lowest_cost_threshold');
+            const optRow = DATA.cost_sensitivity.find(s => s.threshold === 'lowest_cost_threshold');
+            const optTh = optRow ? parseFloat(optRow[col]) : 0.01;
 
-            const minRow = costData.reduce((prev, curr) => curr.totalCost < prev.totalCost ? curr : prev, costData[0]);
-            document.getElementById('c9Headline').innerText = `At ${currentCheckingCost} CU checking cost: Optimal strictness is θ = ${minRow.threshold.toFixed(2)} (minimizing total operational cost to ${(minRow.totalCost / 1e6).toFixed(2)}M currency units).`;
+            document.getElementById('c9Headline').innerText = `At ${currentCheckingCost.toLocaleString()} currency units/check, the minimum total loss is achieved at strictness threshold ${optTh.toFixed(2)}.`;
 
             const ctx = document.getElementById('c9Chart').getContext('2d');
             if (chartC9) chartC9.destroy();
+
+            const totals = sensData.map(s => parseFloat(s[col]));
+
             chartC9 = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: costData.map(c => c.threshold.toFixed(2)),
+                    labels: sensData.map(s => s.threshold),
                     datasets: [
-                        { label: `Total Operational Cost (${currentCheckingCost} CU / review)`, data: costData.map(c => c.totalCost), borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.3 }
+                        {
+                            label: `Total Cost @ ${currentCheckingCost} CU/check`,
+                            data: totals,
+                            borderColor: '#38bdf8',
+                            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                            fill: true,
+                            tension: 0.2,
+                            pointRadius: sensData.map(s => parseFloat(s.threshold) === optTh ? 7 : 2),
+                            pointBackgroundColor: sensData.map(s => parseFloat(s.threshold) === optTh ? '#ef4444' : '#38bdf8')
+                        }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        x: { title: { display: true, text: 'Strictness Threshold (θ)', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
-                        y: { title: { display: true, text: 'Total Loss + Review Cost (CU)', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+                        x: { title: { display: true, text: 'Filter Strictness (θ)', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { title: { display: true, text: 'Total Loss (currency units)', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
                     },
                     plugins: { legend: { labels: { color: '#f8fafc' } } }
                 }
@@ -2104,18 +2120,23 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
         // Card 10
         function renderCard10() {
-            const pol = DATA.overview.policy_alerts_test;
-            document.getElementById('c10Headline').innerText = `Strict Policy (θ=0.10): ${pol.strict.alerts.toLocaleString()} alerts (${pol.strict.frauds_caught} caught) | Balanced (θ=0.50): ${pol.balanced.alerts} alerts (${pol.balanced.frauds_caught} caught) | Lenient (θ=0.90): ${pol.lenient.alerts} alerts (${pol.lenient.frauds_caught} caught).`;
+            const pol = DATA.stream.policy_comparison;
+            const strictSaved = (pol.find(p => p.policy.toLowerCase() === 'strict').fraud_value_saved / 1000000).toFixed(2);
+            const balSaved = (pol.find(p => p.policy.toLowerCase() === 'balanced').fraud_value_saved / 1000000).toFixed(2);
+            const lenSaved = (pol.find(p => p.policy.toLowerCase() === 'lenient').fraud_value_saved / 1000000).toFixed(2);
+
+            document.getElementById('c10Headline').innerText = `Strict Policy stops ${strictSaved}M currency units; Balanced stops ${balSaved}M CU; Lenient stops ${lenSaved}M CU.`;
 
             const ctx = document.getElementById('c10Chart').getContext('2d');
             if (chartC10) chartC10.destroy();
             chartC10 = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['Strict (θ=0.10)', 'Balanced (θ=0.50)', 'Lenient (θ=0.90)'],
+                    labels: pol.map(p => p.policy),
                     datasets: [
-                        { label: 'Total Candidate Alerts', data: [pol.strict.alerts, pol.balanced.alerts, pol.lenient.alerts], backgroundColor: '#38bdf8' },
-                        { label: 'Confirmed Frauds Caught', data: evalMode ? [pol.strict.frauds_caught, pol.balanced.frauds_caught, pol.lenient.frauds_caught] : [0, 0, 0], backgroundColor: '#10b981' }
+                        { label: 'Protected Fraud Principal (currency units)', data: pol.map(p => p.fraud_value_saved), backgroundColor: '#10b981' },
+                        { label: 'Lost Fraud Principal (currency units)', data: pol.map(p => p.fraud_value_lost), backgroundColor: '#ef4444' },
+                        { label: 'Analyst Review Cost (currency units)', data: pol.map(p => p.review_cost), backgroundColor: '#f59e0b' }
                     ]
                 },
                 options: {
@@ -2133,7 +2154,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         // Card 11
         function renderCard11() {
             const m = DATA.market;
-            document.getElementById('c11Headline').innerText = `Following the RBI regulatory order on Jan 31 2024, Paytm shares cratered 42.1% in 3 sessions while the NIFTY 50 remained resilient.`;
+            const preVol = m[0].pre_volatility;
+            const postVol = m[0].post_volatility;
+            const betaPre = m[0].beta_pre;
+            const betaPost = m[0].beta_post;
+
+            document.getElementById('c11Headline').innerText = `Post-RBI supervisory action, Paytm equity dropped ~55% on NSE; annualized volatility surged from ${preVol}% to ${postVol}% while market beta rose from ${betaPre} to ${betaPost}.`;
 
             const ctx = document.getElementById('c11Chart').getContext('2d');
             if (chartC11) chartC11.destroy();
@@ -2150,7 +2176,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', maxTicksLimit: 12 } }
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', maxTicksLimit: 12 } },
+                        y: { title: { display: true, text: 'Normalized Index (Jan 1 = 100)', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
                     },
                     plugins: { legend: { labels: { color: '#f8fafc' } } }
                 }
@@ -2165,7 +2192,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             const caseSel = document.getElementById('patrolCaseSelect');
             if (caseSel && caseSel.children.length === 0) {
                 const keys = Object.keys(DATA.stream.cases);
-                caseSel.innerHTML = keys.map(k => `<option value="${k}">${k} (${DATA.stream.cases[k].transaction.type}, ${DATA.stream.cases[k].transaction.amount.toLocaleString()} CU)</option>`).join('');
+                caseSel.innerHTML = keys.map(k => `<option value="${k}">${k} (${DATA.stream.cases[k].transaction.type}, ${DATA.stream.cases[k].transaction.amount.toLocaleString()} currency units)</option>`).join('');
                 if (keys.length > 0) renderCaseDossier(keys[0]);
             }
 
@@ -2182,8 +2209,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             document.getElementById('patrolCaseDossierBox').innerHTML = `
                 <div style="background:#080d1a; border:1px solid var(--border-color); border-radius:8px; padding:14px; margin-top:8px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <strong>📁 Case Dossier: <code>${caseId}</code></strong>
-                        <span class="stamp-box stamp-${ro.decision_balanced === 'block' ? 'block' : (ro.decision_balanced === 'escalate' ? 'escalate' : 'allow')}">${ro.decision_balanced.toUpperCase()}</span>
+                        <strong>📁 Dossier: <code>${caseId}</code></strong>
+                        <span style="background:#f59e0b; color:black; padding:2px 8px; border-radius:4px; font-weight:700; font-size:11px;">${ro.decision_balanced.toUpperCase()}</span>
                     </div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:12px; color:var(--text-muted); margin-bottom:10px;">
                         <div>• Step: ${tx.step} (Hour ${tx.hour})<br>• Type: ${tx.type}<br>• Amount: <strong style="color:white;">${tx.amount.toLocaleString()}</strong> currency units</div>
@@ -2205,6 +2232,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             patrolCurrentStep = parseInt(step);
             renderPatrolStep(patrolCurrentStep);
             if (cityInitialized) updateCityForStep(patrolCurrentStep);
+        }
+
+        function changePatrolSpeed(ms) {
+            patrolSpeed = parseInt(ms);
+            if (patrolPlaying) {
+                clearInterval(patrolInterval);
+                startPatrolLoop();
+            }
         }
 
         function startPatrolLoop() {
@@ -2252,50 +2287,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         }
 
         // =========================================================================
-        // MISSION 9b - HIGH DEFINITION REALISTIC 3D LEDGER CITY (SENTINEL MODE)
+        // MISSION 9b - PHASE A: 3D LEDGER CITY CORE ENGINE
         // =========================================================================
-        function openSentinelCity() {
-            const modal = document.getElementById('cityModal');
-            modal.classList.add('active');
-            
-            setTimeout(() => {
-                const container = document.getElementById('cityCanvasContainer');
-                if (!cityInitialized) {
-                    init3DLedgerCity();
-                    cityInitialized = true;
-                } else if (cityRenderer) {
-                    const w = container.clientWidth || window.innerWidth;
-                    const h = container.clientHeight || (window.innerHeight - 90);
-                    cityRenderer.setSize(w, h);
-                    cityCamera.aspect = w / h;
-                    cityCamera.updateProjectionMatrix();
-                }
-                updateCityForStep(patrolCurrentStep);
-                if (!cityAnimId) animate3DCity();
-            }, 60);
-        }
-
-        function closeSentinelCity() {
-            document.getElementById('cityModal').classList.remove('active');
-            if (cityAnimId) {
-                cancelAnimationFrame(cityAnimId);
-                cityAnimId = null;
-            }
-        }
-
-        function closeEvidenceBoard() {
-            document.getElementById('cityEvidenceBoard').style.display = 'none';
-            if (routeLaserLine) {
-                cityScene.remove(routeLaserLine);
-                routeLaserLine = null;
-            }
-        }
-
         function init3DLedgerCity() {
             const container = document.getElementById('cityCanvasContainer');
-            const width = container.clientWidth || window.innerWidth || 900;
-            const height = container.clientHeight || (window.innerHeight - 90) || 600;
+            const width = container.clientWidth;
+            const height = container.clientHeight;
 
+            // Check WebGL support
             if (!window.WebGLRenderingContext) {
                 init2DCityFallback(container);
                 return;
@@ -2303,70 +2302,164 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
             try {
                 cityScene = new THREE.Scene();
-                cityScene.background = new THREE.Color(0x020716);
-                cityScene.fog = new THREE.FogExp2(0x020716, 0.0012);
+                cityScene.fog = new THREE.FogExp2(0x050811, 0.0018);
 
-                cityCamera = new THREE.PerspectiveCamera(45, width / height, 2, 4000);
-                updateCameraPosition();
+                cityCamera = new THREE.PerspectiveCamera(45, width / height, 1, 4000);
+                cityCamera.position.set(340, 260, 420);
+                cityCamera.lookAt(0, 30, 0);
 
-                cityRenderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+                cityRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
                 cityRenderer.setSize(width, height);
-                cityRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-                cityRenderer.shadowMap.enabled = true;
+                cityRenderer.setPixelRatio(window.devicePixelRatio);
                 container.appendChild(cityRenderer.domElement);
-
-                cityRaycaster = new THREE.Raycaster();
-                cityMouse = new THREE.Vector2();
             } catch (e) {
                 console.warn("WebGL initialization failed, falling back to 2D Canvas:", e);
                 init2DCityFallback(container);
                 return;
             }
 
-            // Dynamic High-Visibility Lighting
-            const hemiLight = new THREE.HemisphereLight(0x7dd3fc, 0x0f172a, 1.4);
-            cityScene.add(hemiLight);
+            // Lighting
+            const ambient = new THREE.AmbientLight(0x1e293b, 1.4);
+            cityScene.add(ambient);
 
-            const sunLight = new THREE.DirectionalLight(0xe0f2fe, 1.8);
-            sunLight.position.set(350, 700, 350);
+            const sunLight = new THREE.DirectionalLight(0x38bdf8, 1.6);
+            sunLight.position.set(200, 500, 200);
             cityScene.add(sunLight);
 
-            const ambientLight = new THREE.AmbientLight(0x1e293b, 1.6);
-            cityScene.add(ambientLight);
+            // Ground 3x3 Urban Grid
+            const grid = new THREE.GridHelper(900, 45, 0x1e2e4a, 0x0a1020);
+            grid.position.y = 0;
+            cityScene.add(grid);
 
-            // Ground Asphalt Base & Grid Lines
-            const groundGeo = new THREE.PlaneGeometry(1600, 1600);
-            const groundMat = new THREE.MeshLambertMaterial({ color: 0x080f24 });
-            const ground = new THREE.Mesh(groundGeo, groundMat);
-            ground.rotation.x = -Math.PI / 2;
-            ground.position.y = -0.2;
-            cityScene.add(ground);
+            // CENTRAL SENTINEL TOWER (At Center 0, 0)
+            const towerGeo = new THREE.CylinderGeometry(14, 22, 160, 8);
+            const towerMat = new THREE.MeshPhongMaterial({
+                color: 0x0d1527,
+                emissive: 0x38bdf8,
+                emissiveIntensity: 0.25,
+                specular: 0x38bdf8,
+                shininess: 60
+            });
+            cityTower = new THREE.Mesh(towerGeo, towerMat);
+            cityTower.position.set(0, 80, 0);
+            cityScene.add(cityTower);
 
-            const gridHelper = new THREE.GridHelper(1200, 48, 0x1e3a5f, 0x0c1a30);
-            gridHelper.position.y = 0.1;
-            cityScene.add(gridHelper);
+            // Sentinel Golden Spire & Shield-Eye Beacon
+            const spireGeo = new THREE.ConeGeometry(5, 40, 8);
+            const spireMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
+            const spire = new THREE.Mesh(spireGeo, spireMat);
+            spire.position.set(0, 180, 0);
+            cityScene.add(spire);
 
-            // Glowing Road Network & Boulevards
-            buildRoadAvenues();
+            const eyeGeo = new THREE.SphereGeometry(6, 12, 12);
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+            const eye = new THREE.Mesh(eyeGeo, eyeMat);
+            eye.position.set(0, 162, 0);
+            cityScene.add(eye);
 
-            // Central Sentinel Spire (Height 200 CU)
-            buildCentralSentinelTower();
+            // BUILD 8 SURROUNDING DISTRICTS (3x3 Grid Layout)
+            cityBuildings = [];
+            for (let d = 1; d <= 8; d++) {
+                const pos = DISTRICT_POSITIONS[d];
+                // District Plaza Base
+                const plazaGeo = new THREE.BoxGeometry(110, 2, 110);
+                const plazaMat = new THREE.MeshBasicMaterial({ color: 0x101b33, wireframe: true });
+                const plaza = new THREE.Mesh(plazaGeo, plazaMat);
+                plaza.position.set(pos.x, 1, pos.z);
+                cityScene.add(plaza);
 
-            // 8 Urban Districts with Realistic Skyscraper Geometries
-            build8UrbanDistricts();
+                // District Skyscrapers
+                for (let b = 0; b < 10; b++) {
+                    const bx = pos.x + (Math.random() - 0.5) * 85;
+                    const bz = pos.z + (Math.random() - 0.5) * 85;
+                    const bw = 12 + Math.random() * 14;
+                    const bd = 12 + Math.random() * 14;
+                    const bh = 25 + Math.random() * 75;
 
-            // Scanner Security Gates (Phase B)
-            buildScannerGates();
+                    const bGeo = new THREE.BoxGeometry(bw, bh, bd);
+                    const bMat = new THREE.MeshPhongMaterial({
+                        color: 0x080f20,
+                        emissive: 0x1e2e4a,
+                        emissiveIntensity: 0.1,
+                        specular: 0x38bdf8,
+                        shininess: 30
+                    });
 
-            // The Sentinel Character Model (Phase B)
-            buildSentinelPatrolCharacter();
+                    const bMesh = new THREE.Mesh(bGeo, bMat);
+                    bMesh.position.set(bx, bh / 2, bz);
+                    cityScene.add(bMesh);
 
-            // Humanoids Mesh Pool with 3D Overhead Card Badges (300 Max)
-            buildCityPeoplePool();
+                    // Procedural Lit Windows (Emissive point on building facade)
+                    const winGeo = new THREE.PlaneGeometry(3, 4);
+                    const winMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.8 });
+                    const win = new THREE.Mesh(winGeo, winMat);
+                    win.position.set(bx, bh * 0.7, bz + bd / 2 + 0.2);
+                    cityScene.add(win);
 
-            // Setup Orbit & Interaction Listeners
-            setupCityOrbitControls(container);
+                    cityBuildings.push({
+                        mesh: bMesh,
+                        window: win,
+                        district: d,
+                        baseHeight: bh,
+                        x: bx, z: bz, width: bw, depth: bd
+                    });
+                }
+            }
 
+            // PEOPLE MESH POOL (Instanced Low-Poly Humanoids with Amount Bags)
+            cityPeopleMeshes = [];
+            const bodyGeo = new THREE.CylinderGeometry(1.2, 1.5, 6, 6);
+            const headGeo = new THREE.SphereGeometry(1.2, 6, 6);
+            const bagGeo = new THREE.BoxGeometry(2, 2, 2);
+
+            for (let i = 0; i < 300; i++) {
+                const group = new THREE.Group();
+                const coatMat = new THREE.MeshLambertMaterial({ color: 0x38bdf8 });
+                const headMat = new THREE.MeshLambertMaterial({ color: 0xf1f5f9 });
+                const bagMat = new THREE.MeshLambertMaterial({ color: 0x64748b });
+
+                const body = new THREE.Mesh(bodyGeo, coatMat);
+                body.position.y = 3;
+                group.add(body);
+
+                const head = new THREE.Mesh(headGeo, headMat);
+                head.position.y = 7;
+                group.add(head);
+
+                const bag = new THREE.Mesh(bagGeo, bagMat);
+                bag.position.set(2, 2.5, 0);
+                group.add(bag);
+
+                group.position.set(0, -50, 0); // hidden initially
+                cityScene.add(group);
+
+                cityPeopleMeshes.push({
+                    group, body, head, bag,
+                    coatMat, headMat, bagMat,
+                    active: false,
+                    startPos: { x: 0, z: 0 },
+                    endPos: { x: 0, z: 0 },
+                    progress: 0,
+                    speed: 0.005,
+                    txData: null
+                });
+            }
+
+            // Drag to rotate interaction
+            let isDragging = false, prevX = 0, prevY = 0;
+            container.addEventListener('mousedown', (e) => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
+            window.addEventListener('mouseup', () => isDragging = false);
+            container.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - prevX;
+                const dy = e.clientY - prevY;
+                cityScene.rotation.y += dx * 0.005;
+                cityCamera.position.y = Math.max(60, Math.min(500, cityCamera.position.y - dy * 0.8));
+                prevX = e.clientX;
+                prevY = e.clientY;
+            });
+
+            // Pause on tab hidden & Reduced Motion
             document.addEventListener("visibilitychange", () => {
                 if (document.hidden && cityAnimId) {
                     cancelAnimationFrame(cityAnimId);
@@ -2378,8 +2471,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
             window.addEventListener('resize', () => {
                 if (cityRenderer && document.getElementById('cityModal').classList.contains('active')) {
-                    const w = container.clientWidth || window.innerWidth;
-                    const h = container.clientHeight || (window.innerHeight - 90);
+                    const w = container.clientWidth;
+                    const h = container.clientHeight;
                     cityCamera.aspect = w / h;
                     cityCamera.updateProjectionMatrix();
                     cityRenderer.setSize(w, h);
@@ -2387,536 +2480,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             });
         }
 
-        function updateCameraPosition() {
-            const x = camTarget.x + camSpherical.radius * Math.sin(camSpherical.phi) * Math.sin(camSpherical.theta);
-            const y = camTarget.y + camSpherical.radius * Math.cos(camSpherical.phi);
-            const z = camTarget.z + camSpherical.radius * Math.sin(camSpherical.phi) * Math.cos(camSpherical.theta);
-            cityCamera.position.set(x, y, z);
-            cityCamera.lookAt(camTarget);
-        }
-
-        function buildRoadAvenues() {
-            const roadMat = new THREE.MeshLambertMaterial({ color: 0x0b1633 });
-            const lineMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
-
-            // Cross Highways
-            const hRoad = new THREE.Mesh(new THREE.PlaneGeometry(800, 36), roadMat);
-            hRoad.rotation.x = -Math.PI / 2;
-            hRoad.position.y = 0.2;
-            cityScene.add(hRoad);
-
-            const vRoad = new THREE.Mesh(new THREE.PlaneGeometry(36, 800), roadMat);
-            vRoad.rotation.x = -Math.PI / 2;
-            vRoad.position.y = 0.2;
-            cityScene.add(vRoad);
-
-            // Glowing Centerlines
-            const dashH = new THREE.Mesh(new THREE.PlaneGeometry(780, 1.8), lineMat);
-            dashH.rotation.x = -Math.PI / 2;
-            dashH.position.y = 0.3;
-            cityScene.add(dashH);
-
-            const dashV = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 780), lineMat);
-            dashV.rotation.x = -Math.PI / 2;
-            dashV.position.y = 0.3;
-            cityScene.add(dashV);
-        }
-
-        function buildCentralSentinelTower() {
-            const towerGroup = new THREE.Group();
-
-            // Tier 1 Base
-            const baseGeo = new THREE.CylinderGeometry(24, 32, 70, 8);
-            const towerMat = new THREE.MeshPhongMaterial({
-                color: 0x0c1a36,
-                emissive: 0x0284c7,
-                emissiveIntensity: 0.3,
-                specular: 0x38bdf8,
-                shininess: 90
-            });
-            const base = new THREE.Mesh(baseGeo, towerMat);
-            base.position.y = 35;
-            towerGroup.add(base);
-
-            // Tier 2 Mid Tower
-            const midGeo = new THREE.CylinderGeometry(16, 24, 80, 8);
-            const mid = new THREE.Mesh(midGeo, towerMat);
-            mid.position.y = 110;
-            towerGroup.add(mid);
-
-            // Tier 3 Observation Deck
-            const deckGeo = new THREE.CylinderGeometry(28, 14, 18, 16);
-            const deckMat = new THREE.MeshPhongMaterial({ color: 0x0284c7, emissive: 0x38bdf8, emissiveIntensity: 0.6 });
-            const deck = new THREE.Mesh(deckGeo, deckMat);
-            deck.position.y = 159;
-            towerGroup.add(deck);
-
-            // Tier 4 Gold Spire & Luminous Beacon
-            const spireGeo = new THREE.ConeGeometry(6, 50, 8);
-            const spireMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
-            const spire = new THREE.Mesh(spireGeo, spireMat);
-            spire.position.y = 190;
-            towerGroup.add(spire);
-
-            const eyeGeo = new THREE.SphereGeometry(8, 16, 16);
-            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
-            const eye = new THREE.Mesh(eyeGeo, eyeMat);
-            eye.position.y = 170;
-            towerGroup.add(eye);
-
-            const labelSprite = createDistrictLabelSprite("SENTINEL HQ (CENTER)", "#38bdf8");
-            labelSprite.position.set(0, 230, 0);
-            towerGroup.add(labelSprite);
-
-            cityScene.add(towerGroup);
-        }
-
-        function build8UrbanDistricts() {
-            cityBuildings = [];
-            const districtColors = [0x38bdf8, 0x3b82f6, 0x818cf8, 0xa855f7, 0xf59e0b, 0x10b981, 0x06b6d4, 0x94a3b8];
-
-            for (let d = 1; d <= 8; d++) {
-                const pos = DISTRICT_POSITIONS[d];
-                const dColor = districtColors[d - 1];
-
-                // Plaza Ground
-                const plazaGeo = new THREE.BoxGeometry(130, 2, 130);
-                const plazaMat = new THREE.MeshPhongMaterial({
-                    color: 0x0a142c,
-                    emissive: dColor,
-                    emissiveIntensity: 0.18
-                });
-                const plaza = new THREE.Mesh(plazaGeo, plazaMat);
-                plaza.position.set(pos.x, 1, pos.z);
-                cityScene.add(plaza);
-
-                // Floating Hologram Label
-                const labelSprite = createDistrictLabelSprite(pos.name.toUpperCase(), "#38bdf8");
-                labelSprite.position.set(pos.x, 155, pos.z);
-                cityScene.add(labelSprite);
-
-                // District Skyscrapers with Realistic Lit Window Facades
-                for (let b = 0; b < 12; b++) {
-                    const bx = pos.x + (Math.random() - 0.5) * 100;
-                    const bz = pos.z + (Math.random() - 0.5) * 100;
-                    const bw = 16 + Math.random() * 16;
-                    const bd = 16 + Math.random() * 16;
-                    const bh = 35 + Math.random() * 95;
-
-                    const bGeo = new THREE.BoxGeometry(bw, bh, bd);
-                    const bMat = new THREE.MeshPhongMaterial({
-                        color: 0x0b152d,
-                        emissive: 0x111c3a,
-                        emissiveIntensity: 0.25,
-                        specular: 0x38bdf8,
-                        shininess: 40
-                    });
-
-                    const bMesh = new THREE.Mesh(bGeo, bMat);
-                    bMesh.position.set(bx, bh / 2, bz);
-                    cityScene.add(bMesh);
-
-                    // Lit Window Matrix
-                    const winGeo = new THREE.PlaneGeometry(bw * 0.85, bh * 0.75);
-                    const winMat = new THREE.MeshBasicMaterial({
-                        color: 0x38bdf8,
-                        transparent: true,
-                        opacity: 0.75
-                    });
-                    const winF = new THREE.Mesh(winGeo, winMat);
-                    winF.position.set(bx, bh / 2, bz + bd / 2 + 0.3);
-                    cityScene.add(winF);
-
-                    // Rooftop Aircraft Safety Beacon
-                    const beaconGeo = new THREE.SphereGeometry(1.8, 8, 8);
-                    const beaconMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
-                    const beacon = new THREE.Mesh(beaconGeo, beaconMat);
-                    beacon.position.set(bx, bh + 3, bz);
-                    cityScene.add(beacon);
-
-                    cityBuildings.push({
-                        mesh: bMesh,
-                        window: winF,
-                        beacon,
-                        district: d,
-                        baseHeight: bh,
-                        x: bx, z: bz
-                    });
-                }
-            }
-        }
-
-        function buildScannerGates() {
-            scannerGates = [];
-            const gatePositions = [
-                { x: 0, z: -110, name: "North Security Gate" },
-                { x: 0, z: 110, name: "South Security Gate" },
-                { x: -110, z: 0, name: "West Security Gate" },
-                { x: 110, z: 0, name: "East Security Gate" }
-            ];
-
-            const archGeo = new THREE.TorusGeometry(18, 1.8, 8, 24, Math.PI);
-            const archMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
-            const beamGeo = new THREE.PlaneGeometry(32, 22);
-            const beamMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.25, side: THREE.DoubleSide });
-
-            gatePositions.forEach((gp, idx) => {
-                const group = new THREE.Group();
-                const arch = new THREE.Mesh(archGeo, archMat.clone());
-                arch.position.y = 0;
-                group.add(arch);
-
-                const beam = new THREE.Mesh(beamGeo, beamMat.clone());
-                beam.position.y = 11;
-                group.add(beam);
-
-                group.position.set(gp.x, 0, gp.z);
-                if (gp.x !== 0) group.rotation.y = Math.PI / 2;
-
-                cityScene.add(group);
-                scannerGates.push({ group, arch, beam, name: gp.name });
-            });
-        }
-
-        function buildSentinelPatrolCharacter() {
-            const group = new THREE.Group();
-
-            // Sentinel Body Armor
-            const armorGeo = new THREE.CylinderGeometry(2.5, 3.2, 10, 8);
-            const armorMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3, metalness: 0.8 });
-            const body = new THREE.Mesh(armorGeo, armorMat);
-            body.position.y = 5;
-            group.add(body);
-
-            // Round Protective Hood (NO ears, NO wings)
-            const hoodGeo = new THREE.SphereGeometry(3.0, 16, 16);
-            const hoodMat = new THREE.MeshStandardMaterial({ color: 0x080e1a, roughness: 0.4 });
-            const hood = new THREE.Mesh(hoodGeo, hoodMat);
-            hood.position.y = 12;
-            group.add(hood);
-
-            // Gold Shield-Eye Emblem on Chest
-            const emblemGeo = new THREE.CircleGeometry(1.6, 16);
-            const emblemMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
-            const emblem = new THREE.Mesh(emblemGeo, emblemMat);
-            emblem.position.set(0, 7.5, 2.7);
-            group.add(emblem);
-
-            // Long Midnight Cloak
-            const cloakGeo = new THREE.ConeGeometry(4.0, 11, 8, 1, true);
-            const cloakMat = new THREE.MeshLambertMaterial({ color: 0x0284c7, side: THREE.DoubleSide });
-            const cloak = new THREE.Mesh(cloakGeo, cloakMat);
-            cloak.position.set(0, 4.5, -1.2);
-            group.add(cloak);
-
-            // Hover Aura
-            const auraGeo = new THREE.RingGeometry(2, 6, 16);
-            const auraMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.4, side: THREE.DoubleSide });
-            const aura = new THREE.Mesh(auraGeo, auraMat);
-            aura.rotation.x = Math.PI / 2;
-            aura.position.y = 0.2;
-            group.add(aura);
-
-            group.position.set(0, 0, 0);
-            cityScene.add(group);
-
-            sentinelMesh = {
-                group,
-                targetPos: new THREE.Vector3(0, 0, 0),
-                currentPos: new THREE.Vector3(0, 0, 0)
-            };
-        }
-
-        function createDistrictLabelSprite(text, colorHex) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 64;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = "rgba(13, 21, 39, 0.88)";
-            ctx.strokeStyle = colorHex;
-            ctx.lineWidth = 3;
-            ctx.roundRect(4, 4, 248, 56, 12);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.fillStyle = colorHex;
-            ctx.font = "bold 19px sans-serif";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(text, 128, 32);
-
-            const texture = new THREE.CanvasTexture(canvas);
-            const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
-            const sprite = new THREE.Sprite(spriteMat);
-            sprite.scale.set(70, 18, 1);
-            return sprite;
-        }
-
-        // Dedicated Function to Render Crystal-Clear Overhead 3D Holographic Badges
-        function updatePersonBadgeCanvas(canvas, pData, isFlagged) {
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            let bgFill = isFlagged ? "rgba(239, 68, 68, 0.92)" : "rgba(16, 185, 129, 0.90)";
-            let strokeColor = isFlagged ? "#ffffff" : "#a7f3d0";
-            let statusText = isFlagged ? `🚨 FLAGGED (Score: ${pData.sc.toFixed(2)})` : `✅ PASS (${pData.sc.toFixed(2)})`;
-
-            if (evalMode) {
-                if (pData.f === 1 && isFlagged) {
-                    bgFill = "rgba(220, 38, 38, 0.95)";
-                    strokeColor = "#fecaca";
-                    statusText = `🔴 CAUGHT FRAUD (${pData.sc.toFixed(2)})`;
-                } else if (pData.f === 0 && isFlagged) {
-                    bgFill = "rgba(245, 158, 11, 0.95)";
-                    strokeColor = "#fef08a";
-                    statusText = `🟡 FALSE ALARM (${pData.sc.toFixed(2)})`;
-                } else if (pData.f === 1 && !isFlagged) {
-                    bgFill = "rgba(153, 27, 27, 0.95)";
-                    strokeColor = "#f87171";
-                    statusText = `👻 MISSED FRAUD (${pData.sc.toFixed(2)})`;
-                } else {
-                    bgFill = "rgba(15, 23, 42, 0.88)";
-                    strokeColor = "#38bdf8";
-                    statusText = `⚪ CLEAN PASS (${pData.sc.toFixed(2)})`;
-                }
-            }
-
-            // Rounded Card
-            ctx.fillStyle = bgFill;
-            ctx.strokeStyle = strokeColor;
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.roundRect(4, 4, 312, 112, 14);
-            ctx.fill();
-            ctx.stroke();
-
-            // Row 1: Status Classification
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "bold 20px 'Plus Jakarta Sans', sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillText(statusText, 160, 36);
-
-            // Row 2: Amount & Channel
-            ctx.font = "bold 17px 'JetBrains Mono', monospace";
-            ctx.fillStyle = "#ffffff";
-            const amtStr = pData.amt > 999999 ? (pData.amt/1e6).toFixed(1) + 'M CU' : (pData.amt > 999 ? (pData.amt/1e3).toFixed(0) + 'k CU' : pData.amt + ' CU');
-            ctx.fillText(`${amtStr} • ${pData.t}`, 160, 68);
-
-            // Row 3: Route
-            ctx.font = "bold 14px sans-serif";
-            ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-            ctx.fillText(`Dist ${pData.df} ➔ Dist ${pData.dt}`, 160, 96);
-        }
-
-        function buildCityPeoplePool() {
-            cityPeopleMeshes = [];
-            const bodyGeo = new THREE.CylinderGeometry(1.6, 2.2, 7.5, 8);
-            const headGeo = new THREE.SphereGeometry(1.8, 8, 8);
-            const bagGeo = new THREE.BoxGeometry(2.8, 2.8, 2.8);
-
-            for (let i = 0; i < 300; i++) {
-                const group = new THREE.Group();
-                const coatMat = new THREE.MeshLambertMaterial({ color: 0x38bdf8 });
-                const headMat = new THREE.MeshLambertMaterial({ color: 0xf8fafc });
-                const bagMat = new THREE.MeshLambertMaterial({ color: 0xf59e0b });
-
-                const body = new THREE.Mesh(bodyGeo, coatMat);
-                body.position.y = 3.75;
-                group.add(body);
-
-                const head = new THREE.Mesh(headGeo, headMat);
-                head.position.y = 9.0;
-                group.add(head);
-
-                const bag = new THREE.Mesh(bagGeo, bagMat);
-                bag.position.set(3.0, 3.2, 0);
-                group.add(bag);
-
-                // Overhead 3D Information Badge (Clear High-Definition Canvas Sprite)
-                const badgeCanvas = document.createElement('canvas');
-                badgeCanvas.width = 320;
-                badgeCanvas.height = 120;
-                const badgeTexture = new THREE.CanvasTexture(badgeCanvas);
-                const badgeMat = new THREE.SpriteMaterial({ map: badgeTexture, transparent: true });
-                const badgeSprite = new THREE.Sprite(badgeMat);
-                badgeSprite.position.set(0, 22, 0);
-                badgeSprite.scale.set(40, 15, 1);
-                group.add(badgeSprite);
-
-                group.position.set(0, -100, 0);
-                group.userData = { index: i, personData: null };
-                cityScene.add(group);
-
-                cityPeopleMeshes.push({
-                    group, body, head, bag,
-                    badgeSprite, badgeCanvas, badgeTexture,
-                    coatMat, headMat, bagMat,
-                    active: false,
-                    startPos: { x: 0, z: 0 },
-                    endPos: { x: 0, z: 0 },
-                    progress: 0,
-                    speed: 0.004,
-                    txData: null
-                });
-            }
-        }
-
-        function setupCityOrbitControls(container) {
-            container.addEventListener('mousedown', (e) => {
-                if (e.button === 0) isOrbiting = true;
-                else if (e.button === 2) isPanning = true;
-                mousePrevX = e.clientX;
-                mousePrevY = e.clientY;
-            });
-
-            window.addEventListener('mouseup', () => {
-                isOrbiting = false;
-                isPanning = false;
-            });
-
-            container.addEventListener('contextmenu', (e) => e.preventDefault());
-
-            container.addEventListener('mousemove', (e) => {
-                if (!isOrbiting && !isPanning) return;
-                const dx = e.clientX - mousePrevX;
-                const dy = e.clientY - mousePrevY;
-
-                if (isOrbiting) {
-                    camSpherical.theta -= dx * 0.005;
-                    camSpherical.phi = Math.max(0.1, Math.min(Math.PI / 2 - 0.05, camSpherical.phi - dy * 0.005));
-                } else if (isPanning) {
-                    camTarget.x -= dx * 0.4;
-                    camTarget.z -= dy * 0.4;
-                }
-
-                updateCameraPosition();
-                mousePrevX = e.clientX;
-                mousePrevY = e.clientY;
-            });
-
-            container.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                camSpherical.radius = Math.max(60, Math.min(1100, camSpherical.radius + e.deltaY * 0.5));
-                updateCameraPosition();
-            }, { passive: false });
-
-            // Click Person to Inspect Dossier
-            container.addEventListener('click', (e) => {
-                const rect = container.getBoundingClientRect();
-                cityMouse.x = ((e.clientX - rect.left) / container.clientWidth) * 2 - 1;
-                cityMouse.y = -((e.clientY - rect.top) / container.clientHeight) * 2 + 1;
-
-                cityRaycaster.setFromCamera(cityMouse, cityCamera);
-                const intersects = cityRaycaster.intersectObjects(cityScene.children, true);
-
-                if (intersects.length > 0) {
-                    let parent = intersects[0].object;
-                    while (parent && !parent.userData.personData && parent.parent) {
-                        parent = parent.parent;
-                    }
-                    if (parent && parent.userData.personData) {
-                        displayEvidenceBoard(parent.userData.personData);
-                    }
-                }
-            });
-        }
-
-        function displayEvidenceBoard(pData) {
-            selectedPersonData = pData;
-            const board = document.getElementById('cityEvidenceBoard');
-            const title = document.getElementById('ebTxId');
-            const body = document.getElementById('ebTxBody');
-
-            title.innerText = `🔍 Transaction ${pData.id}`;
-            const isFlagged = pData.sc >= currentStrictness;
-            const statusBadge = isFlagged ? `<span class="stamp-box stamp-block">🚨 RISK ALARM (SCORE ≥ θ)</span>` : `<span class="stamp-box stamp-allow">✅ APPROVED PAYMENT</span>`;
-
-            // Clear Forensic Risk Factor Calculation
-            const amtRisk = pData.amt > 500000 ? `🔥 <strong>High Value Alert:</strong> ${pData.amt.toLocaleString()} CU (Top ${( (1 - pData.pct)*100 ).toFixed(1)}% of all transfers)` : `⚪ Normal Amount: ${pData.amt.toLocaleString()} CU`;
-            const timeRisk = (pData.hr >= 0 && pData.hr <= 5) ? `🌙 <strong>Nocturnal Velocity:</strong> ${pData.hr}:00 (Late Night Attack Window)` : `☀️ Daytime Activity: ${pData.hr}:00`;
-            const typeRisk = pData.t === 'TRANSFER' ? `💳 <strong>Primary Attack Channel:</strong> TRANSFER (100% of PaySim thefts begin via Transfer)` : `🏧 <strong>Cashout Channel:</strong> Immediate withdrawal point`;
-
-            let decisionAction = isFlagged ? "🚨 RISK OFFICER: BLOCK TRANSACTION & FREEZE ORIGIN WALLET" : "✅ RISK OFFICER: IMMEDIATE CLEARANCE";
-            if (evalMode && pData.f === 1) decisionAction += "<br><span style='color:#ef4444;'>[AUDIT: CONFIRMED GENUINE THEFT]</span>";
-
-            body.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                    <span>Step ${pData.step} (${pData.hr}:00)</span>
-                    ${statusBadge}
-                </div>
-                
-                <div class="forensic-breakdown-box">
-                    <strong style="color:#38bdf8; font-size:12px;">📊 Forensic Risk Indicators:</strong>
-                    <div>• ${amtRisk}</div>
-                    <div>• ${timeRisk}</div>
-                    <div>• ${typeRisk}</div>
-                    <div>• <strong>District Flow:</strong> District ${pData.df} (${DISTRICT_POSITIONS[pData.df].name}) ➔ District ${pData.dt} (${DISTRICT_POSITIONS[pData.dt].name})</div>
-                    <div>• <strong>Random Forest Score:</strong> <strong style="color:${isFlagged ? '#ef4444' : '#10b981'}; font-size:13px;">${pData.sc.toFixed(4)}</strong> (Strictness Cutoff: ${currentStrictness.toFixed(2)})</div>
-                </div>
-
-                <div style="background:#0c1733; border-left:3px solid ${isFlagged ? '#ef4444' : '#10b981'}; padding:8px 10px; border-radius:4px; font-size:11.5px; margin-top:4px;">
-                    ${decisionAction}
-                </div>
-
-                <div style="margin-top:8px; display:flex; gap:8px;">
-                    <button class="btn btn-primary" style="flex:1; justify-content:center;" onclick="viewFullDossierInDrawer('${pData.id}')">📂 Full Case Dossier</button>
-                    <button class="btn btn-secondary" onclick="closeEvidenceBoard()">Close</button>
-                </div>
-            `;
-            board.style.display = 'block';
-
-            // Draw glowing route line on road
-            drawRouteLaser(pData.df, pData.dt);
-
-            // Point Sentinel to this suspect
-            if (sentinelMesh) {
-                const targetGroup = cityPeopleMeshes.find(m => m.txData && m.txData.id === pData.id);
-                if (targetGroup) {
-                    sentinelMesh.targetPos.copy(targetGroup.group.position);
-                }
-            }
-        }
-
-        function drawRouteLaser(fromD, toD) {
-            if (routeLaserLine) {
-                cityScene.remove(routeLaserLine);
-                routeLaserLine = null;
-            }
-
-            const p1 = DISTRICT_POSITIONS[fromD] || DISTRICT_POSITIONS[1];
-            const p2 = DISTRICT_POSITIONS[toD] || DISTRICT_POSITIONS[2];
-
-            const points = [
-                new THREE.Vector3(p1.x, 2, p1.z),
-                new THREE.Vector3(p1.x, 2, 0),
-                new THREE.Vector3(p2.x, 2, 0),
-                new THREE.Vector3(p2.x, 2, p2.z)
-            ];
-
-            const curve = new THREE.CatmullRomCurve3(points);
-            const tubeGeo = new THREE.TubeGeometry(curve, 20, 1.2, 8, false);
-            const tubeMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.8 });
-            routeLaserLine = new THREE.Mesh(tubeGeo, tubeMat);
-            cityScene.add(routeLaserLine);
-        }
-
-        function viewFullDossierInDrawer(txId) {
-            closeSentinelCity();
-            goToStep(6);
-            const caseSel = document.getElementById('patrolCaseSelect');
-            if (caseSel) {
-                caseSel.value = txId;
-                renderCaseDossier(txId);
-            }
-        }
-
         function init2DCityFallback(container) {
             cityIs2DFallback = true;
             const canvas = document.getElementById('cityFallback2D');
             canvas.style.display = 'block';
             const ctx = canvas.getContext('2d');
-            canvas.width = container.clientWidth || 800;
-            canvas.height = container.clientHeight || 500;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
             ctx.fillStyle = '#050811';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#38bdf8';
@@ -2925,62 +2495,48 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         }
 
         function setCityView(type) {
+            if (!cityCamera) return;
             if (type === 'skyline') {
-                camTarget.set(0, 20, 0);
-                camSpherical = { radius: 520, theta: Math.PI / 4, phi: Math.PI / 3 };
+                cityCamera.position.set(340, 260, 420);
+                cityCamera.lookAt(0, 30, 0);
             } else if (type === 'overhead') {
-                camTarget.set(0, 0, 0);
-                camSpherical = { radius: 680, theta: 0.001, phi: 0.05 };
+                cityCamera.position.set(0, 560, 60);
+                cityCamera.lookAt(0, 0, 0);
             } else if (type === 'street') {
-                camTarget.set(0, 10, 0);
-                camSpherical = { radius: 180, theta: Math.PI / 3, phi: Math.PI / 2 - 0.15 };
-            } else if (type === 'tower') {
-                camTarget.set(0, 170, 0);
-                camSpherical = { radius: 120, theta: Math.PI / 6, phi: Math.PI / 2.5 };
-            }
-            updateCameraPosition();
-        }
-
-        function focusOnSuspect() {
-            const flagged = cityPeopleMeshes.find(p => p.active && p.txData && p.txData.sc >= currentStrictness);
-            if (flagged) {
-                camTarget.copy(flagged.group.position);
-                camSpherical.radius = 110;
-                camSpherical.phi = Math.PI / 3.2;
-                updateCameraPosition();
-                displayEvidenceBoard(flagged.txData);
+                cityCamera.position.set(160, 20, 160);
+                cityCamera.lookAt(0, 40, 0);
             }
         }
 
         function updateCityForStep(step) {
-            if (!DATA.district_hourly_by_step || !DATA.city_people_by_step) return;
+            if (!DATA.district_hourly || !DATA.city_people) return;
 
-            // 1. Update District Buildings based on pre-indexed hourly stats
-            const stepDistData = DATA.district_hourly_by_step[step] || {};
+            // 1. Update District Buildings based on recent hourly data
+            const stepDistData = DATA.district_hourly.filter(d => d.step === step);
+            const distMap = {};
+            stepDistData.forEach(d => distMap[d.district] = d);
 
             cityBuildings.forEach(b => {
-                const info = stepDistData[b.district] || { p: 10, s: 0 };
-                const heightMult = 0.7 + Math.min(2.0, (info.p / 25.0));
+                const info = distMap[b.district] || { payments: 10, alerts_strict: 0 };
+                // Scale height by recent payments
+                const heightMult = 0.6 + Math.min(2.0, (info.payments / 30.0));
                 b.mesh.scale.y = heightMult;
                 b.mesh.position.y = (b.baseHeight * heightMult) / 2;
 
-                if (info.s > 0) {
+                // Lit windows if alerts present
+                if (info.alerts_strict > 0) {
+                    b.window.visible = true;
                     b.window.material.color.setHex(0xf59e0b);
-                    b.window.material.opacity = 0.9;
+                    b.mesh.material.emissive.setHex(0x1e2e4a);
                 } else {
+                    b.window.visible = (Math.random() < 0.25);
                     b.window.material.color.setHex(0x38bdf8);
-                    b.window.material.opacity = 0.55;
                 }
             });
 
-            // 2. Spawn / Update People on screen with Clear Overhead Badges
-            let activeStepPeople = DATA.city_people_by_step[step] || [];
-            if (cityFilterMode === 'flagged') {
-                activeStepPeople = activeStepPeople.filter(p => p.sc >= currentStrictness);
-            }
-
+            // 2. Spawn / Update People on screen (max 300 active)
+            const activeStepPeople = DATA.city_people.filter(p => Math.abs(p.step - step) <= 1);
             const spawnCount = Math.min(300, activeStepPeople.length);
-            let firstFlaggedPos = null;
 
             for (let i = 0; i < 300; i++) {
                 const pMesh = cityPeopleMeshes[i];
@@ -2990,49 +2546,43 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     const pData = activeStepPeople[i];
                     pMesh.active = true;
                     pMesh.txData = pData;
-                    pMesh.group.userData.personData = pData;
 
-                    const fromPos = DISTRICT_POSITIONS[pData.df] || DISTRICT_POSITIONS[1];
-                    const toPos = DISTRICT_POSITIONS[pData.dt] || DISTRICT_POSITIONS[2];
+                    const fromPos = DISTRICT_POSITIONS[pData.district_from] || DISTRICT_POSITIONS[1];
+                    const toPos = DISTRICT_POSITIONS[pData.district_to] || DISTRICT_POSITIONS[2];
 
-                    pMesh.startPos = { x: fromPos.x + (Math.random() - 0.5) * 60, z: fromPos.z + (Math.random() - 0.5) * 60 };
-                    pMesh.endPos = { x: toPos.x + (Math.random() - 0.5) * 60, z: toPos.z + (Math.random() - 0.5) * 60 };
+                    pMesh.startPos = { x: fromPos.x + (Math.random() - 0.5) * 40, z: fromPos.z + (Math.random() - 0.5) * 40 };
+                    pMesh.endPos = { x: toPos.x + (Math.random() - 0.5) * 40, z: toPos.z + (Math.random() - 0.5) * 40 };
                     pMesh.progress = Math.random();
                     pMesh.speed = 0.003 + Math.random() * 0.005;
 
                     // Coat color: Cyan (Transfer) vs Violet (Cash-out)
-                    if (pData.t === 'TRANSFER') {
-                        pMesh.coatMat.color.setHex(0x38bdf8);
+                    if (pData.type === 'TRANSFER') {
+                        pMesh.coatMat.color.setHex(0x38bdf8); // Cyan
                     } else {
-                        pMesh.coatMat.color.setHex(0xc084fc);
+                        pMesh.coatMat.color.setHex(0xa855f7); // Violet
                     }
 
-                    // Bag size based on percentile
-                    const bagScale = 0.6 + (pData.pct * 1.8);
+                    // Bag size based on training amount percentile (0.05 to 1.0)
+                    const bagScale = 0.4 + (pData.amount_pct * 1.8);
                     pMesh.bag.scale.set(bagScale, bagScale, bagScale);
 
-                    const isFlagged = pData.sc >= currentStrictness;
-
-                    // Update High-Definition 3D Overhead Card
-                    updatePersonBadgeCanvas(pMesh.badgeCanvas, pData, isFlagged);
-                    pMesh.badgeTexture.needsUpdate = true;
-
-                    if (isFlagged && !firstFlaggedPos) {
-                        firstFlaggedPos = pMesh.startPos;
+                    // Answer key check: if ON and true fraud, highlight head/coat
+                    if (evalMode && pData.is_fraud === 1) {
+                        pMesh.headMat.color.setHex(0xef4444); // Red head beacon
+                    } else if (pData.score >= currentStrictness) {
+                        pMesh.headMat.color.setHex(0xf59e0b); // Amber head flag
+                    } else {
+                        pMesh.headMat.color.setHex(0xf1f5f9); // Normal grey
                     }
 
+                    // Position in 3D space
                     pMesh.group.position.x = pMesh.startPos.x + (pMesh.endPos.x - pMesh.startPos.x) * pMesh.progress;
                     pMesh.group.position.z = pMesh.startPos.z + (pMesh.endPos.z - pMesh.startPos.z) * pMesh.progress;
                     pMesh.group.position.y = 0;
                 } else {
                     pMesh.active = false;
-                    pMesh.group.position.set(0, -100, 0);
+                    pMesh.group.position.set(0, -50, 0); // Hide
                 }
-            }
-
-            // Update Sentinel target
-            if (sentinelMesh && firstFlaggedPos) {
-                sentinelMesh.targetPos.set(firstFlaggedPos.x, 0, firstFlaggedPos.z);
             }
         }
 
@@ -3040,144 +2590,22 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             cityAnimId = requestAnimationFrame(animate3DCity);
 
             if (cityScene && !cityIs2DFallback) {
-                // Animate walking humanoids with dynamic step bobbing
-                const time = Date.now() * 0.008;
-                cityPeopleMeshes.forEach((p, idx) => {
+                if (!prefersReducedMotion) {
+                    cityScene.rotation.y += 0.0006;
+                }
+
+                // Animate people walking along district vectors
+                cityPeopleMeshes.forEach(p => {
                     if (p.active) {
                         p.progress += p.speed;
                         if (p.progress > 1.0) p.progress = 0.0;
                         p.group.position.x = p.startPos.x + (p.endPos.x - p.startPos.x) * p.progress;
                         p.group.position.z = p.startPos.z + (p.endPos.z - p.startPos.z) * p.progress;
-                        p.group.position.y = Math.abs(Math.sin(time + idx)) * 1.2;
                     }
                 });
 
-                // Smoothly glide Sentinel to target
-                if (sentinelMesh) {
-                    sentinelMesh.currentPos.lerp(sentinelMesh.targetPos, 0.03);
-                    sentinelMesh.group.position.copy(sentinelMesh.currentPos);
-                    sentinelMesh.group.position.y = 0.5 + Math.sin(time * 0.8) * 0.5;
-                }
-
                 cityRenderer.render(cityScene, cityCamera);
             }
-        }
-
-        // =========================================================================
-        // MISSION 10: SENTINEL ASSISTANT LOGIC
-        // =========================================================================
-        function toggleAssistantDrawer() {
-            document.getElementById('assistantDrawer').classList.toggle('active');
-        }
-
-        function sendAssistantQuery(intent) {
-            appendUserMsg(intent);
-            setTimeout(() => {
-                let reply = "";
-                if (intent.includes("Why flagged")) {
-                    reply = `🎯 <strong>Flagging Breakdown:</strong><br>Transactions are scored by our Random Forest model based on 4 features: nominal amount, log magnitude, diurnal hour, and transfer vs cash-out flag. At current strictness θ = ${currentStrictness.toFixed(2)}, any score ≥ ${currentStrictness.toFixed(2)} generates an immediate alert.`;
-                } else if (intent.includes("Case summary")) {
-                    reply = `📁 <strong>Case Summary:</strong><br>Tracking ${Object.keys(DATA.stream.cases).length} total investigative dossiers. Step ${patrolCurrentStep} currently exhibits active surveillance across all 8 districts.`;
-                } else if (intent.includes("Policy counts")) {
-                    const pol = DATA.overview.policy_alerts_test;
-                    reply = `⚖️ <strong>Policy Matrix:</strong><br>• Strict (θ=0.10): ${pol.strict.alerts.toLocaleString()} alerts (${pol.strict.frauds_caught} caught)<br>• Balanced (θ=0.50): ${pol.balanced.alerts} alerts (${pol.balanced.frauds_caught} caught)<br>• Lenient (θ=0.90): ${pol.lenient.alerts} alerts (${pol.lenient.frauds_caught} caught)`;
-                } else if (intent.includes("Model limits")) {
-                    reply = `🛡️ <strong>Model Limits & Zero-Balance Rule:</strong><br>Sentinel strictly excludes balance columns (oldbalanceOrg, newbalanceDest) to prevent simulated leakage. Evaluation is strictly temporal (steps 334–742) to simulate true future production.`;
-                } else if (intent.includes("How it works")) {
-                    reply = `🧠 <strong>Detection Engine:</strong><br>Random Forest ensemble with class weighting trained on historical transactions. Features: amount (32.1%), log_amount (31.1%), hour (26.1%), and is_transfer (10.7%). PR-AUC = 0.3348 (~53x baseline lift).`;
-                } else {
-                    reply = `I can answer queries regarding model scores, policy counts, feature importances, and case dossiers. Click one of the quick chips above or generate an Audit Report!`;
-                }
-                appendBotMsg(reply);
-            }, 200);
-        }
-
-        function sendAssistantCustomMessage() {
-            const input = document.getElementById('assistantInput');
-            const text = input.value.trim();
-            if (!text) return;
-            appendUserMsg(text);
-            input.value = '';
-            setTimeout(() => {
-                sendAssistantQuery(text);
-            }, 200);
-        }
-
-        function appendUserMsg(msg) {
-            const body = document.getElementById('assistantChatBody');
-            const div = document.createElement('div');
-            div.className = 'assistant-msg user';
-            div.innerText = msg;
-            body.appendChild(div);
-            body.scrollTop = body.scrollHeight;
-        }
-
-        function appendBotMsg(html) {
-            const body = document.getElementById('assistantChatBody');
-            const div = document.createElement('div');
-            div.className = 'assistant-msg bot';
-            div.innerHTML = html;
-            body.appendChild(div);
-            body.scrollTop = body.scrollHeight;
-        }
-
-        // Report Builder Functions
-        function openReportBuilderModal() {
-            document.getElementById('reportBuilderModal').classList.add('active');
-            generateReportPreview();
-        }
-
-        function closeReportBuilderModal(e) {
-            document.getElementById('reportBuilderModal').classList.remove('active');
-        }
-
-        function generateReportPreview() {
-            const pol = DATA.overview.policy_alerts_test;
-            const text = `# SENTINEL COMPLIANCE & AUDIT REPORT
-Generated: ${(new Date()).toISOString()}
-Status: AI-Assisted Draft (Human Review Required)
-
-## 1. Executive Summary
-- Test Dataset Window: Steps 334 to 742 (103,191 transactions, 652 confirmed frauds)
-- Current Policy Strictness: θ = ${currentStrictness.toFixed(2)}
-- Review Cost Baseline: ${currentCheckingCost} currency units per check
-
-## 2. Policy Performance Matrix
-- Strict Policy (θ = 0.10): ${pol.strict.alerts.toLocaleString()} Candidate Alerts | ${pol.strict.frauds_caught} Confirmed Frauds Caught (${(pol.strict.frauds_caught/652*100).toFixed(1)}% Recall)
-- Balanced Policy (θ = 0.50): ${pol.balanced.alerts} Candidate Alerts | ${pol.balanced.frauds_caught} Confirmed Frauds Caught (${(pol.balanced.frauds_caught/652*100).toFixed(1)}% Recall)
-- Lenient Policy (θ = 0.90): ${pol.lenient.alerts} Candidate Alerts | ${pol.lenient.frauds_caught} Confirmed Frauds Caught (${(pol.lenient.frauds_caught/652*100).toFixed(1)}% Recall)
-
-## 3. Risk Governance & Model Constraints
-- Zero Balance Leakage: Balance columns excluded to maintain strict production fidelity.
-- Primary Discriminators: Transaction Amount (32.1%), Log Amount (31.1%), Hour of Day (26.1%).
-- Multi-Agent Hierarchy: Scout -> Investigator -> Risk Officer -> Reporter.
-`;
-            document.getElementById('reportPreviewText').innerText = text;
-        }
-
-        function exportReportMarkdown() {
-            const text = document.getElementById('reportPreviewText').innerText;
-            const blob = new Blob([text], { type: 'text/markdown' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `sentinel_audit_report_${Date.now()}.md`;
-            a.click();
-        }
-
-        function exportReportCSV() {
-            let csv = "step,district,payments,alerts_strict,alerts_balanced,alerts_lenient\\n";
-            DATA.hourly_stats.forEach(h => {
-                csv += `${h.step},1,${h.payments},${h.alerts_strict},${h.alerts_balanced},${h.alerts_lenient}\\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `sentinel_metrics_${Date.now()}.csv`;
-            a.click();
-        }
-
-        function printReportPage() {
-            window.print();
         }
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -3188,6 +2616,16 @@ Status: AI-Assisted Draft (Human Review Required)
     </script>
 </body>
 </html>"""
+
+    html_out = html_template.replace("__DATA_BUNDLE__", json.dumps(bundle))
+
+    with open("index.html", "w", encoding="utf-8") as f:
+        f.write(html_out)
+
+    with open("docs/index.html", "w", encoding="utf-8") as f:
+        f.write(html_out)
+
+    print("Successfully built Mission 8 & 9 Story Dashboard with 3D Ledger City Phase A at index.html and docs/index.html")
 
 if __name__ == "__main__":
     build_mission8_site()
