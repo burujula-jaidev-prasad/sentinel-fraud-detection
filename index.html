@@ -1682,7 +1682,7 @@
 
         <div class="sidebar-footer">
             <strong>Sentinel Patrol</strong><br>
-            Simulated live stream: replay of the PaySim test period (steps 334–743). Never claim real-time bank data.
+            Simulated live stream: replay of the PaySim test period (steps 334 to 742). Never claim real-time bank data.
         </div>
     </aside>
 
@@ -1808,7 +1808,7 @@
                         <canvas id="c3Chart"></canvas>
                     </div>
                     <div class="card-explanation">
-                        <strong>What this means:</strong> Sentinel strictly trains on past transactions (hours 1–333) and evaluates on future steps (334–743), mirroring real-world deployment without data contamination.
+                        <strong>What this means:</strong> Sentinel strictly trains on past transactions (hours 1–333) and evaluates on future steps (steps 334 to 742), mirroring real-world deployment without data contamination.
                     </div>
                     <div class="card-source-footer">Source: docs/data/data_overview.json</div>
                 </div>
@@ -1863,7 +1863,7 @@
                             <span class="pill-tag" style="background:rgba(56,189,248,0.15); color:#38bdf8;">Input: 954,393 txs</span>
                         </div>
                         <p style="color:#cbd5e1; font-size:12.5px; margin:6px 0;">
-                            Ingests chronological payments across 743 hours. Strictly partitions training (Steps 1–333) from deployment replay (Steps 334–742) without using future data or leaky destination balance delta fields.
+                            Ingests chronological payments across 742 hours. Strictly partitions training (Steps 1–333) from deployment replay (Steps 334–742) without using future data or leaky destination balance delta fields.
                         </p>
                         <div>
                             <span class="pill-tag">Train: 312,371 rows</span>
@@ -2277,26 +2277,26 @@ ightarrow 	ext{CASH\_OUT}$) and locks both destination nodes in tandem.
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px;">
                 <div class="story-card" style="border-left: 4px solid #ef4444; padding: 14px;">
                     <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; letter-spacing: 0.5px;">Equity Destruction</div>
-                    <div style="font-size: 24px; font-weight: 800; color: #ef4444; margin: 4px 0;">-55.1% Drawdown</div>
-                    <div style="font-size: 11.5px; color: #cbd5e1;">~₹25,000 Cr market cap erased in under 3 weeks post-RBI order.</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #ef4444; margin: 4px 0;">-42.4% Drawdown</div>
+                    <div style="font-size: 11.5px; color: #cbd5e1;">₹761.20 (31 Jan 2024) ➔ ₹438.50 (5 Feb 2024) post-RBI directive.</div>
                 </div>
 
                 <div class="story-card" style="border-left: 4px solid #f59e0b; padding: 14px;">
                     <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; letter-spacing: 0.5px;">Volatility Explosion</div>
-                    <div style="font-size: 24px; font-weight: 800; color: #f59e0b; margin: 4px 0;">25.8% ➔ 78.7%</div>
-                    <div style="font-size: 11.5px; color: #cbd5e1;">+305% annualized volatility surge as risk premia expanded.</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #f59e0b; margin: 4px 0;">44.6% ➔ 66.2%</div>
+                    <div style="font-size: 11.5px; color: #cbd5e1;">+48.4% annualized volatility surge as risk premia expanded.</div>
                 </div>
 
                 <div class="story-card" style="border-left: 4px solid #38bdf8; padding: 14px;">
                     <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; letter-spacing: 0.5px;">Market Beta Spike</div>
-                    <div style="font-size: 24px; font-weight: 800; color: #38bdf8; margin: 4px 0;">0.66 ➔ 2.02</div>
-                    <div style="font-size: 11.5px; color: #cbd5e1;">Shifted from defensive tech utility to high-beta distressed asset.</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #38bdf8; margin: 4px 0;">0.91 ➔ 0.87</div>
+                    <div style="font-size: 11.5px; color: #cbd5e1;">Covariance shift against broader benchmark index.</div>
                 </div>
 
                 <div class="story-card" style="border-left: 4px solid #10b981; padding: 14px;">
                     <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; letter-spacing: 0.5px;">Benchmark Decoupling</div>
-                    <div style="font-size: 24px; font-weight: 800; color: #34d399; margin: 4px 0;">-56.9% Alpha Gap</div>
-                    <div style="font-size: 11.5px; color: #cbd5e1;">NIFTY 50 remained stable (+1.8%) confirming 100% compliance cause.</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #34d399; margin: 4px 0;">4.4% ➔ 3.4% R²</div>
+                    <div style="font-size: 11.5px; color: #cbd5e1;">R-squared decoupling confirming firm-specific regulatory shock.</div>
                 </div>
             </div>
 
@@ -2418,7 +2418,7 @@ ightarrow 	ext{CASH\_OUT}$) and locks both destination nodes in tandem.
                         <span style="font-size:12px; color:var(--text-muted);">Filter Cases:</span>
                         <button class="btn btn-secondary active" id="caseFilterFraudBtn" onclick="filterCases('fraud')" style="padding:4px 10px; font-size:11px; background:rgba(239,68,68,0.2); color:#fca5a5; border-color:#ef4444;">🚨 Confirmed Frauds (210)</button>
                         <button class="btn btn-secondary" id="caseFilterFpBtn" onclick="filterCases('fp')" style="padding:4px 10px; font-size:11px; background:rgba(245,158,11,0.15); color:#fde68a; border-color:#f59e0b;">⚠️ False Alarms (179)</button>
-                        <button class="btn btn-secondary" id="caseFilterAllBtn" onclick="filterCases('all')" style="padding:4px 10px; font-size:11px;">All Alerts (389)</button>
+                        <button class="btn btn-secondary" id="caseFilterAllBtn" onclick="filterCases('all')" style="padding:4px 10px; font-size:11px;">All Alerts (389: 258 Held, 131 Escalated)</button>
                     </div>
 
                     <div style="display:flex; align-items:center; gap:8px;">
@@ -3037,7 +3037,7 @@ function onStrictnessChange(idx) {
             const betaPre = m[0].beta_pre;
             const betaPost = m[0].beta_post;
 
-            document.getElementById('c11Headline').innerText = `Post-RBI supervisory action, Paytm equity dropped ~55%; annualized volatility surged from ${preVol}% to ${postVol}% while market beta rose from ${betaPre} to ${betaPost}.`;
+            document.getElementById('c11Headline').innerText = `Post-RBI supervisory action, Paytm equity dropped -42.4% (₹761.20 to ₹438.50); annualized volatility surged from 44.6% to 66.2% (+48.4% surge) with market beta at 0.91 to 0.87 and R-squared shifting from 4.4% to 3.4%.`;
 
             const ctx = document.getElementById('c11Chart').getContext('2d');
             if (chartC11) chartC11.destroy();
