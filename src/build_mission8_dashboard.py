@@ -1,4 +1,4 @@
-"""Mission 8 & 9: Story Dashboard with Purposeful 3D Ledger City Simulation, Road Grid Navigation, and Hourly Threat Intelligence."""
+"""Mission 8 & 9: Story Dashboard with Enhanced 3D Ledger City Camera Angles, Multi-Tier Risk Flagging, and Threat Radar."""
 
 import os
 import json
@@ -666,7 +666,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         .city-modal-overlay.active { display: flex; }
 
         .city-header {
-            padding: 12px 24px;
+            padding: 10px 20px;
             background: #0d1527;
             border-bottom: 1px solid var(--border-color);
             display: flex;
@@ -674,24 +674,36 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             align-items: center;
             z-index: 1010;
             flex-shrink: 0;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
         .city-header-title {
-            font-size: 17px;
-            font-weight: 700;
+            font-size: 16px;
+            font-weight: 800;
             color: #38bdf8;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+        }
+
+        .city-timeline-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 20px;
+            padding: 4px 14px;
         }
 
         .city-disclaimer-banner {
             background: rgba(245, 158, 11, 0.15);
             border-bottom: 1px solid rgba(245, 158, 11, 0.35);
             color: #fde68a;
-            font-size: 11.5px;
+            font-size: 11px;
             text-align: center;
-            padding: 6px 14px;
+            padding: 5px 12px;
             z-index: 1008;
             font-weight: 600;
             flex-shrink: 0;
@@ -703,28 +715,28 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             background: radial-gradient(circle at center, #0a1428 0%, #02050e 100%);
             overflow: hidden;
             width: 100%;
-            height: calc(100vh - 90px);
+            height: calc(100vh - 100px);
             min-height: 400px;
         }
 
         /* Live Hourly Threat Feed Radar Panel (Top-Left) */
         .city-threat-radar-panel {
             position: absolute;
-            top: 16px; left: 16px;
-            background: rgba(13, 21, 39, 0.94);
+            top: 14px; left: 14px;
+            background: rgba(13, 21, 39, 0.95);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 16px;
+            padding: 14px 16px;
             width: 360px;
             backdrop-filter: blur(14px);
             color: white;
             font-size: 12px;
-            box-shadow: 0 12px 35px rgba(0,0,0,0.75);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.8);
             z-index: 1005;
-            max-height: calc(100vh - 160px);
+            max-height: calc(100vh - 170px);
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
 
         .threat-incident-list {
@@ -732,14 +744,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             flex-direction: column;
             gap: 6px;
             overflow-y: auto;
-            max-height: 220px;
+            max-height: 230px;
             padding-right: 4px;
         }
 
         .threat-incident-card {
             background: #091024;
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            border-left: 3px solid #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.45);
+            border-left: 4px solid #ef4444;
             border-radius: 6px;
             padding: 8px 10px;
             cursor: pointer;
@@ -747,25 +759,36 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         }
 
         .threat-incident-card:hover {
-            background: rgba(239, 68, 68, 0.15);
+            background: rgba(239, 68, 68, 0.22);
             border-color: #ef4444;
-            transform: translateX(2px);
+            transform: translateX(3px);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+        }
+
+        .threat-incident-card.elevated {
+            border-color: rgba(245, 158, 11, 0.4);
+            border-left-color: #f59e0b;
+        }
+
+        .threat-incident-card.elevated:hover {
+            background: rgba(245, 158, 11, 0.18);
+            border-color: #f59e0b;
         }
 
         .city-controls-bar {
             position: absolute;
-            bottom: 20px; left: 50%;
+            bottom: 18px; left: 50%;
             transform: translateX(-50%);
-            background: rgba(13, 21, 39, 0.94);
+            background: rgba(13, 21, 39, 0.95);
             border: 1px solid var(--border-color);
             border-radius: 30px;
-            padding: 8px 22px;
+            padding: 8px 20px;
             display: flex;
             align-items: center;
             gap: 10px;
             backdrop-filter: blur(14px);
             z-index: 1005;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.7);
             flex-wrap: wrap;
             justify-content: center;
         }
@@ -773,15 +796,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         /* Floating Evidence Board HUD (Top Right) */
         .city-evidence-board {
             position: absolute;
-            top: 16px; right: 16px;
+            top: 14px; right: 14px;
             background: rgba(15, 23, 42, 0.97);
             border: 1.5px solid #38bdf8;
             border-radius: 14px;
-            padding: 18px;
-            width: 360px;
+            padding: 16px;
+            width: 370px;
             color: white;
             font-size: 12px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.88);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.9);
             z-index: 1006;
             display: none;
             backdrop-filter: blur(16px);
@@ -1326,15 +1349,28 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <!-- City Header Bar -->
         <div class="city-header">
             <div class="city-header-title">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                     <circle cx="12" cy="11" r="3"/>
                 </svg>
-                <span>LEDGER CITY // REAL-TIME 3D SENTINEL SURVEILLANCE</span>
+                <span>LEDGER CITY // 3D SENTINEL THREAT RADAR</span>
             </div>
 
-            <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-                <span class="pill-badge" id="cityStepClock" style="font-size:12px; padding:4px 10px;">Step 334 | Hour 22:00</span>
+            <!-- Integrated Timeline & Step Replay Controls -->
+            <div class="city-timeline-controls">
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="cityStepChange(-1)" title="Previous Hour">◀ Prev</button>
+                <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" id="cityPlayBtn" onclick="togglePatrolPlay()">⏸️ Pause</button>
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="cityStepChange(1)" title="Next Hour">Next ▶</button>
+                
+                <input type="range" id="cityStepSlider" min="334" max="742" value="334" style="width:130px;" oninput="scrubPatrol(this.value)">
+                <span class="pill-badge" id="cityStepClock" style="font-size:11.5px; padding:3px 8px;">Step 334 | 22:00</span>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:6px; background:#080e1f; padding:4px 10px; border-radius:8px; border:1px solid rgba(56,189,248,0.2);">
+                    <span style="font-size:11px; color:#94a3b8;">Strictness (θ):</span>
+                    <strong style="color:#38bdf8; font-size:12px; font-family:var(--font-mono);" id="cityStrictnessBadge">0.50</strong>
+                </div>
                 <button class="toggle-btn" id="cityEvalBtn" onclick="toggleAnswerKey()">
                     <span id="cityEvalBtnText">👁️ Ground Truth: OFF</span>
                 </button>
@@ -1355,16 +1391,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             <div class="city-threat-radar-panel">
                 <div style="font-weight:800; color:#38bdf8; font-size:13px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(56,189,248,0.2); padding-bottom:6px;">
                     <span>🚨 HOURLY THREAT RADAR</span>
-                    <span class="pill-badge" id="radarThreatCountBadge" style="background:rgba(239,68,68,0.2); color:#fca5a5;">0 Threats</span>
+                    <span class="pill-badge" id="radarThreatCountBadge" style="background:rgba(239,68,68,0.25); color:#fca5a5;">0 Threats</span>
                 </div>
                 <div style="font-size:11.5px; color:#cbd5e1; line-height:1.4;">
                     <div>• <strong>Current Hour:</strong> <span id="radarHourDisplay">22:00</span></div>
                     <div>• <strong>Active Payments in City:</strong> <span id="radarActiveTxCount">0</span> transactions</div>
-                    <div>• <strong>Current Strictness (θ):</strong> <span id="cityStrictnessBadge" style="color:#38bdf8; font-weight:700;">0.50</span></div>
+                    <div>• <strong>Current Strictness (θ):</strong> <span id="cityStrictnessDisplay" style="color:#38bdf8; font-weight:700;">0.50</span></div>
                 </div>
 
                 <div style="font-weight:700; color:#f59e0b; font-size:11.5px; margin-top:2px;">
-                    ⚡ Live Flagged Threats (Click to Inspect):
+                    ⚡ Live Flagged Threats (Click to Inspect & Focus):
                 </div>
                 <div class="threat-incident-list" id="radarThreatList">
                     <div style="color:#64748b; font-size:11px; padding:6px;">No high-risk threats detected in this hour.</div>
@@ -1374,7 +1410,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             <!-- Floating Evidence Board & Decision Stamp (Phase B) -->
             <div class="city-evidence-board" id="cityEvidenceBoard">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid rgba(56,189,248,0.25); padding-bottom:6px;">
-                    <strong style="color:#38bdf8; font-size:14px;" id="ebTxId">tx_334_12</strong>
+                    <strong style="color:#38bdf8; font-size:13.5px;" id="ebTxId">tx_334_12</strong>
                     <button style="background:transparent; border:none; color:#94a3b8; cursor:pointer; font-size:16px;" onclick="closeEvidenceBoard()">✕</button>
                 </div>
                 <div style="font-size:12px; color:#cbd5e1; display:flex; flex-direction:column; gap:6px;" id="ebTxBody">
@@ -1384,10 +1420,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
             <!-- City Interactive Controls Bar -->
             <div class="city-controls-bar">
-                <button class="btn btn-secondary" onclick="setCityView('skyline')">🌆 Skyline</button>
-                <button class="btn btn-secondary" onclick="setCityView('overhead')">🛰️ 3x3 Grid Map</button>
-                <button class="btn btn-secondary" onclick="setCityView('street')">🚶 Street Patrol</button>
-                <button class="btn btn-secondary" onclick="setCityView('tower')">🗼 Sentinel Spire</button>
+                <button class="btn btn-secondary" onclick="setCityView('skyline')">🌆 Overview (Cinematic)</button>
+                <button class="btn btn-secondary" onclick="setCityView('overhead')">🛰️ Tactical Map (2D/3D)</button>
+                <button class="btn btn-secondary" onclick="setCityView('street')">🚶 Street Level</button>
+                <button class="btn btn-secondary" onclick="setCityView('tower')">🗼 Sentinel Spire Cam</button>
                 <button class="btn btn-primary" onclick="focusOnNextThreat()">🚨 Focus Active Threat</button>
             </div>
         </div>
@@ -1486,27 +1522,30 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         let cityAnimId = null;
         let cityBuildings = [];
         let cityPeopleMeshes = [];
+        let districtSprites = {};
         let cityIs2DFallback = false;
         let selectedPersonData = null;
         let sentinelMesh = null;
         let routeLaserLine = null;
 
-        // Camera Orbit State
+        // Camera Smooth Navigation State
         let isOrbiting = false, isPanning = false;
         let mousePrevX = 0, mousePrevY = 0;
-        let camTarget = new THREE.Vector3(0, 20, 0);
-        let camSpherical = { radius: 520, theta: Math.PI / 4, phi: Math.PI / 3 };
+        let currentCamPos = new THREE.Vector3(220, 140, 220);
+        let targetCamPos = new THREE.Vector3(220, 140, 220);
+        let currentLookTarget = new THREE.Vector3(0, 15, 0);
+        let targetLookTarget = new THREE.Vector3(0, 15, 0);
 
         // 3x3 District Coordinates
         const DISTRICT_POSITIONS = {
-            1: { x: -220, z: -220, name: "District 1 (Alpha NW)" },
-            2: { x:    0, z: -220, name: "District 2 (North Gate)" },
-            3: { x:  220, z: -220, name: "District 3 (Beta NE)" },
-            4: { x: -220, z:    0, name: "District 4 (West Exchange)" },
-            5: { x:  220, z:    0, name: "District 5 (East Exchange)" },
-            6: { x: -220, z:  220, name: "District 6 (Gamma SW)" },
-            7: { x:    0, z:  220, name: "District 7 (South Terminal)" },
-            8: { x:  220, z:  220, name: "District 8 (Delta SE)" }
+            1: { x: -220, z: -220, name: "Alpha NW" },
+            2: { x:    0, z: -220, name: "North Gate" },
+            3: { x:  220, z: -220, name: "Beta NE" },
+            4: { x: -220, z:    0, name: "West Exchange" },
+            5: { x:  220, z:    0, name: "East Exchange" },
+            6: { x: -220, z:  220, name: "Gamma SW" },
+            7: { x:    0, z:  220, name: "South Terminal" },
+            8: { x:  220, z:  220, name: "Delta SE" }
         };
 
         // Navigation
@@ -2106,10 +2145,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             try {
                 cityScene = new THREE.Scene();
                 cityScene.background = new THREE.Color(0x020716);
-                cityScene.fog = new THREE.FogExp2(0x020716, 0.0012);
+                cityScene.fog = new THREE.FogExp2(0x020716, 0.0010);
 
                 cityCamera = new THREE.PerspectiveCamera(45, width / height, 2, 4000);
-                updateCameraPosition();
+                cityCamera.position.copy(targetCamPos);
+                cityCamera.lookAt(targetLookTarget);
 
                 cityRenderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
                 cityRenderer.setSize(width, height);
@@ -2125,7 +2165,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 return;
             }
 
-            // Dynamic High-Visibility Lighting
+            // High-Definition Lighting
             const hemiLight = new THREE.HemisphereLight(0x7dd3fc, 0x0f172a, 1.4);
             cityScene.add(hemiLight);
 
@@ -2148,7 +2188,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             gridHelper.position.y = 0.1;
             cityScene.add(gridHelper);
 
-            // Glowing Road Network & Boulevards
+            // Road Network & Boulevards
             buildRoadAvenues();
 
             // Central Sentinel Spire (Height 200 CU)
@@ -2186,25 +2226,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             });
         }
 
-        function updateCameraPosition() {
-            const x = camTarget.x + camSpherical.radius * Math.sin(camSpherical.phi) * Math.sin(camSpherical.theta);
-            const y = camTarget.y + camSpherical.radius * Math.cos(camSpherical.phi);
-            const z = camTarget.z + camSpherical.radius * Math.sin(camSpherical.phi) * Math.cos(camSpherical.theta);
-            cityCamera.position.set(x, y, z);
-            cityCamera.lookAt(camTarget);
-        }
-
         function buildRoadAvenues() {
             const roadMat = new THREE.MeshLambertMaterial({ color: 0x0b1633 });
             const lineMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
 
             // Cross Highways
-            const hRoad = new THREE.Mesh(new THREE.PlaneGeometry(800, 36), roadMat);
+            const hRoad = new THREE.Mesh(new THREE.PlaneGeometry(800, 40), roadMat);
             hRoad.rotation.x = -Math.PI / 2;
             hRoad.position.y = 0.2;
             cityScene.add(hRoad);
 
-            const vRoad = new THREE.Mesh(new THREE.PlaneGeometry(36, 800), roadMat);
+            const vRoad = new THREE.Mesh(new THREE.PlaneGeometry(40, 800), roadMat);
             vRoad.rotation.x = -Math.PI / 2;
             vRoad.position.y = 0.2;
             cityScene.add(vRoad);
@@ -2224,7 +2256,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         function buildCentralSentinelTower() {
             const towerGroup = new THREE.Group();
 
-            // Base
             const baseGeo = new THREE.CylinderGeometry(24, 32, 70, 8);
             const towerMat = new THREE.MeshPhongMaterial({
                 color: 0x0c1a36,
@@ -2237,20 +2268,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             base.position.y = 35;
             towerGroup.add(base);
 
-            // Mid
             const midGeo = new THREE.CylinderGeometry(16, 24, 80, 8);
             const mid = new THREE.Mesh(midGeo, towerMat);
             mid.position.y = 110;
             towerGroup.add(mid);
 
-            // Deck
             const deckGeo = new THREE.CylinderGeometry(28, 14, 18, 16);
             const deckMat = new THREE.MeshPhongMaterial({ color: 0x0284c7, emissive: 0x38bdf8, emissiveIntensity: 0.6 });
             const deck = new THREE.Mesh(deckGeo, deckMat);
             deck.position.y = 159;
             towerGroup.add(deck);
 
-            // Spire
             const spireGeo = new THREE.ConeGeometry(6, 50, 8);
             const spireMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
             const spire = new THREE.Mesh(spireGeo, spireMat);
@@ -2272,29 +2300,29 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
         function build8UrbanDistricts() {
             cityBuildings = [];
+            districtSprites = {};
             const districtColors = [0x38bdf8, 0x3b82f6, 0x818cf8, 0xa855f7, 0xf59e0b, 0x10b981, 0x06b6d4, 0x94a3b8];
 
             for (let d = 1; d <= 8; d++) {
                 const pos = DISTRICT_POSITIONS[d];
                 const dColor = districtColors[d - 1];
 
-                // Plaza Ground
                 const plazaGeo = new THREE.BoxGeometry(130, 2, 130);
                 const plazaMat = new THREE.MeshPhongMaterial({
                     color: 0x0a142c,
                     emissive: dColor,
-                    emissiveIntensity: 0.18
+                    emissiveIntensity: 0.22
                 });
                 const plaza = new THREE.Mesh(plazaGeo, plazaMat);
                 plaza.position.set(pos.x, 1, pos.z);
                 cityScene.add(plaza);
 
-                // Floating Hologram Label
-                const labelSprite = createDistrictLabelSprite(pos.name.toUpperCase(), "#38bdf8");
-                labelSprite.position.set(pos.x, 155, pos.z);
+                // Floating Hologram Status Board
+                const labelSprite = createDistrictLabelSprite(`DISTRICT ${d}: ${pos.name.toUpperCase()}`, "🟢 SECURE", "#38bdf8");
+                labelSprite.position.set(pos.x, 135, pos.z);
                 cityScene.add(labelSprite);
+                districtSprites[d] = labelSprite;
 
-                // District Skyscrapers
                 for (let b = 0; b < 12; b++) {
                     const bx = pos.x + (Math.random() - 0.5) * 100;
                     const bz = pos.z + (Math.random() - 0.5) * 100;
@@ -2315,7 +2343,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     bMesh.position.set(bx, bh / 2, bz);
                     cityScene.add(bMesh);
 
-                    // Lit Window Matrix
                     const winGeo = new THREE.PlaneGeometry(bw * 0.85, bh * 0.75);
                     const winMat = new THREE.MeshBasicMaterial({
                         color: 0x38bdf8,
@@ -2326,7 +2353,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     winF.position.set(bx, bh / 2, bz + bd / 2 + 0.3);
                     cityScene.add(winF);
 
-                    // Rooftop Aircraft Safety Beacon
                     const beaconGeo = new THREE.SphereGeometry(1.8, 8, 8);
                     const beaconMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
                     const beacon = new THREE.Mesh(beaconGeo, beaconMat);
@@ -2354,21 +2380,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             body.position.y = 5;
             group.add(body);
 
-            // Round Protective Hood (NO ears, NO wings)
             const hoodGeo = new THREE.SphereGeometry(3.0, 16, 16);
             const hoodMat = new THREE.MeshStandardMaterial({ color: 0x080e1a, roughness: 0.4 });
             const hood = new THREE.Mesh(hoodGeo, hoodMat);
             hood.position.y = 12;
             group.add(hood);
 
-            // Gold Shield-Eye Emblem
             const emblemGeo = new THREE.CircleGeometry(1.6, 16);
             const emblemMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
             const emblem = new THREE.Mesh(emblemGeo, emblemMat);
             emblem.position.set(0, 7.5, 2.7);
             group.add(emblem);
 
-            // Cloak
             const cloakGeo = new THREE.ConeGeometry(4.0, 11, 8, 1, true);
             const cloakMat = new THREE.MeshLambertMaterial({ color: 0x0284c7, side: THREE.DoubleSide });
             const cloak = new THREE.Mesh(cloakGeo, cloakMat);
@@ -2385,29 +2408,94 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             };
         }
 
-        function createDistrictLabelSprite(text, colorHex) {
+        function createDistrictLabelSprite(title, status, colorHex) {
             const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 64;
+            canvas.width = 300;
+            canvas.height = 80;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = "rgba(13, 21, 39, 0.88)";
+            ctx.fillStyle = "rgba(10, 18, 36, 0.92)";
             ctx.strokeStyle = colorHex;
             ctx.lineWidth = 3;
-            ctx.roundRect(4, 4, 248, 56, 12);
+            ctx.roundRect(4, 4, 292, 72, 12);
             ctx.fill();
             ctx.stroke();
 
             ctx.fillStyle = colorHex;
-            ctx.font = "bold 19px sans-serif";
+            ctx.font = "bold 18px sans-serif";
             ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(text, 128, 32);
+            ctx.fillText(title, 150, 32);
+
+            ctx.fillStyle = status.includes("ALARM") ? "#f87171" : "#34d399";
+            ctx.font = "bold 14px monospace";
+            ctx.fillText(status, 150, 58);
 
             const texture = new THREE.CanvasTexture(canvas);
             const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
             const sprite = new THREE.Sprite(spriteMat);
-            sprite.scale.set(70, 18, 1);
+            sprite.scale.set(65, 17, 1);
+            sprite.userData = { canvas, ctx, texture };
             return sprite;
+        }
+
+        function updateDistrictLabelSprite(sprite, title, status, colorHex) {
+            if (!sprite || !sprite.userData || !sprite.userData.ctx) return;
+            const { canvas, ctx, texture } = sprite.userData;
+            ctx.clearRect(0, 0, 300, 80);
+            ctx.fillStyle = "rgba(10, 18, 36, 0.92)";
+            ctx.strokeStyle = colorHex;
+            ctx.lineWidth = 3;
+            ctx.roundRect(4, 4, 292, 72, 12);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = colorHex;
+            ctx.font = "bold 18px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(title, 150, 32);
+
+            ctx.fillStyle = status.includes("ALARM") ? "#f87171" : "#34d399";
+            ctx.font = "bold 14px monospace";
+            ctx.fillText(status, 150, 58);
+
+            texture.needsUpdate = true;
+        }
+
+        function createPedestrianTagCanvas() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 64;
+            const texture = new THREE.CanvasTexture(canvas);
+            const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+            const sprite = new THREE.Sprite(spriteMat);
+            sprite.scale.set(22, 5.5, 1);
+            sprite.position.y = 15;
+            return { canvas, texture, sprite };
+        }
+
+        function renderPedestrianTag(tagObj, text, isAlert, isElevated) {
+            const { canvas, texture, sprite } = tagObj;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 256, 64);
+
+            let bg = isAlert ? "rgba(220, 38, 38, 0.92)" : (isElevated ? "rgba(217, 119, 6, 0.88)" : "rgba(15, 23, 42, 0.82)");
+            let border = isAlert ? "#fca5a5" : (isElevated ? "#fde68a" : "#38bdf8");
+            let textCol = "#ffffff";
+
+            ctx.fillStyle = bg;
+            ctx.strokeStyle = border;
+            ctx.lineWidth = 2.5;
+            ctx.roundRect(4, 4, 248, 56, 10);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = textCol;
+            ctx.font = isAlert ? "bold 17px monospace" : "bold 15px sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(text, 128, 32);
+
+            texture.needsUpdate = true;
+            sprite.visible = true;
         }
 
         function buildCityPeoplePool() {
@@ -2415,8 +2503,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             const bodyGeo = new THREE.CylinderGeometry(1.6, 2.2, 7.5, 8);
             const headGeo = new THREE.SphereGeometry(1.8, 8, 8);
             const bagGeo = new THREE.BoxGeometry(2.8, 2.8, 2.8);
-            const haloGeo = new THREE.TorusGeometry(3.2, 0.4, 6, 16);
-            const beamGeo = new THREE.CylinderGeometry(0.4, 0.4, 40, 8);
+            const haloGeo = new THREE.TorusGeometry(3.4, 0.4, 6, 16);
+            const beamGeo = new THREE.CylinderGeometry(0.3, 0.3, 50, 8);
+            const ringGeo = new THREE.RingGeometry(3.5, 5.0, 16);
 
             for (let i = 0; i < 300; i++) {
                 const group = new THREE.Group();
@@ -2424,7 +2513,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 const headMat = new THREE.MeshLambertMaterial({ color: 0xf8fafc });
                 const bagMat = new THREE.MeshLambertMaterial({ color: 0xf59e0b });
                 const haloMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.9 });
-                const beamMat = new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.7 });
+                const beamMat = new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.8 });
+                const ringMat = new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.7, side: THREE.DoubleSide });
 
                 const body = new THREE.Mesh(bodyGeo, coatMat);
                 body.position.y = 3.75;
@@ -2445,22 +2535,30 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 group.add(halo);
 
                 const beam = new THREE.Mesh(beamGeo, beamMat);
-                beam.position.y = 30;
+                beam.position.y = 34;
                 beam.visible = false;
                 group.add(beam);
+
+                const ring = new THREE.Mesh(ringGeo, ringMat);
+                ring.rotation.x = -Math.PI / 2;
+                ring.position.y = 0.2;
+                ring.visible = false;
+                group.add(ring);
+
+                const tagObj = createPedestrianTagCanvas();
+                group.add(tagObj.sprite);
 
                 group.position.set(0, -100, 0);
                 group.userData = { index: i, personData: null };
                 cityScene.add(group);
 
                 cityPeopleMeshes.push({
-                    group, body, head, bag, halo, beam,
-                    coatMat, headMat, bagMat, haloMat, beamMat,
+                    group, body, head, bag, halo, beam, ring, tagObj,
+                    coatMat, headMat, bagMat, haloMat, beamMat, ringMat,
                     active: false,
                     waypoints: [],
-                    wpIndex: 0,
                     progress: 0,
-                    speed: 0.006,
+                    speed: 0.005,
                     txData: null
                 });
             }
@@ -2487,25 +2585,32 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 const dy = e.clientY - mousePrevY;
 
                 if (isOrbiting) {
-                    camSpherical.theta -= dx * 0.005;
-                    camSpherical.phi = Math.max(0.1, Math.min(Math.PI / 2 - 0.05, camSpherical.phi - dy * 0.005));
+                    const radius = targetCamPos.distanceTo(targetLookTarget);
+                    const theta = Math.atan2(targetCamPos.x - targetLookTarget.x, targetCamPos.z - targetLookTarget.z) - dx * 0.005;
+                    const phi = Math.max(0.12, Math.min(Math.PI / 2 - 0.05, Math.acos((targetCamPos.y - targetLookTarget.y) / Math.max(1, radius)) - dy * 0.005));
+
+                    targetCamPos.x = targetLookTarget.x + radius * Math.sin(phi) * Math.sin(theta);
+                    targetCamPos.y = targetLookTarget.y + radius * Math.cos(phi);
+                    targetCamPos.z = targetLookTarget.z + radius * Math.sin(phi) * Math.cos(theta);
                 } else if (isPanning) {
-                    camTarget.x -= dx * 0.4;
-                    camTarget.z -= dy * 0.4;
+                    targetLookTarget.x -= dx * 0.35;
+                    targetLookTarget.z -= dy * 0.35;
+                    targetCamPos.x -= dx * 0.35;
+                    targetCamPos.z -= dy * 0.35;
                 }
 
-                updateCameraPosition();
                 mousePrevX = e.clientX;
                 mousePrevY = e.clientY;
             });
 
             container.addEventListener('wheel', (e) => {
                 e.preventDefault();
-                camSpherical.radius = Math.max(60, Math.min(1100, camSpherical.radius + e.deltaY * 0.5));
-                updateCameraPosition();
+                const dir = targetCamPos.clone().sub(targetLookTarget).normalize();
+                const dist = Math.max(25, Math.min(800, targetCamPos.distanceTo(targetLookTarget) + e.deltaY * 0.4));
+                targetCamPos.copy(targetLookTarget).add(dir.multiplyScalar(dist));
             }, { passive: false });
 
-            // Click Person to Inspect Dossier
+            // Raycast click
             container.addEventListener('click', (e) => {
                 const rect = container.getBoundingClientRect();
                 cityMouse.x = ((e.clientX - rect.left) / container.clientWidth) * 2 - 1;
@@ -2598,8 +2703,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             ];
 
             const curve = new THREE.CatmullRomCurve3(points);
-            const tubeGeo = new THREE.TubeGeometry(curve, 20, 1.2, 8, false);
-            const tubeMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.8 });
+            const tubeGeo = new THREE.TubeGeometry(curve, 20, 1.4, 8, false);
+            const tubeMat = new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.85 });
             routeLaserLine = new THREE.Mesh(tubeGeo, tubeMat);
             cityScene.add(routeLaserLine);
         }
@@ -2630,36 +2735,58 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
         function setCityView(type) {
             if (type === 'skyline') {
-                camTarget.set(0, 20, 0);
-                camSpherical = { radius: 520, theta: Math.PI / 4, phi: Math.PI / 3 };
+                targetLookTarget.set(0, 15, 0);
+                targetCamPos.set(220, 140, 220);
             } else if (type === 'overhead') {
-                camTarget.set(0, 0, 0);
-                camSpherical = { radius: 680, theta: 0.001, phi: 0.05 };
+                targetLookTarget.set(0, 0, 0);
+                targetCamPos.set(0, 360, 5);
             } else if (type === 'street') {
-                camTarget.set(0, 10, 0);
-                camSpherical = { radius: 180, theta: Math.PI / 3, phi: Math.PI / 2 - 0.15 };
+                targetLookTarget.set(0, 6, 0);
+                targetCamPos.set(50, 12, 50);
             } else if (type === 'tower') {
-                camTarget.set(0, 170, 0);
-                camSpherical = { radius: 120, theta: Math.PI / 6, phi: Math.PI / 2.5 };
+                targetLookTarget.set(100, 10, 100);
+                targetCamPos.set(0, 180, 0);
             }
-            updateCameraPosition();
         }
 
         function focusOnNextThreat() {
             const flagged = cityPeopleMeshes.find(p => p.active && p.txData && p.txData.sc >= currentStrictness);
             if (flagged) {
-                camTarget.copy(flagged.group.position);
-                camSpherical.radius = 110;
-                camSpherical.phi = Math.PI / 3.2;
-                updateCameraPosition();
-                displayEvidenceBoard(flagged.txData);
+                inspectThreatById(flagged.txData.id);
             }
+        }
+
+        function inspectThreatById(txId) {
+            const targetMesh = cityPeopleMeshes.find(m => m.txData && m.txData.id === txId);
+            if (targetMesh && targetMesh.txData) {
+                targetLookTarget.copy(targetMesh.group.position).add(new THREE.Vector3(0, 6, 0));
+                targetCamPos.copy(targetMesh.group.position).add(new THREE.Vector3(26, 14, 26));
+                displayEvidenceBoard(targetMesh.txData);
+            }
+        }
+
+        function cityStepChange(delta) {
+            patrolCurrentStep = Math.max(334, Math.min(742, patrolCurrentStep + delta));
+            scrubPatrol(patrolCurrentStep);
         }
 
         function updateCityForStep(step) {
             if (!DATA.district_hourly_by_step || !DATA.city_people_by_step) return;
 
-            // 1. Update District Buildings based on pre-indexed hourly stats
+            const hour = step % 24;
+            const hourText = `${hour}:00 (${(hour>=0 && hour<=5)?'🌙 Late Night Window':'☀️ Standard Hours'})`;
+
+            // Sync Header & HUD Clock
+            const clockBadge = document.getElementById('cityStepClock');
+            if (clockBadge) clockBadge.innerText = `Step ${step} | ${hour}:00`;
+            const stepSlider = document.getElementById('cityStepSlider');
+            if (stepSlider) stepSlider.value = step;
+            const strictBadge = document.getElementById('cityStrictnessBadge');
+            if (strictBadge) strictBadge.innerText = currentStrictness.toFixed(2);
+            const strictDisp = document.getElementById('cityStrictnessDisplay');
+            if (strictDisp) strictDisp.innerText = currentStrictness.toFixed(2);
+
+            // 1. Update District Buildings & Floating Hologram Status Signs
             const stepDistData = DATA.district_hourly_by_step[step] || {};
 
             cityBuildings.forEach(b => {
@@ -2677,20 +2804,30 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 }
             });
 
+            for (let d = 1; d <= 8; d++) {
+                const info = stepDistData[d] || { p: 0, s: 0 };
+                const sprite = districtSprites[d];
+                if (sprite) {
+                    const statusText = info.s > 0 ? `🔴 ALARM (${info.s} THREATS)` : `🟢 ${info.p} TX/HR`;
+                    const colorHex = info.s > 0 ? "#ef4444" : "#38bdf8";
+                    updateDistrictLabelSprite(sprite, `DISTRICT ${d}: ${DISTRICT_POSITIONS[d].name.toUpperCase()}`, statusText, colorHex);
+                }
+            }
+
             // 2. Update Live Hourly Threat Radar Panel
             const activeStepPeople = DATA.city_people_by_step[step] || [];
-            const hour = step % 24;
             const flaggedThreats = activeStepPeople.filter(p => p.sc >= currentStrictness);
+            const elevatedThreats = activeStepPeople.filter(p => p.sc >= 0.15 && p.sc < currentStrictness);
 
-            document.getElementById('radarHourDisplay').innerText = `${hour}:00 (${(hour>=0 && hour<=5)?'🌙 Late Night Window':'☀️ Standard Hours'})`;
+            document.getElementById('radarHourDisplay').innerText = hourText;
             document.getElementById('radarActiveTxCount').innerText = activeStepPeople.length;
             document.getElementById('radarThreatCountBadge').innerText = `${flaggedThreats.length} Threats`;
 
             const radarList = document.getElementById('radarThreatList');
-            if (flaggedThreats.length === 0) {
-                radarList.innerHTML = `<div style="color:#64748b; font-size:11px; padding:6px;">No high-risk threats detected in this hour.</div>`;
+            if (flaggedThreats.length === 0 && elevatedThreats.length === 0) {
+                radarList.innerHTML = `<div style="color:#64748b; font-size:11px; padding:6px;">No high-risk threats detected in this hour. All traffic normal.</div>`;
             } else {
-                radarList.innerHTML = flaggedThreats.map((p, idx) => `
+                let threatHTML = flaggedThreats.map((p, idx) => `
                     <div class="threat-incident-card" onclick="inspectThreatById('${p.id}')">
                         <div style="display:flex; justify-content:space-between; font-weight:700; color:#f87171; font-size:11.5px;">
                             <span>🚨 Threat #${idx+1} (${p.t})</span>
@@ -2701,9 +2838,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                         </div>
                     </div>
                 `).join('');
+
+                if (elevatedThreats.length > 0) {
+                    threatHTML += elevatedThreats.slice(0, 3).map((p, idx) => `
+                        <div class="threat-incident-card elevated" onclick="inspectThreatById('${p.id}')">
+                            <div style="display:flex; justify-content:space-between; font-weight:700; color:#f59e0b; font-size:11px;">
+                                <span>⚠️ Watch #${idx+1} (${p.t})</span>
+                                <span style="font-family:var(--font-mono); color:#facc15;">Score: ${p.sc.toFixed(2)}</span>
+                            </div>
+                            <div style="font-size:10.5px; color:#94a3b8; margin-top:1px;">
+                                ${p.amt.toLocaleString()} CU • Dist ${p.df} ➔ Dist ${p.dt}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                radarList.innerHTML = threatHTML;
             }
 
-            // 3. Spawn / Update People on screen with Manhattan Road Navigation
+            // 3. Spawn / Update People on screen with Floating Badges & Multi-Tier Visual Classification
             const spawnCount = Math.min(300, activeStepPeople.length);
             let firstFlaggedPos = null;
 
@@ -2720,7 +2873,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     const fromPos = DISTRICT_POSITIONS[pData.df] || DISTRICT_POSITIONS[1];
                     const toPos = DISTRICT_POSITIONS[pData.dt] || DISTRICT_POSITIONS[2];
 
-                    // Manhattan Road Grid Waypoints: Start District -> Avenue -> Highway Ring -> Destination District
                     pMesh.waypoints = [
                         new THREE.Vector3(fromPos.x, 0, fromPos.z),
                         new THREE.Vector3(fromPos.x, 0, 0),
@@ -2742,49 +2894,56 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     pMesh.bag.scale.set(bagScale, bagScale, bagScale);
 
                     const isFlagged = pData.sc >= currentStrictness;
+                    const isElevated = pData.sc >= 0.15;
+                    const kAmt = (pData.amt >= 1000000) ? (pData.amt / 1000000).toFixed(1) + 'M' : (pData.amt / 1000).toFixed(0) + 'K';
 
-                    // Halos & Laser Beams on Flagged Threats
+                    // Floating 3D Overhead Text Badges & Risk Lighting:
                     if (evalMode && pData.f === 1) {
+                        renderPedestrianTag(pMesh.tagObj, `🚨 THEFT: ${kAmt} CU (${pData.sc.toFixed(2)})`, true, false);
                         pMesh.headMat.color.setHex(0xef4444);
                         pMesh.halo.visible = true;
                         pMesh.haloMat.color.setHex(0xef4444);
                         pMesh.beam.visible = true;
                         pMesh.beamMat.color.setHex(0xef4444);
+                        pMesh.ring.visible = true;
+                        pMesh.ringMat.color.setHex(0xef4444);
+                        if (!firstFlaggedPos) firstFlaggedPos = pMesh.waypoints[0];
                     } else if (isFlagged) {
-                        pMesh.headMat.color.setHex(0xf59e0b);
+                        renderPedestrianTag(pMesh.tagObj, `🚨 THREAT: ${kAmt} CU (SC ${pData.sc.toFixed(2)})`, true, false);
+                        pMesh.headMat.color.setHex(0xef4444);
                         pMesh.halo.visible = true;
                         pMesh.haloMat.color.setHex(0xf59e0b);
                         pMesh.beam.visible = true;
                         pMesh.beamMat.color.setHex(0xf59e0b);
+                        pMesh.ring.visible = true;
+                        pMesh.ringMat.color.setHex(0xef4444);
                         if (!firstFlaggedPos) firstFlaggedPos = pMesh.waypoints[0];
+                    } else if (isElevated) {
+                        renderPedestrianTag(pMesh.tagObj, `⚠️ WATCH: ${kAmt} CU`, false, true);
+                        pMesh.headMat.color.setHex(0xf59e0b);
+                        pMesh.halo.visible = true;
+                        pMesh.haloMat.color.setHex(0xfacc15);
+                        pMesh.beam.visible = false;
+                        pMesh.ring.visible = false;
                     } else {
-                        pMesh.headMat.color.setHex(0xf8fafc);
+                        renderPedestrianTag(pMesh.tagObj, `✅ ${pData.t.slice(0,4)} ${kAmt}`, false, false);
+                        pMesh.headMat.color.setHex(0x10b981);
                         pMesh.halo.visible = false;
                         pMesh.beam.visible = false;
+                        pMesh.ring.visible = false;
                     }
 
-                    // Position along road path
                     updatePersonRoadPosition(pMesh);
                 } else {
                     pMesh.active = false;
                     pMesh.group.position.set(0, -100, 0);
+                    pMesh.tagObj.sprite.visible = false;
                 }
             }
 
             // Sentinel targets first threat
             if (sentinelMesh && firstFlaggedPos) {
                 sentinelMesh.targetPos.set(firstFlaggedPos.x, 0, firstFlaggedPos.z);
-            }
-        }
-
-        function inspectThreatById(txId) {
-            const targetMesh = cityPeopleMeshes.find(m => m.txData && m.txData.id === txId);
-            if (targetMesh && targetMesh.txData) {
-                camTarget.copy(targetMesh.group.position);
-                camSpherical.radius = 110;
-                camSpherical.phi = Math.PI / 3.2;
-                updateCameraPosition();
-                displayEvidenceBoard(targetMesh.txData);
             }
         }
 
@@ -2803,7 +2962,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             pMesh.group.position.x = pA.x + (pB.x - pA.x) * localT;
             pMesh.group.position.z = pA.z + (pB.z - pA.z) * localT;
 
-            // Orient character towards direction of walking
             const dx = pB.x - pA.x;
             const dz = pB.z - pA.z;
             if (Math.abs(dx) > 0.01 || Math.abs(dz) > 0.01) {
@@ -2817,7 +2975,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             if (cityScene && !cityIs2DFallback) {
                 const time = Date.now() * 0.008;
 
-                // Animate walking humanoids along roads with step bobbing
+                // Smooth camera interpolation
+                currentCamPos.lerp(targetCamPos, 0.05);
+                currentLookTarget.lerp(targetLookTarget, 0.05);
+                cityCamera.position.copy(currentCamPos);
+                cityCamera.lookAt(currentLookTarget);
+
+                // Animate walking humanoids
                 cityPeopleMeshes.forEach((p, idx) => {
                     if (p.active) {
                         p.progress += p.speed;
@@ -2825,10 +2989,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                         updatePersonRoadPosition(p);
                         p.group.position.y = Math.abs(Math.sin(time + idx)) * 1.2;
                         if (p.halo.visible) p.halo.rotation.z += 0.03;
+                        if (p.ring.visible) {
+                            const scale = 1.0 + Math.sin(time * 2 + idx) * 0.15;
+                            p.ring.scale.set(scale, scale, 1);
+                        }
                     }
                 });
 
-                // Smoothly glide Sentinel along roads to target
+                // Sentinel gliding
                 if (sentinelMesh) {
                     sentinelMesh.currentPos.lerp(sentinelMesh.targetPos, 0.03);
                     sentinelMesh.group.position.copy(sentinelMesh.currentPos);
