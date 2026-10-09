@@ -1880,7 +1880,7 @@ ightarrow 	ext{CASH\_OUT}$) and locks both destination nodes in tandem.
             <div class="step-header">
                 <div class="step-badge">Step 8 of 9</div>
                 <h2 class="step-title">The Market Link: Compliance Failures & Equity Impact</h2>
-                <p class="step-sub">Forensic case study on the ₹25,000+ Cr valuation collapse following supervisory action on payment fraud and AML/KYC non-compliance.</p>
+                <p class="step-sub">Case study: Paytm's share price after the RBI action under Section 35A on 31 January 2024.</p>
             </div>
 
             <!-- Market Impact Key Financial Metrics Grid -->
@@ -1900,13 +1900,13 @@ ightarrow 	ext{CASH\_OUT}$) and locks both destination nodes in tandem.
                 <div class="story-card" style="border-left: 4px solid #38bdf8; padding: 14px;">
                     <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; letter-spacing: 0.5px;">Market Beta Spike</div>
                     <div style="font-size: 24px; font-weight: 800; color: #38bdf8; margin: 4px 0;">0.91 ➔ 0.87</div>
-                    <div style="font-size: 11.5px; color: #cbd5e1;">Covariance shift against broader benchmark index.</div>
+                    <div style="font-size: 11.5px; color: #cbd5e1;">Barely changed. The ranges overlap, so there is no evidence of a shift.</div>
                 </div>
 
                 <div class="story-card" style="border-left: 4px solid #10b981; padding: 14px;">
                     <div style="font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; letter-spacing: 0.5px;">Benchmark Decoupling</div>
                     <div style="font-size: 24px; font-weight: 800; color: #34d399; margin: 4px 0;">4.4% ➔ 3.4% R²</div>
-                    <div style="font-size: 11.5px; color: #cbd5e1;">R-squared decoupling confirming firm-specific regulatory shock.</div>
+                    <div style="font-size: 11.5px; color: #cbd5e1;">The market explained only about 4% of Paytm's moves both before and after: the shock was company-specific.</div>
                 </div>
             </div>
 
@@ -1919,7 +1919,7 @@ ightarrow 	ext{CASH\_OUT}$) and locks both destination nodes in tandem.
                         <canvas id="c11Chart"></canvas>
                     </div>
                     <div class="card-explanation">
-                        <strong>What this means:</strong> Weak supervisory AML/KYC controls lead to direct equity destruction and regulatory license restrictions. Automated multi-agent monitoring with full audit logs guarantees compliance under RBI and DPDP directives.
+                        <strong>What this means:</strong> Weak supervisory controls lead to direct equity destruction and regulatory license restrictions. Automated multi-agent monitoring with full audit logs guarantees compliance under RBI and DPDP directives.
                     </div>
                     <div class="card-source-footer">Source: docs/data/market/paytm_nifty.csv</div>
                 </div>
