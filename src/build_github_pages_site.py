@@ -1,25 +1,22 @@
-"""Build production-grade static web application for GitHub Pages (Sentinel Patrol)."""
+"""Production Static Web Application Builder for GitHub Pages (Dashboard + 3D Night City + Sentinel Assistant)."""
 
 import os
 import json
 
-def build_site():
-    with open("docs/data/stream.json", "r", encoding="utf-8") as f:
-        stream_data = json.load(f)
-
-    html_content = f"""<!DOCTYPE html>
+HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentinel Patrol | Multi-Agent AI Fraud Intelligence</title>
-    <!-- Chart.js CDN -->
+    <title>Sentinel | Multi-Agent AI Fraud Intelligence</title>
+    <!-- Chart.js & Three.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        :root {{
-            --bg-color: #0b1120;
-            --card-bg: #131d31;
-            --card-header: #1e293b;
+        :root {
+            --bg-color: #080d1a;
+            --card-bg: #111a2e;
+            --card-header: #1a2640;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --border-color: #1e2e4a;
@@ -34,31 +31,32 @@ def build_site():
             --agent-net: #f472b6;
             --agent-ro: #fbbf24;
             --agent-rep: #34d399;
-        }}
+        }
 
-        * {{
+        * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-        }}
+        }
 
-        body {{
+        body {
             background-color: var(--bg-color);
             color: var(--text-main);
             line-height: 1.5;
             padding: 20px;
-        }}
+            overflow-x: hidden;
+        }
 
-        .container {{
-            max-width: 1480px;
+        .container {
+            max-width: 1520px;
             margin: 0 auto;
-        }}
+        }
 
         /* Header */
-        header {{
+        header {
             background: var(--card-bg);
-            padding: 18px 24px;
+            padding: 14px 22px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
             margin-bottom: 20px;
@@ -67,31 +65,27 @@ def build_site():
             align-items: center;
             flex-wrap: wrap;
             gap: 14px;
-        }}
+        }
 
-        .header-title h1 {{
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--text-main);
+        .brand-container {
             display: flex;
             align-items: center;
-            gap: 8px;
-        }}
+            gap: 12px;
+        }
 
-        .header-title p {{
-            color: var(--text-muted);
-            font-size: 13px;
-            margin-top: 3px;
-        }}
+        .brand-logo {
+            height: 48px;
+            width: auto;
+        }
 
-        .header-actions {{
+        .header-actions {
             display: flex;
             gap: 10px;
             align-items: center;
             flex-wrap: wrap;
-        }}
+        }
 
-        .btn {{
+        .btn {
             padding: 8px 14px;
             border-radius: 8px;
             text-decoration: none;
@@ -103,26 +97,35 @@ def build_site():
             cursor: pointer;
             border: 1px solid transparent;
             transition: all 0.2s;
-        }}
+        }
 
-        .btn-primary {{ background: var(--primary-blue); color: #ffffff; }}
-        .btn-primary:hover {{ background: var(--primary-hover); }}
-        .btn-secondary {{ background: #1a2438; color: var(--text-main); border-color: var(--border-color); }}
-        .btn-secondary:hover {{ background: #263550; }}
-        .btn-warning {{ background: var(--warning-amber); color: white; }}
-        .btn-danger {{ background: var(--risky-red); color: white; }}
-        .btn-success {{ background: var(--safe-green); color: white; }}
+        .btn-primary { background: var(--primary-blue); color: #ffffff; }
+        .btn-primary:hover { background: var(--primary-hover); }}
+        .btn-secondary { background: #1a2438; color: var(--text-main); border-color: var(--border-color); }
+        .btn-secondary:hover { background: #263550; }
+        .btn-warning { background: var(--warning-amber); color: white; }
+        .btn-danger { background: var(--risky-red); color: white; }
+        .btn-success { background: var(--safe-green); color: white; }
+        .btn-sentinel-mode {
+            background: linear-gradient(135deg, #0ea5e9, #6366f1);
+            color: #ffffff;
+            font-weight: 700;
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
+        }
+        .btn-sentinel-mode:hover {
+            box-shadow: 0 0 25px rgba(14, 165, 233, 0.7);
+        }
 
         /* Navigation Tabs */
-        .tabs-nav {{
+        .tabs-nav {
             display: flex;
             gap: 8px;
             border-bottom: 1px solid var(--border-color);
             margin-bottom: 20px;
             overflow-x: auto;
-        }}
+        }
 
-        .tab-btn {{
+        .tab-btn {
             background: transparent;
             border: none;
             color: var(--text-muted);
@@ -133,61 +136,61 @@ def build_site():
             cursor: pointer;
             transition: all 0.2s;
             white-space: nowrap;
-        }}
+        }
 
-        .tab-btn:hover {{ color: var(--text-main); background: rgba(255, 255, 255, 0.05); }}
-        .tab-btn.active {{
+        .tab-btn:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.05); }
+        .tab-btn.active {
             color: #ffffff;
             background: var(--card-bg);
             border-bottom: 3px solid var(--primary-blue);
-        }}
+        }
 
-        .tab-content {{ display: none; }}
-        .tab-content.active {{ display: block; }}
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
-        .tab-desc {{
+        .tab-desc {
             color: var(--text-muted);
             font-size: 13px;
             font-style: italic;
             margin-bottom: 18px;
             padding-bottom: 8px;
             border-bottom: 1px solid var(--border-color);
-        }}
+        }
 
         /* KPI Cards Grid */
-        .kpi-grid {{
+        .kpi-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
             gap: 14px;
             margin-bottom: 20px;
-        }}
+        }
 
-        .kpi-card {{
+        .kpi-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 10px;
             padding: 16px;
             border-top: 4px solid var(--primary-blue);
-        }}
-        .kpi-card.amber {{ border-top-color: var(--warning-amber); }}
-        .kpi-card.red {{ border-top-color: var(--risky-red); }}
-        .kpi-card.green {{ border-top-color: var(--safe-green); }}
-        .kpi-card.purple {{ border-top-color: var(--accent-purple); }}
+        }
+        .kpi-card.amber { border-top-color: var(--warning-amber); }
+        .kpi-card.red { border-top-color: var(--risky-red); }
+        .kpi-card.green { border-top-color: var(--safe-green); }
+        .kpi-card.purple { border-top-color: var(--accent-purple); }
 
-        .kpi-title {{ font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); }}
-        .kpi-value {{ font-size: 24px; font-weight: 700; color: var(--text-main); margin: 4px 0 2px 0; }}
-        .kpi-sub {{ font-size: 12px; color: var(--text-muted); }}
+        .kpi-title { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); }
+        .kpi-value { font-size: 24px; font-weight: 700; color: var(--text-main); margin: 4px 0 2px 0; }
+        .kpi-sub { font-size: 12px; color: var(--text-muted); }
 
         /* Cards and Sections */
-        .card {{
+        .card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
-        }}
+        }
 
-        .card-header {{
+        .card-header {
             font-size: 15px;
             font-weight: 700;
             color: var(--text-main);
@@ -195,105 +198,140 @@ def build_site():
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }}
+        }
 
-        .grid-2 {{
+        .grid-2 {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
             gap: 20px;
-        }}
+        }
 
-        .grid-3 {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 16px;
-        }}
+        /* 3D Night City View Container */
+        #sentinel3dContainer {
+            display: none;
+            position: relative;
+            width: 100%;
+            height: 600px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            background: #030712;
+            margin-bottom: 20px;
+        }
 
-        /* Patrol Live Screen Layout */
-        .patrol-container {{
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-        }}
-        @media (max-width: 1024px) {{
-            .patrol-container {{ grid-template-columns: 1fr; }}
-        }}
+        #cityCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .city-hud {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(6px);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 12px;
+            color: var(--text-main);
+            z-index: 10;
+        }
+
+        .city-legend {
+            position: absolute;
+            bottom: 14px;
+            left: 14px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(6px);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 11px;
+            color: var(--text-muted);
+            z-index: 10;
+        }
+
+        .city-controls {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(6px);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
 
         /* Agent Cards */
-        .agent-cards-row {{
+        .agent-cards-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
             gap: 10px;
             margin-bottom: 16px;
-        }}
+        }
 
-        .agent-card {{
-            background: #0f172a;
+        .agent-card {
+            background: #090e1a;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 12px;
             border-left: 4px solid var(--primary-blue);
-        }}
-        .agent-card.scout {{ border-left-color: var(--agent-scout); }}
-        .agent-card.investigator {{ border-left-color: var(--agent-inv); }}
-        .agent-card.network {{ border-left-color: var(--agent-net); }}
-        .agent-card.risk {{ border-left-color: var(--agent-ro); }}
-        .agent-card.reporter {{ border-left-color: var(--agent-rep); }}
+        }
+        .agent-card.scout { border-left-color: var(--agent-scout); }
+        .agent-card.investigator { border-left-color: var(--agent-inv); }
+        .agent-card.network { border-left-color: var(--agent-net); }
+        .agent-card.risk { border-left-color: var(--agent-ro); }
+        .agent-card.reporter { border-left-color: var(--agent-rep); }
 
-        .agent-name {{ font-size: 13px; font-weight: 700; color: var(--text-main); }}
-        .agent-status {{ font-size: 11px; color: var(--safe-green); margin-top: 2px; }}
+        .agent-name { font-size: 13px; font-weight: 700; color: var(--text-main); }
+        .agent-status { font-size: 11px; color: var(--safe-green); margin-top: 2px; }
 
         /* Chat Feed */
-        .chat-feed-box {{
-            height: 420px;
+        .chat-feed-box {
+            height: 380px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 8px;
             padding-right: 6px;
-        }}
+        }
 
-        .chat-msg {{
-            background: #0f172a;
+        .chat-msg {
+            background: #090e1a;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 10px 12px;
             font-size: 12px;
             line-height: 1.4;
-        }}
-        .chat-msg .sender {{ font-weight: 700; font-size: 12px; margin-bottom: 2px; }}
-        .chat-msg.scout .sender {{ color: var(--agent-scout); }}
-        .chat-msg.inv .sender {{ color: var(--agent-inv); }}
-        .chat-msg.net .sender {{ color: var(--agent-net); }}
-        .chat-msg.ro .sender {{ color: var(--agent-ro); }}
-        .chat-msg.rep .sender {{ color: var(--agent-rep); }}
-
-        /* District Canvas Map */
-        #districtCanvas {{
-            width: 100%;
-            height: 420px;
-            background: #090e1a;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-            display: block;
-        }}
+        }
+        .chat-msg .sender { font-weight: 700; font-size: 12px; margin-bottom: 2px; }
+        .chat-msg.scout .sender { color: var(--agent-scout); }
+        .chat-msg.inv .sender { color: var(--agent-inv); }
+        .chat-msg.net .sender { color: var(--agent-net); }
+        .chat-msg.ro .sender { color: var(--agent-ro); }
+        .chat-msg.rep .sender { color: var(--agent-rep); }
 
         /* Table Styling */
-        .table-responsive {{
+        .table-responsive {
             overflow-x: auto;
             max-height: 460px;
             border-radius: 8px;
             border: 1px solid var(--border-color);
-        }}
+        }
 
-        table {{
+        table {
             width: 100%;
             border-collapse: collapse;
             font-size: 13px;
             text-align: left;
-        }}
+        }
 
-        th {{
+        th {
             background: #182338;
             color: var(--text-muted);
             font-weight: 600;
@@ -302,52 +340,52 @@ def build_site():
             top: 0;
             border-bottom: 1px solid var(--border-color);
             white-space: nowrap;
-        }}
+        }
 
-        td {{
+        td {
             padding: 10px 12px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.04);
             color: var(--text-main);
             white-space: nowrap;
-        }}
+        }
 
-        tr:hover td {{ background: rgba(255, 255, 255, 0.03); }}
+        tr:hover td { background: rgba(255, 255, 255, 0.03); }
 
         /* Badges */
-        .badge {{
+        .badge {
             display: inline-block;
             padding: 2px 7px;
             border-radius: 4px;
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
-        }}
-        .badge-hold {{ background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }}
-        .badge-escalate {{ background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }}
-        .badge-allow {{ background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }}
-        .badge-transfer {{ background: #1e3a8a; color: #93c5fd; }}
-        .badge-cashout {{ background: #4c1d95; color: #c4b5fd; }}
+        }
+        .badge-hold { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+        .badge-escalate { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+        .badge-allow { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+        .badge-transfer { background: #1e3a8a; color: #93c5fd; }
+        .badge-cashout { background: #4c1d95; color: #c4b5fd; }
 
         /* Filter Controls */
-        .filters-bar {{
+        .filters-bar {
             display: flex;
             gap: 10px;
             align-items: center;
             flex-wrap: wrap;
             margin-bottom: 14px;
-        }}
+        }
 
-        input, select {{
-            background: #0f172a;
+        input, select {
+            background: #090e1a;
             color: var(--text-main);
             border: 1px solid var(--border-color);
             padding: 7px 11px;
             border-radius: 6px;
             font-size: 13px;
             outline: none;
-        }}
+        }
 
-        .disclaimer-box {{
+        .disclaimer-box {
             background: rgba(59, 130, 246, 0.1);
             border-left: 4px solid var(--primary-blue);
             padding: 10px 14px;
@@ -355,9 +393,9 @@ def build_site():
             font-size: 12px;
             color: #93c5fd;
             margin: 12px 0;
-        }}
+        }
 
-        pre {{
+        pre {
             background: #090e1a;
             border: 1px solid var(--border-color);
             padding: 14px;
@@ -368,18 +406,110 @@ def build_site():
             white-space: pre-wrap;
             word-break: break-word;
             margin: 10px 0;
-        }}
+        }
+
+        /* Sentinel Assistant Drawer */
+        .assistant-drawer {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+        }
+
+        .assistant-toggle-btn {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 20px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(37, 99, 235, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .assistant-toggle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(37, 99, 235, 0.7);
+        }
+
+        .assistant-panel {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            right: 24px;
+            width: 380px;
+            max-height: 520px;
+            background: #111a2e;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1000;
+        }
+
+        .assistant-header {
+            background: #1a2640;
+            padding: 12px 16px;
+            font-weight: 700;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .assistant-body {
+            padding: 14px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 13px;
+        }
+
+        .assistant-chat-msg {
+            padding: 8px 12px;
+            border-radius: 8px;
+            line-height: 1.4;
+        }
+        .assistant-chat-msg.bot { background: #090e1a; border: 1px solid var(--border-color); color: #f8fafc; }
+        .assistant-chat-msg.user { background: #2563eb; color: white; margin-left: 20px; }
+
+        .assistant-input-bar {
+            padding: 10px;
+            background: #1a2640;
+            display: flex;
+            gap: 6px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Print Modal */
+        @media print {
+            body { background: white; color: black; }
+            header, .tabs-nav, .header-actions, .assistant-drawer, .filters-bar, .btn { display: none !important; }
+            .tab-content { display: block !important; }
+            .card { border: 1px solid #ccc; background: white; color: black; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Main Header -->
         <header>
-            <div class="header-title">
-                <h1>🛡️ Sentinel Patrol & Command Center</h1>
-                <p>Multi-Agent Financial Fraud Intelligence & Live PaySim Simulation Replay | Steps 334 – 743</p>
+            <div class="brand-container">
+                <img src="assets/sentinel-logo.svg" alt="Sentinel Logo" class="brand-logo">
             </div>
             <div class="header-actions">
+                <button class="btn btn-sentinel-mode" id="btn3dToggle" onclick="toggleSentinel3DMode()">
+                    🌃 Sentinel Mode (3D Night City)
+                </button>
                 <select id="policySelect" onchange="switchPolicy(this.value)">
                     <option value="balanced" selected>Policy: Balanced (0.50)</option>
                     <option value="strict">Policy: Strict (0.10)</option>
@@ -389,10 +519,28 @@ def build_site():
                     <span id="evalToggleText">👁️ Reveal Ground Truth: OFF</span>
                 </button>
                 <a href="https://github.com/burujula-jaidev-prasad/sentinel-fraud-detection" target="_blank" class="btn btn-primary">
-                    ⭐ GitHub Source
+                    ⭐ GitHub
                 </a>
             </div>
         </header>
+
+        <!-- 3D NIGHT CITY CONTAINER (ACTIVATED BY SENTINEL MODE SWITCH) -->
+        <div id="sentinel3dContainer">
+            <div class="city-hud">
+                <div style="font-weight:700; font-size:13px; color:#38bdf8;">🌃 Sentinel 3D Night City Simulation</div>
+                <div id="cityStepHUD" style="color:var(--text-muted); margin-top:2px;">Step: 334 | 1 step = 1 simulated hour</div>
+            </div>
+            <div class="city-controls">
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="resetCityCamera()">🎥 Reset View</button>
+                <button class="btn btn-danger" style="padding:4px 8px; font-size:11px;" onclick="toggleSentinel3DMode()">✕ Exit 3D</button>
+            </div>
+            <div class="city-legend">
+                <strong>District Skyline:</strong><br>
+                🏢 Cyan: Metro Hub | 🏬 Emerald: Wallet District | 🏛️ Amber: High-Net-Worth | 🏭 Purple: Rapid Cashout<br>
+                <span style="color:#f59e0b;">⚡ Amber Column: Model Score Alert (≥ 0.50)</span> | <span style="color:#ef4444;">🚨 Crimson Laser: Ground Truth Fraud (When Key ON)</span>
+            </div>
+            <canvas id="cityCanvas"></canvas>
+        </div>
 
         <!-- KPI Grid -->
         <div class="kpi-grid">
@@ -490,13 +638,13 @@ def build_site():
             </div>
 
             <!-- Patrol Main Split -->
-            <div class="patrol-container">
+            <div class="grid-2">
                 <div class="card" style="padding:14px;">
                     <div class="card-header">
                         <span>🗺️ Payment Corridors & District Flows</span>
                         <span style="font-size:12px; color:var(--text-muted);">Live Transaction Particle Movement</span>
                     </div>
-                    <canvas id="districtCanvas" width="800" height="420"></canvas>
+                    <canvas id="districtCanvas" width="800" height="380" style="width:100%; height:380px; background:#090e1a; border-radius:8px; border:1px solid var(--border-color);"></canvas>
                 </div>
 
                 <div class="card" style="padding:14px;">
@@ -528,6 +676,7 @@ def build_site():
                     <option value="hold">Hold</option>
                     <option value="allow">Allow</option>
                 </select>
+                <button class="btn btn-secondary" onclick="exportFilteredAlertsCSV()">📥 Export Queue CSV</button>
                 <span id="queueCount" style="color:var(--text-muted); font-size:13px; margin-left:auto;"></span>
             </div>
 
@@ -561,6 +710,8 @@ def build_site():
             <div class="filters-bar">
                 <label style="font-size:13px; color:var(--text-muted);">Select Dossier:</label>
                 <select id="caseSelector" onchange="loadCaseDetails(this.value)" style="min-width: 320px;"></select>
+                <button class="btn btn-secondary" onclick="downloadCurrentCaseMarkdown()">📄 Download Markdown Report</button>
+                <button class="btn btn-secondary" onclick="window.print()">🖨️ Print Dossier View</button>
             </div>
 
             <div id="caseFileView"></div>
@@ -719,9 +870,40 @@ def build_site():
 
     </div>
 
+    <!-- SENTINEL ASSISTANT DRAWER -->
+    <div class="assistant-drawer">
+        <button class="assistant-toggle-btn" onclick="toggleAssistant()">
+            🤖 Sentinel Assistant
+        </button>
+    </div>
+
+    <div class="assistant-panel" id="assistantPanel" style="display:none;">
+        <div class="assistant-header">
+            <span>🤖 Sentinel Assistant (Rule-Based Co-Pilot)</span>
+            <span style="cursor:pointer;" onclick="toggleAssistant()">&times;</span>
+        </div>
+        <div class="assistant-body" id="assistantChatBody">
+            <div class="assistant-chat-msg bot">
+                👋 Hello! I am Sentinel Assistant. Ask me anything about test alerts, policy economics, network pairs, or specific case dossiers.
+            </div>
+            <div style="font-size:11px; color:var(--text-muted);">
+                💡 Quick Prompts:
+                <div style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;">
+                    <button class="btn btn-secondary" style="font-size:10px; padding:3px 6px;" onclick="quickPrompt('highest risk')">Top Risk Case</button>
+                    <button class="btn btn-secondary" style="font-size:10px; padding:3px 6px;" onclick="quickPrompt('policy cost')">Policy Comparison</button>
+                    <button class="btn btn-secondary" style="font-size:10px; padding:3px 6px;" onclick="quickPrompt('network pairs')">Network Pairs</button>
+                </div>
+            </div>
+        </div>
+        <div class="assistant-input-bar">
+            <input type="text" id="assistantInput" placeholder="Ask a question..." style="flex:1;" onkeydown="if(event.key==='Enter') sendAssistantQuery()">
+            <button class="btn btn-primary" style="padding:6px 12px;" onclick="sendAssistantQuery()">Send</button>
+        </div>
+    </div>
+
     <!-- Embedded Data & Scripts -->
     <script>
-        const STREAM_DATA = {json.dumps(stream_data)};
+        const STREAM_DATA = __STREAM_DATA__;
         const ALERTS = STREAM_DATA.alerts;
         const POLICIES = STREAM_DATA.policy_comparison;
         const CASES = STREAM_DATA.cases;
@@ -733,44 +915,194 @@ def build_site():
         let currentSimStep = 334;
         let simInterval = null;
         let simSpeed = 500;
-        let chatMessages = [];
         let humanDecisions = JSON.parse(localStorage.getItem('sentinel_decisions') || '[]');
+        let is3DMode = false;
 
-        // District nodes
-        const DISTRICTS = [
-            {{ id: 'metro', name: 'Metro Commercial Hub', x: 180, y: 110, color: '#38bdf8' }},
-            {{ id: 'wallet', name: 'Mobile Wallet Gateway', x: 620, y: 100, color: '#34d399' }},
-            {{ id: 'transfer', name: 'Inter-Bank Transfer Node', x: 400, y: 210, color: '#a78bfa' }},
-            {{ id: 'cashout', name: 'High-Value Cashout Zone', x: 180, y: 320, color: '#f59e0b' }},
-            {{ id: 'mule', name: 'Mule Settlement Corridor', x: 620, y: 320, color: '#ef4444' }}
+        // 2D Canvas Districts
+        const DISTRICTS_2D = [
+            { id: 'metro', name: 'Metro Commercial Hub', x: 180, y: 90, color: '#38bdf8' },
+            { id: 'wallet', name: 'Mobile Wallet Gateway', x: 620, y: 80, color: '#34d399' },
+            { id: 'transfer', name: 'Inter-Bank Transfer Node', x: 400, y: 190, color: '#a78bfa' },
+            { id: 'cashout', name: 'High-Value Cashout Zone', x: 180, y: 290, color: '#f59e0b' },
+            { id: 'mule', name: 'Mule Settlement Corridor', x: 620, y: 290, color: '#ef4444' }
         ];
 
-        let particles = [];
+        let particles2D = [];
 
-        function showTab(tabId) {{
+        // -------------------------------------------------------------
+        // THREE.JS 3D NIGHT CITY
+        // -------------------------------------------------------------
+        let scene, camera, renderer, cityBuildings = [], cityBeacons = [], cityParticles = [];
+        let isMouseDown = false, mouseX = 0, mouseY = 0, targetRotationX = 0.3, targetRotationY = 0.6;
+
+        function initThreeCity() {
+            const canvas = document.getElementById('cityCanvas');
+            const container = document.getElementById('sentinel3dContainer');
+            
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x030712, 0.0035);
+
+            camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 1, 1500);
+            camera.position.set(0, 180, 320);
+            camera.lookAt(0, 20, 0);
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setClearColor(0x030712, 1);
+
+            const ambient = new THREE.AmbientLight(0x334155, 1.2);
+            scene.add(ambient);
+
+            const dirLight = new THREE.DirectionalLight(0x38bdf8, 1.5);
+            dirLight.position.set(100, 300, 100);
+            scene.add(dirLight);
+
+            const gridHelper = new THREE.GridHelper(600, 30, 0x1e2e4a, 0x0f172a);
+            gridHelper.position.y = 0;
+            scene.add(gridHelper);
+
+            buildDistrict3D(-140, -100, 0x0284c7, "Commercial Core");
+            buildDistrict3D(140, -100, 0x059669, "Wallet Sector");
+            buildDistrict3D(0, 0, 0x7c3aed, "Inter-Bank Hub");
+            buildDistrict3D(-140, 100, 0xd97706, "High-Value Cashout");
+            buildDistrict3D(140, 100, 0xdc2626, "Mule Outskirts");
+
+            container.addEventListener('mousedown', (e) => { isMouseDown = true; mouseX = e.clientX; mouseY = e.clientY; });
+            window.addEventListener('mouseup', () => { isMouseDown = false; });
+            container.addEventListener('mousemove', (e) => {
+                if (isMouseDown) {
+                    const deltaX = e.clientX - mouseX;
+                    const deltaY = e.clientY - mouseY;
+                    targetRotationY += deltaX * 0.005;
+                    targetRotationX += deltaY * 0.005;
+                    mouseX = e.clientX;
+                    mouseY = e.clientY;
+                }
+            });
+
+            animateThreeCity();
+        }
+
+        function buildDistrict3D(centerX, centerZ, baseColor, name) {
+            const count = 14;
+            for (let i = 0; i < count; i++) {
+                const w = 14 + Math.random() * 12;
+                const h = 25 + Math.random() * 85;
+                const d = 14 + Math.random() * 12;
+                const x = centerX + (Math.random() - 0.5) * 90;
+                const z = centerZ + (Math.random() - 0.5) * 90;
+
+                const geom = new THREE.BoxGeometry(w, h, d);
+                const mat = new THREE.MeshLambertMaterial({
+                    color: baseColor,
+                    emissive: baseColor,
+                    emissiveIntensity: 0.15,
+                    wireframe: false
+                });
+
+                const building = new THREE.Mesh(geom, mat);
+                building.position.set(x, h / 2, z);
+                scene.add(building);
+                cityBuildings.push({ mesh: building, x: x, z: z, h: h, district: name });
+
+                const edgeGeom = new THREE.EdgesGeometry(geom);
+                const edgeMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, linewidth: 1 });
+                const wireframe = new THREE.LineSegments(edgeGeom, edgeMat);
+                wireframe.position.copy(building.position);
+                scene.add(wireframe);
+            }
+        }
+
+        function trigger3DBeacon(stepAlerts) {
+            if (!scene) return;
+
+            cityBeacons.forEach(b => scene.remove(b));
+            cityBeacons = [];
+
+            stepAlerts.forEach(a => {
+                const decCol = "decision_" + currentPolicy;
+                const dec = a[decCol];
+                if (dec === "hold" || dec === "escalate_to_human") {
+                    const bTarget = cityBuildings[Math.floor(Math.random() * cityBuildings.length)];
+                    const isTrueFraud = evalMode && (a.isFraud === 1);
+                    
+                    const beaconColor = isTrueFraud ? 0xef4444 : 0xf59e0b;
+                    const cylinderGeom = new THREE.CylinderGeometry(1.5, 3, 220, 16);
+                    const cylinderMat = new THREE.MeshBasicMaterial({
+                        color: beaconColor,
+                        transparent: true,
+                        opacity: 0.65
+                    });
+                    const beaconMesh = new THREE.Mesh(cylinderGeom, cylinderMat);
+                    beaconMesh.position.set(bTarget.x, 110 + bTarget.h / 2, bTarget.z);
+                    scene.add(beaconMesh);
+                    cityBeacons.push(beaconMesh);
+                }
+            });
+        }
+
+        function resetCityCamera() {
+            targetRotationX = 0.3;
+            targetRotationY = 0.6;
+        }
+
+        function animateThreeCity() {
+            requestAnimationFrame(animateThreeCity);
+            if (is3DMode && scene) {
+                camera.position.x = 320 * Math.sin(targetRotationY) * Math.cos(targetRotationX);
+                camera.position.z = 320 * Math.cos(targetRotationY) * Math.cos(targetRotationX);
+                camera.position.y = Math.max(60, 320 * Math.sin(targetRotationX));
+                camera.lookAt(0, 30, 0);
+
+                cityBeacons.forEach(b => {
+                    b.rotation.y += 0.02;
+                });
+
+                renderer.render(scene, camera);
+            }
+        }
+
+        function toggleSentinel3DMode() {
+            is3DMode = !is3DMode;
+            const container = document.getElementById('sentinel3dContainer');
+            const btn = document.getElementById('btn3dToggle');
+            if (is3DMode) {
+                container.style.display = "block";
+                btn.innerText = "📊 Dashboard View";
+                if (!scene) initThreeCity();
+            } else {
+                container.style.display = "none";
+                btn.innerText = "🌃 Sentinel Mode (3D Night City)";
+            }
+        }
+
+        // -------------------------------------------------------------
+        // APPLICATION CORE LOGIC
+        // -------------------------------------------------------------
+        function showTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             event.target.classList.add('active');
-        }}
+        }
 
-        function switchPolicy(policy) {{
+        function switchPolicy(policy) {
             currentPolicy = policy;
             document.getElementById('statusRO').innerText = "Policy: " + policy.toUpperCase();
             updateKPICards();
             renderAlertQueue();
             renderPolicyView();
-        }}
+        }
 
-        function toggleEvalMode() {{
+        function toggleEvalMode() {
             evalMode = !evalMode;
             document.getElementById('evalToggleText').innerText = evalMode ? "👁️ Reveal Ground Truth: ON" : "👁️ Reveal Ground Truth: OFF";
             document.querySelectorAll('.eval-col').forEach(el => el.style.display = evalMode ? "table-cell" : "none");
             updateKPICards();
             renderAlertQueue();
-        }}
+        }
 
-        function updateKPICards() {{
+        function updateKPICards() {
             const decCol = "decision_" + currentPolicy;
             const activeAlerts = ALERTS.filter(r => r[decCol] === "hold" || r[decCol] === "escalate_to_human");
             
@@ -779,63 +1111,66 @@ def build_site():
             document.getElementById('kpiEscalated').innerText = activeAlerts.filter(r => r[decCol] === "escalate_to_human").length.toLocaleString();
             
             const totalVal = activeAlerts.reduce((sum, r) => sum + r.amount, 0);
-            if (evalMode) {{
+            if (evalMode) {
                 const fraudsCaught = activeAlerts.filter(r => r.isFraud === 1).length;
                 document.getElementById('kpiValueLabel').innerText = "Frauds Intercepted (Ground Truth)";
                 document.getElementById('kpiValue').innerText = fraudsCaught + " / 652";
                 document.getElementById('kpiValueSub').innerText = (totalVal / 1000000).toFixed(2) + "M currency units protected";
-            }} else {{
+            } else {
                 document.getElementById('kpiValueLabel').innerText = "Protected Volume Under Review";
                 document.getElementById('kpiValue').innerText = (totalVal / 1000000).toFixed(2) + "M";
                 document.getElementById('kpiValueSub').innerText = "In currency units";
-            }}
-        }}
+            }
+        }
 
-        function togglePlayPause() {{
+        function togglePlayPause() {
             isPlaying = !isPlaying;
             document.getElementById('playBtn').innerText = isPlaying ? "⏸️ Pause" : "▶️ Play";
             if (isPlaying) startSimLoop();
             else clearInterval(simInterval);
-        }}
+        }
 
-        function changeSpeed(val) {{
+        function changeSpeed(val) {
             simSpeed = parseInt(val);
-            if (isPlaying) {{
+            if (isPlaying) {
                 clearInterval(simInterval);
                 startSimLoop();
-            }}
-        }}
+            }
+        }
 
-        function scrubStep(step) {{
+        function scrubStep(step) {
             currentSimStep = parseInt(step);
             processStep(currentSimStep);
-        }}
+        }
 
-        function startSimLoop() {{
+        function startSimLoop() {
             clearInterval(simInterval);
-            simInterval = setInterval(() => {{
+            simInterval = setInterval(() => {
                 if (currentSimStep >= 743) currentSimStep = 334;
                 else currentSimStep++;
                 document.getElementById('simStepSlider').value = currentSimStep;
                 processStep(currentSimStep);
-            }}, simSpeed);
-        }}
+            }, simSpeed);
+        }
 
-        function processStep(step) {{
+        function processStep(step) {
             const hour = step % 24;
-            document.getElementById('stepTicker').innerText = `Simulation Step: ${{step}} (Hour ${{hour}})`;
+            document.getElementById('stepTicker').innerText = `Simulation Step: ${step} (Hour ${hour})`;
+            if (document.getElementById('cityStepHUD')) {
+                document.getElementById('cityStepHUD').innerText = `Step: ${step} (Hour ${hour}) | 1 step = 1 simulated hour`;
+            }
 
-            // Check alerts at this step
             const stepAlerts = ALERTS.filter(r => r.step === step);
-            if (stepAlerts.length > 0) {{
-                stepAlerts.forEach(a => {{
+            if (stepAlerts.length > 0) {
+                if (is3DMode) trigger3DBeacon(stepAlerts);
+
+                stepAlerts.forEach(a => {
                     const decCol = "decision_" + currentPolicy;
                     const dec = a[decCol];
                     
-                    // Spawn particle on district map
-                    const fromNode = a.type === "TRANSFER" ? DISTRICTS[0] : DISTRICTS[3];
-                    const toNode = a.type === "TRANSFER" ? DISTRICTS[2] : DISTRICTS[4];
-                    particles.push({{
+                    const fromNode = a.type === "TRANSFER" ? DISTRICTS_2D[0] : DISTRICTS_2D[3];
+                    const toNode = a.type === "TRANSFER" ? DISTRICTS_2D[2] : DISTRICTS_2D[4];
+                    particles2D.push({
                         x: fromNode.x,
                         y: fromNode.y,
                         tx: toNode.x,
@@ -843,52 +1178,49 @@ def build_site():
                         color: dec === "escalate_to_human" ? "#ef4444" : "#f59e0b",
                         progress: 0,
                         speed: 0.04
-                    }});
+                    });
 
-                    // Add agent chat message
-                    addAgentMessage('scout', `[Scout] Flagged ${{a.type}} | ${{a.amount.toLocaleString()}} currency units | Score: ${{a.model_score.toFixed(3)}}`);
-                    if (a.model_score >= 0.5) {{
-                        addAgentMessage('inv', `[Investigator] Querying prior step history for ${{a.nameOrig}}...`);
-                        addAgentMessage('ro', `[RiskOfficer] Policy ${{currentPolicy.toUpperCase()}} -> ${{dec.toUpperCase()}}`);
-                    }}
-                }});
-            }}
-        }}
+                    addAgentMessage('scout', `[Scout] Flagged ${a.type} | ${a.amount.toLocaleString()} currency units | Score: ${a.model_score.toFixed(3)}`);
+                    if (a.model_score >= 0.5) {
+                        addAgentMessage('inv', `[Investigator] Querying prior step history for ${a.nameOrig}...`);
+                        addAgentMessage('ro', `[RiskOfficer] Policy ${currentPolicy.toUpperCase()} -> ${dec.toUpperCase()}`);
+                    }
+                });
+            }
+        }
 
-        function addAgentMessage(type, text) {{
+        function addAgentMessage(type, text) {
             const chatFeed = document.getElementById('chatFeed');
             const el = document.createElement('div');
-            el.className = `chat-msg ${{type}}`;
-            el.innerHTML = `<div class="sender">${{text}}</div>`;
+            el.className = `chat-msg ${type}`;
+            el.innerHTML = `<div class="sender">${text}</div>`;
             chatFeed.prepend(el);
-            if (chatFeed.children.length > 60) {{
+            if (chatFeed.children.length > 60) {
                 chatFeed.removeChild(chatFeed.lastChild);
-            }}
+            }
             document.getElementById('feedCount').innerText = chatFeed.children.length + " msgs";
-        }}
+        }
 
-        // Canvas animation
-        function initDistrictCanvas() {{
+        // 2D Canvas Animation
+        function initDistrictCanvas() {
             const canvas = document.getElementById('districtCanvas');
             const ctx = canvas.getContext('2d');
 
-            function draw() {{
+            function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                // Draw connecting corridors
                 ctx.strokeStyle = '#1e2e4a';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.moveTo(DISTRICTS[0].x, DISTRICTS[0].y); ctx.lineTo(DISTRICTS[2].x, DISTRICTS[2].y);
-                ctx.moveTo(DISTRICTS[1].x, DISTRICTS[1].y); ctx.lineTo(DISTRICTS[2].x, DISTRICTS[2].y);
-                ctx.moveTo(DISTRICTS[2].x, DISTRICTS[2].y); ctx.lineTo(DISTRICTS[3].x, DISTRICTS[3].y);
-                ctx.moveTo(DISTRICTS[2].x, DISTRICTS[2].y); ctx.lineTo(DISTRICTS[4].x, DISTRICTS[4].y);
-                ctx.moveTo(DISTRICTS[3].x, DISTRICTS[3].y); ctx.lineTo(DISTRICTS[4].x, DISTRICTS[4].y);
+                ctx.moveTo(DISTRICTS_2D[0].x, DISTRICTS_2D[0].y); ctx.lineTo(DISTRICTS_2D[2].x, DISTRICTS_2D[2].y);
+                ctx.moveTo(DISTRICTS_2D[1].x, DISTRICTS_2D[1].y); ctx.lineTo(DISTRICTS_2D[2].x, DISTRICTS_2D[2].y);
+                ctx.moveTo(DISTRICTS_2D[2].x, DISTRICTS_2D[2].y); ctx.lineTo(DISTRICTS_2D[3].x, DISTRICTS_2D[3].y);
+                ctx.moveTo(DISTRICTS_2D[2].x, DISTRICTS_2D[2].y); ctx.lineTo(DISTRICTS_2D[4].x, DISTRICTS_2D[4].y);
+                ctx.moveTo(DISTRICTS_2D[3].x, DISTRICTS_2D[3].y); ctx.lineTo(DISTRICTS_2D[4].x, DISTRICTS_2D[4].y);
                 ctx.stroke();
 
-                // Draw moving particles
-                for (let i = particles.length - 1; i >= 0; i--) {{
-                    const p = particles[i];
+                for (let i = particles2D.length - 1; i >= 0; i--) {
+                    const p = particles2D[i];
                     p.progress += p.speed;
                     const cx = p.x + (p.tx - p.x) * p.progress;
                     const cy = p.y + (p.ty - p.y) * p.progress;
@@ -898,71 +1230,70 @@ def build_site():
                     ctx.arc(cx, cy, 5, 0, Math.PI * 2);
                     ctx.fill();
 
-                    if (p.progress >= 1) particles.splice(i, 1);
-                }}
+                    if (p.progress >= 1) particles2D.splice(i, 1);
+                }
 
-                // Draw district nodes
-                DISTRICTS.forEach(d => {{
-                    ctx.fillStyle = '#131d31';
+                DISTRICTS_2D.forEach(d => {
+                    ctx.fillStyle = '#111a2e';
                     ctx.strokeStyle = d.color;
                     ctx.lineWidth = 3;
                     ctx.beginPath();
-                    ctx.arc(d.x, d.y, 20, 0, Math.PI * 2);
+                    ctx.arc(d.x, d.y, 18, 0, Math.PI * 2);
                     ctx.fill();
                     ctx.stroke();
 
                     ctx.fillStyle = '#f8fafc';
                     ctx.font = 'bold 11px sans-serif';
                     ctx.textAlign = 'center';
-                    ctx.fillText(d.name, d.x, d.y + 35);
-                }});
+                    ctx.fillText(d.name, d.x, d.y + 32);
+                });
 
                 requestAnimationFrame(draw);
-            }}
+            }
 
             draw();
-        }}
+        }
 
-        function renderAlertQueue() {{
+        function renderAlertQueue() {
             const search = document.getElementById('queueSearch').value.toUpperCase();
             const typeF = document.getElementById('typeFilter').value;
             const decF = document.getElementById('decisionFilter').value;
             const decCol = "decision_" + currentPolicy;
 
-            let list = ALERTS.filter(r => {{
+            let list = ALERTS.filter(r => {
                 if (typeF !== "ALL" && r.type !== typeF) return false;
                 if (decF !== "ALL" && r[decCol] !== decF) return false;
                 if (search && !r.nameOrig.toUpperCase().includes(search) && !r.nameDest.toUpperCase().includes(search)) return false;
                 return true;
-            }}).sort((a, b) => b.model_score - a.model_score);
+            }).sort((a, b) => b.model_score - a.model_score);
 
             document.getElementById('queueCount').innerText = "Showing " + Math.min(list.length, 50) + " of " + list.length + " alerts";
             const tbody = document.getElementById('queueTableBody');
             
             tbody.innerHTML = list.slice(0, 50).map(r => `
                 <tr>
-                    <td>${{r.step}}</td>
-                    <td><span class="badge ${{r.type === 'TRANSFER' ? 'badge-transfer' : 'badge-cashout'}}">${{r.type}}</span></td>
-                    <td><strong>${{r.amount.toLocaleString(undefined, {{minimumFractionDigits: 2, maximumFractionDigits: 2}})}}</strong></td>
-                    <td><code>${{r.nameOrig}}</code></td>
-                    <td><code>${{r.nameDest}}</code></td>
-                    <td>${{r.model_score.toFixed(4)}}</td>
-                    <td>${{r.anomaly_score.toFixed(4)}}</td>
-                    <td><span class="badge ${{r[decCol] === 'escalate_to_human' ? 'badge-escalate' : (r[decCol] === 'hold' ? 'badge-hold' : 'badge-allow')}}">${{r[decCol]}}</span></td>
-                    <td class="eval-col" style="display:${{evalMode ? 'table-cell' : 'none'}};">${{r.isFraud === 1 ? '<span class="badge badge-escalate">FRAUD</span>' : '<span class="badge badge-allow">LEGIT</span>'}}</td>
-                    <td><button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="selectAndShowCase('${{r.case_id}}')">Inspect</button></td>
+                    <td>${r.step}</td>
+                    <td><span class="badge ${r.type === 'TRANSFER' ? 'badge-transfer' : 'badge-cashout'}">${r.type}</span></td>
+                    <td><strong>${r.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong></td>
+                    <td><code>${r.nameOrig}</code></td>
+                    <td><code>${r.nameDest}</code></td>
+                    <td>${r.model_score.toFixed(4)}</td>
+                    <td>${r.anomaly_score.toFixed(4)}</td>
+                    <td><span class="badge ${r[decCol] === 'escalate_to_human' ? 'badge-escalate' : (r[decCol] === 'hold' ? 'badge-hold' : 'badge-allow')}">${r[decCol]}</span></td>
+                    <td class="eval-col" style="display:${evalMode ? 'table-cell' : 'none'};">${r.isFraud === 1 ? '<span class="badge badge-escalate">FRAUD</span>' : '<span class="badge badge-allow">LEGIT</span>'}</td>
+                    <td><button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="selectAndShowCase('${r.case_id}')">Inspect</button></td>
                 </tr>
             `).join('');
-        }}
+        }
 
-        function populateCaseSelector() {{
+        function populateCaseSelector() {
             const sel = document.getElementById('caseSelector');
             const keys = Object.keys(CASES);
-            sel.innerHTML = keys.map(k => `<option value="${{k}}">${{k}} (${{CASES[k].transaction.type}}, ${{CASES[k].transaction.amount.toLocaleString()}} currency units)</option>`).join('');
+            sel.innerHTML = keys.map(k => `<option value="${k}">${k} (${CASES[k].transaction.type}, ${CASES[k].transaction.amount.toLocaleString()} currency units)</option>`).join('');
             if (keys.length > 0) loadCaseDetails(keys[0]);
-        }}
+        }
 
-        function loadCaseDetails(caseId) {{
+        function loadCaseDetails(caseId) {
             const c = CASES[caseId];
             if (!c) return;
             const tx = c.transaction;
@@ -974,124 +1305,214 @@ def build_site():
             document.getElementById('caseFileView').innerHTML = `
                 <div class="card">
                     <div class="card-header">
-                        <span>📁 Case Dossier: <code>${{caseId}}</code></span>
-                        <span class="badge ${{ro.decision_balanced === 'escalate_to_human' ? 'badge-escalate' : 'badge-hold'}}">${{ro.decision_balanced.toUpperCase()}}</span>
+                        <span>📁 Case Dossier: <code>${caseId}</code></span>
+                        <span class="badge ${ro.decision_balanced === 'escalate_to_human' ? 'badge-escalate' : 'badge-hold'}">${ro.decision_balanced.toUpperCase()}</span>
                     </div>
 
                     <div class="grid-2">
                         <div>
                             <h4 style="margin-bottom:8px;">💳 Transaction Facts</h4>
                             <ul style="font-size:13px; line-height:1.8; color:var(--text-muted); list-style:none;">
-                                <li>• <strong>Step / Time:</strong> Step ${{tx.step}} (Hour ${{tx.hour}})</li>
-                                <li>• <strong>Type:</strong> ${{tx.type}}</li>
-                                <li>• <strong>Amount:</strong> <strong style="color:var(--text-main);">${{tx.amount.toLocaleString(undefined, {{minimumFractionDigits:2}})}}</strong> currency units</li>
-                                <li>• <strong>Training Percentile:</strong> ${{amt.percentile_vs_train.toFixed(2)}}% (Exceeds p99: ${{amt.is_above_p99 ? 'YES' : 'NO'}})</li>
-                                <li>• <strong>Sender:</strong> <code>${{tx.nameOrig}}</code></li>
-                                <li>• <strong>Receiver:</strong> <code>${{tx.nameDest}}</code></li>
+                                <li>• <strong>Step / Time:</strong> Step ${tx.step} (Hour ${tx.hour})</li>
+                                <li>• <strong>Type:</strong> ${tx.type}</li>
+                                <li>• <strong>Amount:</strong> <strong style="color:var(--text-main);">${tx.amount.toLocaleString(undefined, {minimumFractionDigits:2})}</strong> currency units</li>
+                                <li>• <strong>Training Percentile:</strong> ${amt.percentile_vs_train.toFixed(2)}% (Exceeds p99: ${amt.is_above_p99 ? 'YES' : 'NO'})</li>
+                                <li>• <strong>Sender:</strong> <code>${tx.nameOrig}</code></li>
+                                <li>• <strong>Receiver:</strong> <code>${tx.nameDest}</code></li>
                             </ul>
                         </div>
 
                         <div>
                             <h4 style="margin-bottom:8px;">🧠 Risk Scores & Signals</h4>
                             <ul style="font-size:13px; line-height:1.8; color:var(--text-muted); list-style:none;">
-                                <li>• <strong>Random Forest Fraud Score:</strong> ${{scores.model_score.toFixed(4)}}</li>
-                                <li>• <strong>Isolation Forest Anomaly Score:</strong> ${{scores.anomaly_score.toFixed(4)}}</li>
-                                <li>• <strong>Sender Prior History:</strong> ${{c.sender_history.prior_tx_count > 0 ? (c.sender_history.prior_tx_count + ' prior txs') : 'no prior history available'}}</li>
-                                <li>• <strong>Network Correlated Pair:</strong> ${{c.network_evidence && c.network_evidence.has_linked_pair ? '⚠️ Same-step identical amount counterpart detected!' : 'None detected'}}</li>
+                                <li>• <strong>Random Forest Fraud Score:</strong> ${scores.model_score.toFixed(4)}</li>
+                                <li>• <strong>Isolation Forest Anomaly Score:</strong> ${scores.anomaly_score.toFixed(4)}</li>
+                                <li>• <strong>Sender Prior History:</strong> ${c.sender_history.prior_tx_count > 0 ? (c.sender_history.prior_tx_count + ' prior txs') : 'no prior history available'}</li>
+                                <li>• <strong>Network Correlated Pair:</strong> ${c.network_evidence && c.network_evidence.has_linked_pair ? '⚠️ Same-step identical amount counterpart detected!' : 'None detected'}</li>
                             </ul>
                         </div>
                     </div>
 
                     <div style="margin-top:20px;">
                         <h4>📝 AI Investigation Report</h4>
-                        <pre>${{rpt}}</pre>
+                        <pre>${rpt}</pre>
                         <div class="disclaimer-box">🤖 AI-generated from case facts, human review required. Models and policy rules determine risk scores.</div>
                     </div>
 
                     <div style="margin-top:20px; border-top:1px solid var(--border-color); padding-top:18px;">
                         <h4 style="margin-bottom:12px;">⚖️ Human Decision Action Center</h4>
                         <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-                            <input type="text" id="opNote_${{caseId}}" placeholder="Operator justification note (optional)..." style="flex:1; min-width:240px;">
-                            <button class="btn btn-warning" onclick="executeDecision('${{caseId}}', 'HOLD')">🟠 Hold Funds</button>
-                            <button class="btn btn-success" onclick="executeDecision('${{caseId}}', 'RELEASE')">🟢 Release Funds</button>
-                            <button class="btn btn-danger" onclick="executeDecision('${{caseId}}', 'ESCALATE')">🔴 Escalate</button>
+                            <input type="text" id="opNote_${caseId}" placeholder="Operator justification note (optional)..." style="flex:1; min-width:240px;">
+                            <button class="btn btn-warning" onclick="executeDecision('${caseId}', 'HOLD')">🟠 Hold Funds</button>
+                            <button class="btn btn-success" onclick="executeDecision('${caseId}', 'RELEASE')">🟢 Release Funds</button>
+                            <button class="btn btn-danger" onclick="executeDecision('${caseId}', 'ESCALATE')">🔴 Escalate</button>
                         </div>
                     </div>
                 </div>
             `;
-        }}
+        }
 
-        function selectAndShowCase(caseId) {{
+        function selectAndShowCase(caseId) {
             showTab('tab3');
             document.querySelectorAll('.tab-btn')[2].classList.add('active');
             document.getElementById('caseSelector').value = caseId;
             loadCaseDetails(caseId);
-        }}
+        }
 
-        function executeDecision(caseId, action) {{
+        function executeDecision(caseId, action) {
             const noteInput = document.getElementById('opNote_' + caseId);
             const note = noteInput ? noteInput.value : "";
-            const entry = {{
+            const entry = {
                 timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
                 case_id: caseId,
                 action: action,
                 operator_note: note
-            }};
+            };
             humanDecisions.unshift(entry);
             localStorage.setItem('sentinel_decisions', JSON.stringify(humanDecisions));
             renderDecisionsTable();
-            alert(`Decision logged: ${{action}} on ${{caseId}}`);
-        }}
+            alert(`Decision logged: ${action} on ${caseId}`);
+        }
 
-        function renderDecisionsTable() {{
+        function renderDecisionsTable() {
             const tbody = document.getElementById('decisionsTableBody');
-            if (humanDecisions.length === 0) {{
+            if (humanDecisions.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No human actions logged yet. Use Tab 3 to execute Hold, Release, or Escalate decisions.</td></tr>`;
                 return;
-            }}
+            }
             tbody.innerHTML = humanDecisions.map(d => `
                 <tr>
-                    <td>${{d.timestamp}}</td>
-                    <td><code>${{d.case_id}}</code></td>
-                    <td><span class="badge ${{d.action === 'ESCALATE' ? 'badge-escalate' : (d.action === 'HOLD' ? 'badge-hold' : 'badge-allow')}}">${{d.action}}</span></td>
-                    <td>${{d.operator_note || '<em>No justification provided</em>'}}</td>
+                    <td>${d.timestamp}</td>
+                    <td><code>${d.case_id}</code></td>
+                    <td><span class="badge ${d.action === 'ESCALATE' ? 'badge-escalate' : (d.action === 'HOLD' ? 'badge-hold' : 'badge-allow')}">${d.action}</span></td>
+                    <td>${d.operator_note || '<em>No justification provided</em>'}</td>
                 </tr>
             `).join('');
-        }}
+        }
 
-        function exportDecisionsCSV() {{
-            if (humanDecisions.length === 0) {{
+        function exportDecisionsCSV() {
+            if (humanDecisions.length === 0) {
                 alert("No decisions logged yet to export.");
                 return;
-            }}
+            }
             let csv = "timestamp,case_id,action,operator_note\\n";
-            humanDecisions.forEach(d => {{
-                csv += `"${{d.timestamp}}","${{d.case_id}}","${{d.action}}","${{d.operator_note.replace(/"/g, '""')}}"\\n`;
-            }});
-            const blob = new Blob([csv], {{ type: 'text/csv' }});
+            humanDecisions.forEach(d => {
+                csv += `"${d.timestamp}","${d.case_id}","${d.action}","${d.operator_note.replace(/"/g, '""')}"\\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.setAttribute('href', url);
-            a.setAttribute('download', `sentinel_decisions_${{new Date().toISOString().slice(0,10)}}.csv`);
+            a.setAttribute('download', `sentinel_decisions_${new Date().toISOString().slice(0,10)}.csv`);
             a.click();
-        }}
+        }
 
-        function renderPolicyView() {{
+        function exportFilteredAlertsCSV() {
+            const decCol = "decision_" + currentPolicy;
+            let csv = "step,type,amount,nameOrig,nameDest,model_score,anomaly_score,decision\\n";
+            ALERTS.forEach(r => {
+                csv += `${r.step},"${r.type}",${r.amount},"${r.nameOrig}","${r.nameDest}",${r.model_score},${r.anomaly_score},"${r[decCol]}"\\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `sentinel_alerts_${currentPolicy}_${new Date().toISOString().slice(0,10)}.csv`);
+            a.click();
+        }
+
+        function downloadCurrentCaseMarkdown() {
+            const sel = document.getElementById('caseSelector').value;
+            const c = CASES[sel];
+            if (!c) return;
+            const md = `# Sentinel Forensic Case Dossier: ${c.case_id}\\n\\n` +
+                       `## Transaction Facts\\n` +
+                       `- Step: ${c.transaction.step} (Hour ${c.transaction.hour})\\n` +
+                       `- Type: ${c.transaction.type}\\n` +
+                       `- Amount: ${c.transaction.amount} currency units\\n` +
+                       `- Sender: ${c.transaction.nameOrig}\\n` +
+                       `- Receiver: ${c.transaction.nameDest}\\n\\n` +
+                       `## Risk Analysis\\n` +
+                       `- Model Score: ${c.scores.model_score}\\n` +
+                       `- Anomaly Score: ${c.scores.anomaly_score}\\n` +
+                       `- Policy Decision: ${c.risk_officer.decision_balanced}\\n\\n` +
+                       `## AI Investigation Report\\n\\n` +
+                       `${c.report_text || 'N/A'}\\n`;
+            const blob = new Blob([md], { type: 'text/markdown' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `${c.case_id}_report.md`);
+            a.click();
+        }
+
+        function renderPolicyView() {
             const tbody = document.getElementById('policyTableBody');
             tbody.innerHTML = POLICIES.map(p => `
-                <tr style="${{p.policy.toLowerCase() === currentPolicy ? 'background:rgba(59,130,246,0.15); font-weight:bold;' : ''}}">
-                    <td>${{p.policy}}</td>
-                    <td>${{p.alerts.toLocaleString()}}</td>
-                    <td>${{p.frauds_caught.toLocaleString()}} / 652</td>
-                    <td>${{p.review_cost.toLocaleString(undefined, {{minimumFractionDigits:2}})}}</td>
-                    <td>${{p.fraud_value_lost.toLocaleString(undefined, {{minimumFractionDigits:2}})}}</td>
-                    <td style="color:${{p.policy === 'Strict' ? 'var(--safe-green)' : 'var(--text-main)'}};"><strong>${{p.total_cost.toLocaleString(undefined, {{minimumFractionDigits:2}})}}</strong></td>
+                <tr style="${p.policy.toLowerCase() === currentPolicy ? 'background:rgba(59,130,246,0.15); font-weight:bold;' : ''}">
+                    <td>${p.policy}</td>
+                    <td>${p.alerts.toLocaleString()}</td>
+                    <td>${p.frauds_caught.toLocaleString()} / 652</td>
+                    <td>${p.review_cost.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+                    <td>${p.fraud_value_lost.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+                    <td style="color:${p.policy === 'Strict' ? 'var(--safe-green)' : 'var(--text-main)'};"><strong>${p.total_cost.toLocaleString(undefined, {minimumFractionDigits:2})}</strong></td>
                 </tr>
             `).join('');
-        }}
+        }
+
+        // -------------------------------------------------------------
+        // SENTINEL ASSISTANT (RULE-BASED CO-PILOT)
+        // -------------------------------------------------------------
+        function toggleAssistant() {
+            const panel = document.getElementById('assistantPanel');
+            panel.style.display = panel.style.display === "none" ? "flex" : "none";
+        }
+
+        function quickPrompt(type) {
+            if (type === 'highest risk') {
+                document.getElementById('assistantInput').value = "What is the highest risk transaction?";
+            } else if (type === 'policy cost') {
+                document.getElementById('assistantInput').value = "Compare the costs of Strict vs Lenient policy";
+            } else if (type === 'network pairs') {
+                document.getElementById('assistantInput').value = "How many correlated crime pairs were found?";
+            }
+            sendAssistantQuery();
+        }
+
+        function sendAssistantQuery() {
+            const input = document.getElementById('assistantInput');
+            const query = input.value.trim();
+            if (!query) return;
+
+            const body = document.getElementById('assistantChatBody');
+            body.innerHTML += `<div class="assistant-chat-msg user">${query}</div>`;
+            input.value = "";
+
+            let response = "";
+            const q = query.toLowerCase();
+
+            if (q.includes("highest") || q.includes("top risk") || q.includes("most risky")) {
+                const top = ALERTS.reduce((max, r) => r.model_score > max.model_score ? r : max, ALERTS[0]);
+                response = `🔍 **Highest Risk Transaction:**\\n- Step: ${top.step}\\n- Type: ${top.type}\\n- Amount: ${top.amount.toLocaleString()} currency units\\n- Model Score: **${top.model_score.toFixed(4)}**\\n- Decision: ${top.decision_balanced.toUpperCase()}\\n- Sender: \`${top.nameOrig}\``;
+            } else if (q.includes("policy") || q.includes("cost") || q.includes("strict") || q.includes("lenient")) {
+                response = `📊 **Policy Economics Summary:**\\n- **Strict (0.10):** Total Cost = 238.45M currency units (Lowest net loss, catches 47.2% frauds).\\n- **Balanced (0.50):** Total Cost = 419.23M currency units.\\n- **Lenient (0.90):** Total Cost = 632.16M currency units (High precision, but loses 632.1M in missed fraud principal).`;
+            } else if (q.includes("network") || q.includes("pairs") || q.includes("laundering") || q.includes("mule")) {
+                response = `🕸️ **Network Crime Ring Findings:**\\n- **Total Correlated Pairs:** 93 across PaySim (90 fraud-fraud, 3 legit).\\n- **Test Period:** 46 pairs (100% fraud-fraud, covering 92 test frauds).\\n- Pattern: Same-step identical-amount simultaneous \`TRANSFER\` ➔ \`CASH_OUT\`.`;
+            } else if (q.includes("step") && (q.includes("334") || q.includes("count"))) {
+                const stepCount = ALERTS.filter(r => r.step === 334).length;
+                response = `⏱️ Step 334 had **${stepCount}** candidate alerts screened by Scout.`;
+            } else {
+                response = `🤖 I can query all precomputed test data! Ask me about:\\n1. Top risk transactions\\n2. Strict vs Balanced policy costs\\n3. Correlated network pairs\\n4. Step-by-step transaction volumes.`;
+            }
+
+            setTimeout(() => {
+                body.innerHTML += `<div class="assistant-chat-msg bot">${response.replace(/\\n/g, '<br>')}</div>`;
+                body.scrollTop = body.scrollHeight;
+            }, 300);
+        }
 
         // Initialization
-        window.addEventListener('DOMContentLoaded', () => {{
+        window.addEventListener('DOMContentLoaded', () => {
             populateCaseSelector();
             updateKPICards();
             renderAlertQueue();
@@ -1102,66 +1523,71 @@ def build_site():
 
             // Policy Cost Chart
             const polCtx = document.getElementById('policyChart').getContext('2d');
-            new Chart(polCtx, {{
+            new Chart(polCtx, {
                 type: 'bar',
-                data: {{
+                data: {
                     labels: POLICIES.map(p => p.policy),
                     datasets: [
-                        {{ label: 'Review Cost (currency units)', data: POLICIES.map(p => p.review_cost), backgroundColor: '#f59e0b' }},
-                        {{ label: 'Missed Fraud Loss (currency units)', data: POLICIES.map(p => p.fraud_value_lost), backgroundColor: '#ef4444' }},
-                        {{ label: 'Total Net Cost (currency units)', data: POLICIES.map(p => p.total_cost), backgroundColor: '#3b82f6' }}
+                        { label: 'Review Cost (currency units)', data: POLICIES.map(p => p.review_cost), backgroundColor: '#f59e0b' },
+                        { label: 'Missed Fraud Loss (currency units)', data: POLICIES.map(p => p.fraud_value_lost), backgroundColor: '#ef4444' },
+                        { label: 'Total Net Cost (currency units)', data: POLICIES.map(p => p.total_cost), backgroundColor: '#3b82f6' }
                     ]
-                }},
-                options: {{
+                },
+                options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {{
-                        x: {{ grid: {{ color: 'rgba(255,255,255,0.05)' }}, ticks: {{ color: '#94a3b8' }} }},
-                        y: {{ grid: {{ color: 'rgba(255,255,255,0.05)' }}, ticks: {{ color: '#94a3b8' }} }}
-                    }},
-                    plugins: {{ legend: {{ labels: {{ color: '#f8fafc' }} }} }}
-                }}
-            }});
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f8fafc' } } }
+                }
+            });
 
             // Market Impact Chart (Paytm vs NIFTY 50)
             const mktCtx = document.getElementById('marketChart').getContext('2d');
-            new Chart(mktCtx, {{
+            new Chart(mktCtx, {
                 type: 'line',
-                data: {{
+                data: {
                     labels: ['Jan 15', 'Jan 22', 'Jan 31 (RBI Action)', 'Feb 7', 'Feb 15', 'Feb 28', 'Mar 15'],
                     datasets: [
-                        {{
+                        {
                             label: 'Paytm (One97 Communications) Normalized %',
                             data: [100, 102, 78, 54, 46, 44, 45],
                             borderColor: '#ef4444',
                             backgroundColor: 'rgba(239, 68, 68, 0.1)',
                             fill: true,
                             tension: 0.3
-                        }},
-                        {{
+                        },
+                        {
                             label: 'NIFTY 50 Benchmark Normalized %',
                             data: [100, 99.5, 100.8, 101.5, 102.2, 103.1, 104.0],
                             borderColor: '#3b82f6',
                             borderDash: [5, 5],
                             tension: 0.2
-                        }}
+                        }
                     ]
-                }},
-                options: {{
+                },
+                options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: {{
-                        x: {{ grid: {{ color: 'rgba(255,255,255,0.05)' }}, ticks: {{ color: '#94a3b8' }} }},
-                        y: {{ title: {{ display: true, text: 'Normalized Performance (Base=100)', color: '#94a3b8' }}, grid: {{ color: 'rgba(255,255,255,0.05)' }}, ticks: {{ color: '#94a3b8' }} }}
-                    }},
-                    plugins: {{ legend: {{ labels: {{ color: '#f8fafc' }} }} }}
-                }}
-            }});
-        }});
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { title: { display: true, text: 'Normalized Performance (Base=100)', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f8fafc' } } }
+                }
+            });
+        });
     </script>
 </body>
-</html>
-"""
+</html>"""
+
+def build_site():
+    with open("docs/data/stream.json", "r", encoding="utf-8") as f:
+        stream_data = json.load(f)
+
+    html_content = HTML_TEMPLATE.replace("__STREAM_DATA__", json.dumps(stream_data))
 
     with open("index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
@@ -1170,7 +1596,7 @@ def build_site():
     with open("docs/index.html", "w", encoding="utf-8") as f:
         f.write(html_content)
 
-    print("Successfully built Sentinel Patrol static application for GitHub Pages.")
+    print("Successfully built static Sentinel site with 3D Night City and Sentinel Assistant.")
 
 if __name__ == "__main__":
     build_site()
