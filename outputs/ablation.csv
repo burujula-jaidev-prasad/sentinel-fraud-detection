@@ -1,0 +1,5 @@
+experiment,features_used,num_features,pr_auc,roc_auc,precision_at_0_5,recall_at_0_5,f1_at_0_5
+(a) All 4 features,"amount, log_amount, is_transfer, hour",4,0.3371,0.781,0.5398,0.3221,0.4035
+(b) Without hour,"amount, log_amount, is_transfer",3,0.1999,0.652,0.209,0.2055,0.2073
+(c) Without log_amount,"amount, is_transfer, hour",3,0.3495,0.7959,0.4304,0.365,0.395
+(d) Amount only,amount,1,0.041,0.5652,0.0661,0.0721,0.069
