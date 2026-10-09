@@ -643,27 +643,41 @@
             padding: 8px 22px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             backdrop-filter: blur(14px);
             z-index: 1005;
             box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+            flex-wrap: wrap;
+            justify-content: center;
         }
 
         /* Floating Evidence Board HUD (Top Right) */
         .city-evidence-board {
             position: absolute;
             top: 16px; right: 16px;
-            background: rgba(15, 23, 42, 0.96);
-            border: 1px solid #38bdf8;
+            background: rgba(15, 23, 42, 0.97);
+            border: 1.5px solid #38bdf8;
             border-radius: 14px;
             padding: 18px;
-            width: 350px;
+            width: 380px;
             color: white;
             font-size: 12px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.85);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.88);
             z-index: 1006;
             display: none;
             backdrop-filter: blur(16px);
+        }
+
+        .forensic-breakdown-box {
+            background: #091024;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-top: 8px;
+            font-size: 11.5px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
 
         .stamp-box {
@@ -676,26 +690,26 @@
             font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            transform: rotate(-3deg);
-            margin-top: 6px;
+            transform: rotate(-2deg);
+            margin-top: 4px;
         }
 
         .stamp-block {
             border-color: #ef4444;
             color: #f87171;
-            background: rgba(239, 68, 68, 0.15);
+            background: rgba(239, 68, 68, 0.18);
         }
 
         .stamp-escalate {
             border-color: #f59e0b;
             color: #fbbf24;
-            background: rgba(245, 158, 11, 0.15);
+            background: rgba(245, 158, 11, 0.18);
         }
 
         .stamp-allow {
             border-color: #10b981;
             color: #34d399;
-            background: rgba(16, 185, 129, 0.15);
+            background: rgba(16, 185, 129, 0.18);
         }
 
         /* Beginner Glossary Modal */
@@ -1354,10 +1368,10 @@
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                     <circle cx="12" cy="11" r="3"/>
                 </svg>
-                <span>LEDGER CITY // SENTINEL MODE 3D</span>
+                <span>LEDGER CITY // SENTINEL 3D INTELLIGENCE RADAR</span>
             </div>
 
-            <div style="display:flex; align-items:center; gap:16px;">
+            <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
                 <span class="pill-badge" id="cityStepClock" style="font-size:12px; padding:4px 10px;">Step 334 | Hour 22:00</span>
                 <button class="toggle-btn" id="cityEvalBtn" onclick="toggleAnswerKey()">
                     <span id="cityEvalBtnText">👁️ Ground Truth: OFF</span>
@@ -1388,18 +1402,19 @@
                     <div>• <strong>Bags:</strong> Sized by training amount percentile</div>
                 </div>
                 <div style="margin-top:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.12); font-size:11px; color:#94a3b8;">
-                    <strong>Surveillance Systems:</strong><br>
-                    <span style="color:#f59e0b;">● Amber Ring:</span> Model Risk Alert (Score ≥ <span id="cityStrictnessBadge">0.50</span>)<br>
-                    <span style="color:#ef4444;">● Red Beacon:</span> Confirmed Fraud (Ground Truth ON)<br>
-                    <span style="color:#38bdf8;">● Golden Sentinel:</span> Autonomous investigator on road patrol
+                    <strong>Live Surveillance Indicators:</strong><br>
+                    <span style="color:#f59e0b; font-weight:700;">● Amber Card:</span> Model Risk Alert (Score ≥ <span id="cityStrictnessBadge">0.50</span>)<br>
+                    <span style="color:#10b981; font-weight:700;">● Green Card:</span> Clean Approved Payment<br>
+                    <span style="color:#ef4444; font-weight:700;">● Red Card:</span> Confirmed Fraud (Ground Truth ON)<br>
+                    <span style="color:#38bdf8; font-weight:700;">● Golden Sentinel:</span> Road patrol investigator
                 </div>
             </div>
 
             <!-- Floating Evidence Board & Decision Stamp (Phase B) -->
             <div class="city-evidence-board" id="cityEvidenceBoard">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid rgba(56,189,248,0.25); padding-bottom:6px;">
-                    <strong style="color:#38bdf8; font-size:13.5px;" id="ebTxId">tx_334_12</strong>
-                    <button style="background:transparent; border:none; color:#94a3b8; cursor:pointer; font-size:15px;" onclick="closeEvidenceBoard()">✕</button>
+                    <strong style="color:#38bdf8; font-size:14px;" id="ebTxId">tx_334_12</strong>
+                    <button style="background:transparent; border:none; color:#94a3b8; cursor:pointer; font-size:16px;" onclick="closeEvidenceBoard()">✕</button>
                 </div>
                 <div style="font-size:12px; color:#cbd5e1; display:flex; flex-direction:column; gap:6px;" id="ebTxBody">
                     <div>Select a suspect or payment to inspect forensic evidence...</div>
@@ -1408,12 +1423,13 @@
 
             <!-- City Interactive Controls Bar -->
             <div class="city-controls-bar">
+                <button class="btn btn-secondary" onclick="setCityFilter('all')">🌐 All Transactions</button>
+                <button class="btn btn-secondary" onclick="setCityFilter('flagged')">🚨 Flagged Only</button>
                 <button class="btn btn-secondary" onclick="setCityView('skyline')">🌆 Skyline</button>
                 <button class="btn btn-secondary" onclick="setCityView('overhead')">🛰️ 3x3 Grid Map</button>
                 <button class="btn btn-secondary" onclick="setCityView('street')">🚶 Street Patrol</button>
                 <button class="btn btn-secondary" onclick="setCityView('tower')">🗼 Sentinel Spire</button>
-                <button class="btn btn-secondary" onclick="focusOnSuspect()">🚨 Focus Suspect</button>
-                <span style="font-size:11px; color:#94a3b8; margin-left:6px;">🖱️ Left Drag: Orbit | Right Drag: Pan | Scroll: Zoom | Click person: Inspect</span>
+                <button class="btn btn-primary" onclick="focusOnSuspect()">🚨 Next Suspect</button>
             </div>
         </div>
     </div>
@@ -1556,7 +1572,7 @@
         let currentStrictness = 0.50;
         let currentCheckingCost = 500;
         let evalMode = false;
-        let prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        let cityFilterMode = 'all'; // 'all' or 'flagged'
 
         // Patrol & Stream State
         let patrolPlaying = true;
@@ -1577,12 +1593,13 @@
         let selectedPersonData = null;
         let sentinelMesh = null;
         let scannerGates = [];
+        let routeLaserLine = null;
 
         // Camera Orbit State
         let isOrbiting = false, isPanning = false;
         let mousePrevX = 0, mousePrevY = 0;
         let camTarget = new THREE.Vector3(0, 20, 0);
-        let camSpherical = { radius: 550, theta: Math.PI / 4, phi: Math.PI / 3 };
+        let camSpherical = { radius: 520, theta: Math.PI / 4, phi: Math.PI / 3 };
 
         // 3x3 District Coordinates
         const DISTRICT_POSITIONS = {
@@ -1628,6 +1645,11 @@
             const cityBtn = document.getElementById('cityEvalBtnText');
             if (cityBtn) cityBtn.innerText = evalMode ? "👁️ Ground Truth: ON" : "👁️ Ground Truth: OFF";
             renderAllDynamicCards();
+            if (cityInitialized) updateCityForStep(patrolCurrentStep);
+        }
+
+        function setCityFilter(mode) {
+            cityFilterMode = mode;
             if (cityInitialized) updateCityForStep(patrolCurrentStep);
         }
 
@@ -2174,6 +2196,10 @@
 
         function closeEvidenceBoard() {
             document.getElementById('cityEvidenceBoard').style.display = 'none';
+            if (routeLaserLine) {
+                cityScene.remove(routeLaserLine);
+                routeLaserLine = null;
+            }
         }
 
         function init3DLedgerCity() {
@@ -2246,7 +2272,7 @@
             // The Sentinel Character Model (Phase B)
             buildSentinelPatrolCharacter();
 
-            // Humanoids Mesh Pool (300 Max)
+            // Humanoids Mesh Pool with 3D Overhead Card Badges (300 Max)
             buildCityPeoplePool();
 
             // Setup Orbit & Interaction Listeners
@@ -2434,16 +2460,16 @@
         function buildScannerGates() {
             scannerGates = [];
             const gatePositions = [
-                { x: 0, z: -110, name: "North Gate" },
-                { x: 0, z: 110, name: "South Gate" },
-                { x: -110, z: 0, name: "West Gate" },
-                { x: 110, z: 0, name: "East Gate" }
+                { x: 0, z: -110, name: "North Security Gate" },
+                { x: 0, z: 110, name: "South Security Gate" },
+                { x: -110, z: 0, name: "West Security Gate" },
+                { x: 110, z: 0, name: "East Security Gate" }
             ];
 
             const archGeo = new THREE.TorusGeometry(18, 1.8, 8, 24, Math.PI);
             const archMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
             const beamGeo = new THREE.PlaneGeometry(32, 22);
-            const beamMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.2, side: THREE.DoubleSide });
+            const beamMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.25, side: THREE.DoubleSide });
 
             gatePositions.forEach((gp, idx) => {
                 const group = new THREE.Group();
@@ -2537,19 +2563,73 @@
             return sprite;
         }
 
+        // Dedicated Function to Render Crystal-Clear Overhead 3D Holographic Badges
+        function updatePersonBadgeCanvas(canvas, pData, isFlagged) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            let bgFill = isFlagged ? "rgba(239, 68, 68, 0.92)" : "rgba(16, 185, 129, 0.90)";
+            let strokeColor = isFlagged ? "#ffffff" : "#a7f3d0";
+            let statusText = isFlagged ? `🚨 FLAGGED (Score: ${pData.sc.toFixed(2)})` : `✅ PASS (${pData.sc.toFixed(2)})`;
+
+            if (evalMode) {
+                if (pData.f === 1 && isFlagged) {
+                    bgFill = "rgba(220, 38, 38, 0.95)";
+                    strokeColor = "#fecaca";
+                    statusText = `🔴 CAUGHT FRAUD (${pData.sc.toFixed(2)})`;
+                } else if (pData.f === 0 && isFlagged) {
+                    bgFill = "rgba(245, 158, 11, 0.95)";
+                    strokeColor = "#fef08a";
+                    statusText = `🟡 FALSE ALARM (${pData.sc.toFixed(2)})`;
+                } else if (pData.f === 1 && !isFlagged) {
+                    bgFill = "rgba(153, 27, 27, 0.95)";
+                    strokeColor = "#f87171";
+                    statusText = `👻 MISSED FRAUD (${pData.sc.toFixed(2)})`;
+                } else {
+                    bgFill = "rgba(15, 23, 42, 0.88)";
+                    strokeColor = "#38bdf8";
+                    statusText = `⚪ CLEAN PASS (${pData.sc.toFixed(2)})`;
+                }
+            }
+
+            // Rounded Card
+            ctx.fillStyle = bgFill;
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.roundRect(4, 4, 312, 112, 14);
+            ctx.fill();
+            ctx.stroke();
+
+            // Row 1: Status Classification
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 20px 'Plus Jakarta Sans', sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(statusText, 160, 36);
+
+            // Row 2: Amount & Channel
+            ctx.font = "bold 17px 'JetBrains Mono', monospace";
+            ctx.fillStyle = "#ffffff";
+            const amtStr = pData.amt > 999999 ? (pData.amt/1e6).toFixed(1) + 'M CU' : (pData.amt > 999 ? (pData.amt/1e3).toFixed(0) + 'k CU' : pData.amt + ' CU');
+            ctx.fillText(`${amtStr} • ${pData.t}`, 160, 68);
+
+            // Row 3: Route
+            ctx.font = "bold 14px sans-serif";
+            ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+            ctx.fillText(`Dist ${pData.df} ➔ Dist ${pData.dt}`, 160, 96);
+        }
+
         function buildCityPeoplePool() {
             cityPeopleMeshes = [];
             const bodyGeo = new THREE.CylinderGeometry(1.6, 2.2, 7.5, 8);
             const headGeo = new THREE.SphereGeometry(1.8, 8, 8);
             const bagGeo = new THREE.BoxGeometry(2.8, 2.8, 2.8);
-            const haloGeo = new THREE.TorusGeometry(3.2, 0.4, 6, 16);
 
             for (let i = 0; i < 300; i++) {
                 const group = new THREE.Group();
                 const coatMat = new THREE.MeshLambertMaterial({ color: 0x38bdf8 });
                 const headMat = new THREE.MeshLambertMaterial({ color: 0xf8fafc });
                 const bagMat = new THREE.MeshLambertMaterial({ color: 0xf59e0b });
-                const haloMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.9 });
 
                 const body = new THREE.Mesh(bodyGeo, coatMat);
                 body.position.y = 3.75;
@@ -2563,19 +2643,25 @@
                 bag.position.set(3.0, 3.2, 0);
                 group.add(bag);
 
-                const halo = new THREE.Mesh(haloGeo, haloMat);
-                halo.rotation.x = Math.PI / 2;
-                halo.position.y = 12.0;
-                halo.visible = false;
-                group.add(halo);
+                // Overhead 3D Information Badge (Clear High-Definition Canvas Sprite)
+                const badgeCanvas = document.createElement('canvas');
+                badgeCanvas.width = 320;
+                badgeCanvas.height = 120;
+                const badgeTexture = new THREE.CanvasTexture(badgeCanvas);
+                const badgeMat = new THREE.SpriteMaterial({ map: badgeTexture, transparent: true });
+                const badgeSprite = new THREE.Sprite(badgeMat);
+                badgeSprite.position.set(0, 22, 0);
+                badgeSprite.scale.set(40, 15, 1);
+                group.add(badgeSprite);
 
                 group.position.set(0, -100, 0);
                 group.userData = { index: i, personData: null };
                 cityScene.add(group);
 
                 cityPeopleMeshes.push({
-                    group, body, head, bag, halo,
-                    coatMat, headMat, bagMat, haloMat,
+                    group, body, head, bag,
+                    badgeSprite, badgeCanvas, badgeTexture,
+                    coatMat, headMat, bagMat,
                     active: false,
                     startPos: { x: 0, z: 0 },
                     endPos: { x: 0, z: 0 },
@@ -2654,23 +2740,44 @@
 
             title.innerText = `🔍 Transaction ${pData.id}`;
             const isFlagged = pData.sc >= currentStrictness;
-            const statusBadge = isFlagged ? `<span class="stamp-box stamp-block">🚨 FLAGGED</span>` : `<span class="stamp-box stamp-allow">✅ APPROVED</span>`;
+            const statusBadge = isFlagged ? `<span class="stamp-box stamp-block">🚨 RISK ALARM (SCORE ≥ θ)</span>` : `<span class="stamp-box stamp-allow">✅ APPROVED PAYMENT</span>`;
+
+            // Clear Forensic Risk Factor Calculation
+            const amtRisk = pData.amt > 500000 ? `🔥 <strong>High Value Alert:</strong> ${pData.amt.toLocaleString()} CU (Top ${( (1 - pData.pct)*100 ).toFixed(1)}% of all transfers)` : `⚪ Normal Amount: ${pData.amt.toLocaleString()} CU`;
+            const timeRisk = (pData.hr >= 0 && pData.hr <= 5) ? `🌙 <strong>Nocturnal Velocity:</strong> ${pData.hr}:00 (Late Night Attack Window)` : `☀️ Daytime Activity: ${pData.hr}:00`;
+            const typeRisk = pData.t === 'TRANSFER' ? `💳 <strong>Primary Attack Channel:</strong> TRANSFER (100% of PaySim thefts begin via Transfer)` : `🏧 <strong>Cashout Channel:</strong> Immediate withdrawal point`;
+
+            let decisionAction = isFlagged ? "🚨 RISK OFFICER: BLOCK TRANSACTION & FREEZE ORIGIN WALLET" : "✅ RISK OFFICER: IMMEDIATE CLEARANCE";
+            if (evalMode && pData.f === 1) decisionAction += "<br><span style='color:#ef4444;'>[AUDIT: CONFIRMED GENUINE THEFT]</span>";
 
             body.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                    <span>Step: ${pData.step} (${pData.hr}:00)</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span>Step ${pData.step} (${pData.hr}:00)</span>
                     ${statusBadge}
                 </div>
-                <div>• Type: <strong>${pData.t}</strong></div>
-                <div>• Amount: <strong style="color:white;">${pData.amt.toLocaleString()}</strong> currency units (${(pData.pct * 100).toFixed(0)}th percentile)</div>
-                <div>• Route: District ${pData.df} ➔ District ${pData.dt}</div>
-                <div>• Model Risk Score: <strong style="color:#f59e0b;">${pData.sc.toFixed(4)}</strong> (Cutoff: ${currentStrictness.toFixed(2)})</div>
-                ${evalMode ? `<div>• Real Fraud (Ground Truth): <strong style="color:${pData.f ? '#ef4444' : '#10b981'};">${pData.f ? 'CONFIRMED FRAUD (CAUGHT)' : 'HONEST PAYMENT'}</strong></div>` : ''}
-                <div style="margin-top:8px; border-top:1px dashed rgba(255,255,255,0.15); padding-top:8px;">
-                    <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="viewFullDossierInDrawer('${pData.id}')">📂 View Forensic Dossier</button>
+                
+                <div class="forensic-breakdown-box">
+                    <strong style="color:#38bdf8; font-size:12px;">📊 Forensic Risk Indicators:</strong>
+                    <div>• ${amtRisk}</div>
+                    <div>• ${timeRisk}</div>
+                    <div>• ${typeRisk}</div>
+                    <div>• <strong>District Flow:</strong> District ${pData.df} (${DISTRICT_POSITIONS[pData.df].name}) ➔ District ${pData.dt} (${DISTRICT_POSITIONS[pData.dt].name})</div>
+                    <div>• <strong>Random Forest Score:</strong> <strong style="color:${isFlagged ? '#ef4444' : '#10b981'}; font-size:13px;">${pData.sc.toFixed(4)}</strong> (Strictness Cutoff: ${currentStrictness.toFixed(2)})</div>
+                </div>
+
+                <div style="background:#0c1733; border-left:3px solid ${isFlagged ? '#ef4444' : '#10b981'}; padding:8px 10px; border-radius:4px; font-size:11.5px; margin-top:4px;">
+                    ${decisionAction}
+                </div>
+
+                <div style="margin-top:8px; display:flex; gap:8px;">
+                    <button class="btn btn-primary" style="flex:1; justify-content:center;" onclick="viewFullDossierInDrawer('${pData.id}')">📂 Full Case Dossier</button>
+                    <button class="btn btn-secondary" onclick="closeEvidenceBoard()">Close</button>
                 </div>
             `;
             board.style.display = 'block';
+
+            // Draw glowing route line on road
+            drawRouteLaser(pData.df, pData.dt);
 
             // Point Sentinel to this suspect
             if (sentinelMesh) {
@@ -2679,6 +2786,29 @@
                     sentinelMesh.targetPos.copy(targetGroup.group.position);
                 }
             }
+        }
+
+        function drawRouteLaser(fromD, toD) {
+            if (routeLaserLine) {
+                cityScene.remove(routeLaserLine);
+                routeLaserLine = null;
+            }
+
+            const p1 = DISTRICT_POSITIONS[fromD] || DISTRICT_POSITIONS[1];
+            const p2 = DISTRICT_POSITIONS[toD] || DISTRICT_POSITIONS[2];
+
+            const points = [
+                new THREE.Vector3(p1.x, 2, p1.z),
+                new THREE.Vector3(p1.x, 2, 0),
+                new THREE.Vector3(p2.x, 2, 0),
+                new THREE.Vector3(p2.x, 2, p2.z)
+            ];
+
+            const curve = new THREE.CatmullRomCurve3(points);
+            const tubeGeo = new THREE.TubeGeometry(curve, 20, 1.2, 8, false);
+            const tubeMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.8 });
+            routeLaserLine = new THREE.Mesh(tubeGeo, tubeMat);
+            cityScene.add(routeLaserLine);
         }
 
         function viewFullDossierInDrawer(txId) {
@@ -2708,7 +2838,7 @@
         function setCityView(type) {
             if (type === 'skyline') {
                 camTarget.set(0, 20, 0);
-                camSpherical = { radius: 550, theta: Math.PI / 4, phi: Math.PI / 3 };
+                camSpherical = { radius: 520, theta: Math.PI / 4, phi: Math.PI / 3 };
             } else if (type === 'overhead') {
                 camTarget.set(0, 0, 0);
                 camSpherical = { radius: 680, theta: 0.001, phi: 0.05 };
@@ -2726,8 +2856,8 @@
             const flagged = cityPeopleMeshes.find(p => p.active && p.txData && p.txData.sc >= currentStrictness);
             if (flagged) {
                 camTarget.copy(flagged.group.position);
-                camSpherical.radius = 90;
-                camSpherical.phi = Math.PI / 3;
+                camSpherical.radius = 110;
+                camSpherical.phi = Math.PI / 3.2;
                 updateCameraPosition();
                 displayEvidenceBoard(flagged.txData);
             }
@@ -2754,10 +2884,13 @@
                 }
             });
 
-            // 2. Spawn / Update People on screen (O(1) Step Lookup)
-            const activeStepPeople = DATA.city_people_by_step[step] || [];
-            const spawnCount = Math.min(300, activeStepPeople.length);
+            // 2. Spawn / Update People on screen with Clear Overhead Badges
+            let activeStepPeople = DATA.city_people_by_step[step] || [];
+            if (cityFilterMode === 'flagged') {
+                activeStepPeople = activeStepPeople.filter(p => p.sc >= currentStrictness);
+            }
 
+            const spawnCount = Math.min(300, activeStepPeople.length);
             let firstFlaggedPos = null;
 
             for (let i = 0; i < 300; i++) {
@@ -2789,19 +2922,14 @@
                     const bagScale = 0.6 + (pData.pct * 1.8);
                     pMesh.bag.scale.set(bagScale, bagScale, bagScale);
 
-                    // Halos & Answer Key
-                    if (evalMode && pData.f === 1) {
-                        pMesh.headMat.color.setHex(0xef4444);
-                        pMesh.halo.visible = true;
-                        pMesh.haloMat.color.setHex(0xef4444);
-                    } else if (pData.sc >= currentStrictness) {
-                        pMesh.headMat.color.setHex(0xf59e0b);
-                        pMesh.halo.visible = true;
-                        pMesh.haloMat.color.setHex(0xf59e0b);
-                        if (!firstFlaggedPos) firstFlaggedPos = pMesh.startPos;
-                    } else {
-                        pMesh.headMat.color.setHex(0xf8fafc);
-                        pMesh.halo.visible = false;
+                    const isFlagged = pData.sc >= currentStrictness;
+
+                    // Update High-Definition 3D Overhead Card
+                    updatePersonBadgeCanvas(pMesh.badgeCanvas, pData, isFlagged);
+                    pMesh.badgeTexture.needsUpdate = true;
+
+                    if (isFlagged && !firstFlaggedPos) {
+                        firstFlaggedPos = pMesh.startPos;
                     }
 
                     pMesh.group.position.x = pMesh.startPos.x + (pMesh.endPos.x - pMesh.startPos.x) * pMesh.progress;
@@ -2832,7 +2960,6 @@
                         p.group.position.x = p.startPos.x + (p.endPos.x - p.startPos.x) * p.progress;
                         p.group.position.z = p.startPos.z + (p.endPos.z - p.startPos.z) * p.progress;
                         p.group.position.y = Math.abs(Math.sin(time + idx)) * 1.2;
-                        p.halo.rotation.z += 0.02;
                     }
                 });
 
