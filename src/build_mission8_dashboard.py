@@ -2368,9 +2368,10 @@ ightarrow 	ext{CASH\_OUT}$) and locks both destination nodes in tandem.
                     <div style="display:flex; align-items:center; gap:8px;">
                         <span style="font-size:12px; color:var(--text-muted);">Speed:</span>
                         <select id="patrolSpeedSelect" onchange="changePatrolSpeed(this.value)">
-                            <option value="1000">1 hr/sec</option>
-                            <option value="400" selected>2.5 hr/sec</option>
-                            <option value="150">6 hr/sec</option>
+                            <option value="2500">🐢 Slow (2.5s / step)</option>
+                            <option value="1500" selected>⏱️ Normal (1.5s / step)</option>
+                            <option value="800">⚡ Moderate (0.8s / step)</option>
+                            <option value="400">🚀 Fast (0.4s / step)</option>
                         </select>
                     </div>
                 </div>
@@ -2523,7 +2524,7 @@ ightarrow 	ext{CASH\_OUT}$) and locks both destination nodes in tandem.
         let patrolPlaying = true;
         let patrolCurrentStep = 334;
         let patrolInterval = null;
-        let patrolSpeed = 400;
+        let patrolSpeed = 1500;
 
         // Chart instances
         let chartC2, chartC3, chartC4, chartC5, chartC6, chartC7, chartC9, chartC10, chartC11, chartC12;
