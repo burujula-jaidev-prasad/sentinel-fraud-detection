@@ -1262,10 +1262,428 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             max-width: 460px;
             justify-content: flex-end;
         }
+
+        /* ========================================================================= */
+        /* 15-SECOND EXECUTIVE BRIEFING FLYER STYLES */
+        /* ========================================================================= */
+        .briefing-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(4, 8, 18, 0.88);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 0.35s ease, visibility 0.35s ease;
+            visibility: visible;
+        }
+
+        .briefing-modal-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .briefing-card {
+            background: linear-gradient(145deg, #0d172e 0%, #080f1e 100%);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 45px rgba(56, 189, 248, 0.15);
+            border-radius: 16px;
+            max-width: 860px;
+            width: 92%;
+            max-height: 92vh;
+            overflow-y: auto;
+            position: relative;
+            animation: flyerPopIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes flyerPopIn {
+            from {
+                transform: scale(0.94) translateY(12px);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .briefing-timer-header {
+            position: sticky;
+            top: 0;
+            background: rgba(13, 23, 46, 0.96);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 10;
+        }
+
+        .briefing-progress-track {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+
+        .briefing-progress-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #38bdf8, #818cf8, #a78bfa);
+            transition: width 0.1s linear;
+        }
+
+        .briefing-top-controls {
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .briefing-pill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
+        .live-dot {
+            width: 7px;
+            height: 7px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 6px #10b981;
+            animation: livePulse 1.5s infinite;
+        }
+
+        @keyframes livePulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .briefing-action-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .briefing-countdown-text {
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .briefing-btn-subtle {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #cbd5e1;
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .briefing-btn-subtle:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+        .briefing-btn-primary {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            border: 1px solid rgba(56, 189, 248, 0.6);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 0 14px rgba(2, 132, 199, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        .briefing-btn-primary:hover {
+            background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .briefing-body {
+            padding: 22px 26px 26px 26px;
+        }
+
+        .briefing-title-section {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .briefing-tagline {
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #38bdf8;
+            margin-bottom: 4px;
+        }
+
+        .briefing-hero-title {
+            font-size: 26px;
+            font-weight: 800;
+            color: #f8fafc;
+            letter-spacing: -0.5px;
+            margin: 0 0 6px 0;
+            background: linear-gradient(135deg, #ffffff 30%, #93c5fd 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .briefing-hero-desc {
+            font-size: 13px;
+            color: #94a3b8;
+            line-height: 1.5;
+            margin: 0;
+            max-width: 740px;
+        }
+
+        .briefing-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .briefing-pillar-card {
+            background: rgba(15, 23, 42, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 10px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .briefing-pillar-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .pillar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .pillar-icon {
+            font-size: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            flex-shrink: 0;
+        }
+
+        .pillar-category {
+            font-size: 10.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #94a3b8;
+            font-weight: 700;
+        }
+
+        .pillar-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin: 1px 0 0 0;
+        }
+
+        .pillar-text {
+            font-size: 12px;
+            color: #cbd5e1;
+            line-height: 1.45;
+            margin: 0 0 10px 0;
+        }
+
+        .pillar-stat {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .stat-pill {
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .briefing-bottom-bar {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .briefing-meta-note {
+            font-size: 11.5px;
+            color: #94a3b8;
+        }
+
+        @media (max-width: 768px) {
+            .briefing-grid {
+                grid-template-columns: 1fr;
+            }
+            .briefing-bottom-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
     
     </style>
 </head>
 <body>
+    <!-- 15-SECOND EXECUTIVE BRIEFING FLYER OVERLAY -->
+    <div id="briefingFlyerModal" class="briefing-modal-overlay">
+        <div class="briefing-card">
+            <!-- Progress / Timer Header -->
+            <div class="briefing-timer-header">
+                <div class="briefing-progress-track">
+                    <div id="briefingProgressBar" class="briefing-progress-bar"></div>
+                </div>
+                <div class="briefing-top-controls">
+                    <div class="briefing-pill-badge">
+                        <span class="live-dot"></span>
+                        <span>MBA CAPSTONE • 15s EXECUTIVE BRIEFING</span>
+                    </div>
+                    <div class="briefing-action-group">
+                        <span class="briefing-countdown-text">Auto-entering in: <strong id="flyerTimerCount" style="color:#38bdf8;">15</strong>s</span>
+                        <button id="briefingPauseBtn" class="briefing-btn-subtle" onclick="toggleFlyerPause()" title="Pause or Resume Timer">⏸ Pause</button>
+                        <button class="briefing-btn-primary" onclick="closeBriefingFlyer()">Enter Dashboard ➔</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Briefing Content -->
+            <div class="briefing-body">
+                <div class="briefing-title-section">
+                    <div class="briefing-tagline">Autonomous Multi-Agent AI Fraud Intelligence Suite</div>
+                    <h1 class="briefing-hero-title">Project SENTINEL</h1>
+                    <p class="briefing-hero-desc">
+                        Real-time behavioral risk monitoring, cost-optimal circuit breakers, and 3D transaction network surveillance for digital payment ecosystems.
+                    </p>
+                </div>
+
+                <!-- 4 Strategic Pillars Grid -->
+                <div class="briefing-grid">
+                    <div class="briefing-pillar-card" style="border-left: 4px solid #38bdf8;">
+                        <div class="pillar-header">
+                            <span class="pillar-icon">📊</span>
+                            <div>
+                                <div class="pillar-category">The Data Foundation</div>
+                                <h3 class="pillar-title">954,393 PaySim Transactions</h3>
+                            </div>
+                        </div>
+                        <p class="pillar-text">
+                            Strict temporal split (steps 334 to 742), zero balance-column leakage, and 1,201 ground-truth frauds isolated to TRANSFER and CASH_OUT corridors.
+                        </p>
+                        <div class="pillar-stat">
+                            <span class="stat-pill" style="background:rgba(56,189,248,0.12); color:#38bdf8;">15% Random Sample</span>
+                            <span class="stat-pill" style="background:rgba(56,189,248,0.12); color:#38bdf8;">0.126% Base Fraud Rate</span>
+                        </div>
+                    </div>
+
+                    <div class="briefing-pillar-card" style="border-left: 4px solid #a78bfa;">
+                        <div class="pillar-header">
+                            <span class="pillar-icon">⚡</span>
+                            <div>
+                                <div class="pillar-category">Dual ML Engine</div>
+                                <h3 class="pillar-title">XGBoost + Random Forest</h3>
+                            </div>
+                        </div>
+                        <p class="pillar-text">
+                            Dual-model precision-recall optimization (PR-AUC 0.906 & 0.887) targeting extreme payment class imbalance with rapid sub-millisecond scoring.
+                        </p>
+                        <div class="pillar-stat">
+                            <span class="stat-pill" style="background:rgba(167,139,250,0.12); color:#c4b5fd;">PR-AUC: 0.906 / 0.887</span>
+                            <span class="stat-pill" style="background:rgba(167,139,250,0.12); color:#c4b5fd;">Zero Balance Leakage</span>
+                        </div>
+                    </div>
+
+                    <div class="briefing-pillar-card" style="border-left: 4px solid #10b981;">
+                        <div class="pillar-header">
+                            <span class="pillar-icon">⚖️</span>
+                            <div>
+                                <div class="pillar-category">Cost-Optimal Governance</div>
+                                <h3 class="pillar-title">3-Tier Circuit Breakers</h3>
+                            </div>
+                        </div>
+                        <p class="pillar-text">
+                            Permissive, Balanced (θ* = 0.50), and Strict automated quarantine policies protecting up to ₹752.38M with tiered analyst escalation workflows.
+                        </p>
+                        <div class="pillar-stat">
+                            <span class="stat-pill" style="background:rgba(16,185,129,0.12); color:#34d399;">₹752.38M Protected</span>
+                            <span class="stat-pill" style="background:rgba(16,185,129,0.12); color:#34d399;">θ* = 0.50 Cost Optima</span>
+                        </div>
+                    </div>
+
+                    <div class="briefing-pillar-card" style="border-left: 4px solid #f59e0b;">
+                        <div class="pillar-header">
+                            <span class="pillar-icon">🏙️</span>
+                            <div>
+                                <div class="pillar-category">Live Digital Twin & AI</div>
+                                <h3 class="pillar-title">3D Ledger City & Copilot</h3>
+                            </div>
+                        </div>
+                        <p class="pillar-text">
+                            Real-time 3D cybernetic transaction network simulation with autonomous drone patrols and an embedded multi-agent LLM Copilot for SAR filing.
+                        </p>
+                        <div class="pillar-stat">
+                            <span class="stat-pill" style="background:rgba(245,158,11,0.12); color:#fbbf24;">WebGL 3D Twin</span>
+                            <span class="stat-pill" style="background:rgba(245,158,11,0.12); color:#fbbf24;">Multi-Agent SAR AI</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Briefing Footer Summary -->
+                <div class="briefing-bottom-bar">
+                    <div class="briefing-meta-note">
+                        <strong>🛡️ Sentinel Compliance:</strong> RBI Master Directions & Digital Personal Data Protection (DPDP) ready.
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button class="briefing-btn-subtle" onclick="toggleFlyerPause()" id="briefingPauseBtnBottom">⏸ Freeze Briefing</button>
+                        <button class="briefing-btn-primary" onclick="closeBriefingFlyer()" style="padding: 10px 22px; font-size: 13.5px; font-weight: 700;">
+                            🚀 Launch Investigation Dashboard ➔
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Left-Hand Story Navigation -->
     <aside class="sidebar">
         <div class="brand-box">
@@ -1285,8 +1703,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             <li><button class="nav-item-btn" onclick="goToStep(9)">⏱️ 9. Live Patrol & Cases</button></li>
         </ul>
 
-        <div class="nav-section-title" style="margin-top: 18px;">3D Visualization</div>
+        <div class="nav-section-title" style="margin-top: 18px;">Presentation & 3D</div>
         <ul class="nav-list">
+            <li><button class="nav-item-btn" style="color: #c4b5fd; border: 1px solid rgba(167, 139, 250, 0.4); background: rgba(167, 139, 250, 0.08); font-weight: 700; margin-bottom: 6px;" onclick="openBriefingFlyer()">🎬 Project Briefing (15s)</button></li>
             <li><button class="nav-item-btn" style="color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.08); font-weight: 700;" onclick="openSentinelCity()">🏙️ 3D Ledger City</button></li>
         </ul>
 
@@ -1327,9 +1746,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                     </select>
                 </div>
 
-                <div class="control-group">
+                <div class="control-group" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <button onclick="openBriefingFlyer()" style="background:rgba(167,139,250,0.15); border:1px solid rgba(167,139,250,0.4); color:#c4b5fd; font-size:12px; font-weight:700; padding:6px 12px; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.2s ease;">
+                        <span>🎬 15s Briefing</span>
+                    </button>
                     <div style="background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4); color:#34d399; font-size:12px; font-weight:700; padding:6px 14px; border-radius:6px; display:inline-flex; align-items:center; gap:6px;">
-                        <span>🟢 Ground Truth & Verified Frauds: FULLY VISIBLE</span>
+                        <span>🟢 Ground Truth &amp; Verified Frauds: FULLY VISIBLE</span>
                     </div>
                 </div>
             </div>
@@ -3917,10 +4339,90 @@ function setCityView(type) { setCameraPreset(type); }
             }
         }
 
+        // ==========================================================================
+        // 15-SECOND EXECUTIVE BRIEFING FLYER CONTROLLER
+        // ==========================================================================
+        let flyerTotalSeconds = 15;
+        let flyerRemainingMs = 15000;
+        let flyerInterval = null;
+        let isFlyerPaused = false;
+        const flyerTickStep = 100; // ms
+
+        function startFlyerTimer() {
+            if (flyerInterval) clearInterval(flyerInterval);
+            const progressBar = document.getElementById('briefingProgressBar');
+            const timerCount = document.getElementById('flyerTimerCount');
+
+            flyerInterval = setInterval(() => {
+                if (isFlyerPaused) return;
+
+                flyerRemainingMs -= flyerTickStep;
+                if (flyerRemainingMs <= 0) {
+                    flyerRemainingMs = 0;
+                    if (progressBar) progressBar.style.width = '0%';
+                    if (timerCount) timerCount.innerText = '0';
+                    clearInterval(flyerInterval);
+                    closeBriefingFlyer();
+                    return;
+                }
+
+                const percent = (flyerRemainingMs / (flyerTotalSeconds * 1000)) * 100;
+                if (progressBar) progressBar.style.width = `${percent}%`;
+
+                const secondsLeft = Math.ceil(flyerRemainingMs / 1000);
+                if (timerCount) timerCount.innerText = secondsLeft;
+            }, flyerTickStep);
+        }
+
+        function toggleFlyerPause() {
+            isFlyerPaused = !isFlyerPaused;
+            const topBtn = document.getElementById('briefingPauseBtn');
+            const bottomBtn = document.getElementById('briefingPauseBtnBottom');
+            
+            if (isFlyerPaused) {
+                if (topBtn) topBtn.innerHTML = '▶ Resume';
+                if (bottomBtn) bottomBtn.innerHTML = '▶ Resume Timer';
+            } else {
+                if (topBtn) topBtn.innerHTML = '⏸ Pause';
+                if (bottomBtn) bottomBtn.innerHTML = '⏸ Freeze Briefing';
+            }
+        }
+
+        function closeBriefingFlyer() {
+            if (flyerInterval) clearInterval(flyerInterval);
+            const modal = document.getElementById('briefingFlyerModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+
+        function openBriefingFlyer() {
+            const modal = document.getElementById('briefingFlyerModal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            
+            // Reset timer to 15s
+            flyerRemainingMs = 15000;
+            isFlyerPaused = false;
+            const topBtn = document.getElementById('briefingPauseBtn');
+            const bottomBtn = document.getElementById('briefingPauseBtnBottom');
+            if (topBtn) topBtn.innerHTML = '⏸ Pause';
+            if (bottomBtn) bottomBtn.innerHTML = '⏸ Freeze Briefing';
+            
+            const progressBar = document.getElementById('briefingProgressBar');
+            if (progressBar) progressBar.style.width = '100%';
+            
+            const timerCount = document.getElementById('flyerTimerCount');
+            if (timerCount) timerCount.innerText = '15';
+
+            startFlyerTimer();
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             renderAllDynamicCards();
             updateSimScore();
             startPatrolLoop();
+            startFlyerTimer();
         });
         // ==========================================================================
         // SENTINEL AI COPILOT CHATBOT LOGIC & INTELLIGENCE ENGINE
