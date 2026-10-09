@@ -2331,6 +2331,105 @@ ightarrow 	ext{CASH\_OUT}$) and locks both destination nodes in tandem.
 
     </main>
 
+    <!-- ========================================================================= -->
+    <!-- 3D LEDGER CITY (SENTINEL MODE) MODAL VIEW                                 -->
+    <!-- ========================================================================= -->
+    <div class="city-modal-overlay" id="cityModal">
+        <!-- City Header Bar -->
+        <div class="city-header">
+            <div class="city-header-title">
+                <span>🏙️</span>
+                <span>LEDGER CITY // 3D SENTINEL THREAT RADAR</span>
+            </div>
+
+            <!-- Integrated Timeline & Step Replay Controls -->
+            <div class="city-timeline-controls">
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="cityStepChange(-1)" title="Previous Hour">◀ Prev</button>
+                <button class="btn btn-secondary" style="padding:4px 10px; font-size:11px;" id="cityPlayBtn" onclick="togglePatrolPlay()">⏸️ Pause</button>
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="cityStepChange(1)" title="Next Hour">Next ▶</button>
+                
+                <input type="range" id="cityStepSlider" min="334" max="742" value="334" style="width:130px;" oninput="scrubPatrol(this.value)">
+                <span class="pill-badge" id="cityStepClock" style="font-size:11.5px; padding:3px 8px; background:rgba(56,189,248,0.15); color:#38bdf8;">Step 334 | 22:00</span>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <div style="display:flex; align-items:center; gap:6px; background:#080e1f; padding:4px 10px; border-radius:8px; border:1px solid rgba(56,189,248,0.2);">
+                    <span style="font-size:11px; color:#94a3b8;">Strictness (θ):</span>
+                    <strong style="color:#38bdf8; font-size:12px; font-family:var(--font-mono);" id="cityStrictnessBadge">0.50</strong>
+                </div>
+                <button class="btn btn-primary" onclick="closeSentinelCity()" style="font-size:12px; padding:6px 14px;">✕ Close City</button>
+            </div>
+        </div>
+
+        <!-- Educational Disclaimer Banner -->
+        <div class="city-disclaimer-banner">
+            ⚠️ <strong>Live Financial Digital Twin:</strong> Replaying synthetic PaySim payment flows across 8 account hash districts. Red beams show autonomous AI circuit breaker fund freezes.
+        </div>
+
+        <!-- 3D WebGL Canvas Container -->
+        <div class="city-canvas-container" id="cityCanvasContainer">
+            <canvas id="cityFallback2D" style="display:none; width:100%; height:100%;"></canvas>
+
+            <!-- Live City Situation Briefing (Top Center) -->
+            <div class="city-situation-briefing" id="cityBriefingBox">
+                <div class="briefing-pulse"></div>
+                <div>
+                    <strong style="color:#38bdf8; font-size:12px;">📡 LIVE SITUATION BRIEFING:</strong>
+                    <span id="cityBriefingText" style="color:#e2e8f0; margin-left:4px;">Initializing payment stream...</span>
+                </div>
+            </div>
+
+            <!-- Hourly Threat Briefing & Live Incident Feed (Top-Left) -->
+            <div class="city-threat-radar-panel">
+                <div style="font-weight:800; color:#38bdf8; font-size:13px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(56,189,248,0.2); padding-bottom:6px;">
+                    <span>🚨 HOURLY THREAT RADAR</span>
+                    <span class="pill-badge" id="radarThreatCountBadge" style="background:rgba(239,68,68,0.25); color:#fca5a5; font-size:11px;">0 Threats</span>
+                </div>
+                <div style="font-size:11.5px; color:#cbd5e1; line-height:1.4;">
+                    <div>• <strong>Current Hour:</strong> <span id="radarHourDisplay" style="color:#38bdf8; font-weight:700;">22:00</span></div>
+                    <div>• <strong>Active Transactions:</strong> <span id="radarActiveTxCount" style="font-weight:700;">0</span> moving</div>
+                    <div>• <strong>Alarm Strictness (θ):</strong> <span id="cityStrictnessDisplay" style="color:#38bdf8; font-weight:700;">0.50</span></div>
+                </div>
+
+                <div style="font-weight:700; color:#f59e0b; font-size:11.5px; margin-top:4px;">
+                    ⚡ Intercepted Threats (Click to Track):
+                </div>
+                <div class="threat-incident-list" id="radarThreatList">
+                    <div style="color:#64748b; font-size:11px; padding:6px;">No high-risk threats detected in this hour.</div>
+                </div>
+            </div>
+
+            <!-- Floating Evidence Board & Decision Stamp (Top Right) -->
+            <div class="city-evidence-board" id="cityEvidenceBoard">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid rgba(56,189,248,0.25); padding-bottom:6px;">
+                    <strong style="color:#38bdf8; font-size:13.5px;" id="ebTxId">🔍 Select Suspect</strong>
+                    <button style="background:transparent; border:none; color:#94a3b8; cursor:pointer; font-size:16px;" onclick="closeEvidenceBoard()">✕</button>
+                </div>
+                <div style="font-size:12px; color:#cbd5e1; display:flex; flex-direction:column; gap:6px;" id="ebTxBody">
+                    <div>Click any suspect or payment in the city or threat list to inspect forensic evidence...</div>
+                </div>
+            </div>
+
+            <!-- Visual Legend Bar -->
+            <div class="city-legend-bar">
+                <span>🔴 <strong style="color:#ef4444;">Red:</strong> Theft / Auto-Quarantine</span>
+                <span>⚠️ <strong style="color:#f59e0b;">Amber:</strong> Suspicious Alert</span>
+                <span>🔵 <strong style="color:#38bdf8;">Cyan:</strong> Transfer</span>
+                <span>🟣 <strong style="color:#c084fc;">Purple:</strong> Cash-Out</span>
+            </div>
+
+            <!-- City Interactive Controls Bar -->
+            <div class="city-controls-bar">
+                <button class="btn btn-secondary" onclick="setCameraPreset('top')" style="font-size:12px; padding:6px 12px;">🔭 Top Bird's Eye</button>
+                <button class="btn btn-secondary" onclick="setCameraPreset('radar')" style="font-size:12px; padding:6px 12px;">🛰️ 90° Radar</button>
+                <button class="btn btn-secondary" onclick="setCameraPreset('iso')" style="font-size:12px; padding:6px 12px;">📐 Isometric</button>
+                <button class="btn btn-secondary" onclick="setCameraPreset('street')" style="font-size:12px; padding:6px 12px;">🚶 Street Cam</button>
+                <button class="btn btn-secondary" onclick="focusOnNextThreat()" style="font-size:12px; padding:6px 12px; border-color:#ef4444; color:#fca5a5;">🎯 Focus Threat</button>
+            </div>
+        </div>
+    </div>
+    
+
     <!-- Floating Sentinel AI Copilot Chatbot Button -->
     <button id="sentinelChatTrigger" class="chat-trigger-btn" onclick="toggleChat()" title="Open Sentinel AI Copilot">
         <span class="chat-trigger-pulse"></span>
