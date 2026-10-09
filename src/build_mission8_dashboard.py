@@ -1,4 +1,4 @@
-"""Mission 8 Story Dashboard Builder: Left-hand story navigation, 12 dynamic cards, and live patrol."""
+"""Mission 8 Story Dashboard Builder: Left-hand story navigation, 12 dynamic cards, interactive tooltips, and live patrol."""
 
 import os
 import json
@@ -40,7 +40,6 @@ def build_mission8_site():
         "feature_importance": df_feat_imp.to_dict(orient="records")
     }
 
-    # HTML template with standard replace
     html_template = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -83,7 +82,7 @@ def build_mission8_site():
 
         /* Left-Hand Story Navigation */
         .sidebar {
-            width: 280px;
+            width: 290px;
             background: var(--sidebar-bg);
             border-right: 1px solid var(--border-color);
             padding: 20px 16px;
@@ -100,14 +99,14 @@ def build_mission8_site():
         .brand-box {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
             border-bottom: 1px solid var(--border-color);
         }
 
         .brand-logo {
-            height: 42px;
+            height: 40px;
             width: auto;
         }
 
@@ -119,13 +118,16 @@ def build_mission8_site():
             letter-spacing: 1px;
             margin-bottom: 8px;
             padding-left: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .nav-list {
             list-style: none;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
             margin-bottom: 20px;
         }
 
@@ -141,21 +143,60 @@ def build_mission8_site():
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
-            align-items: center;
-            gap: 10px;
+            flex-direction: column;
+            gap: 2px;
             width: 100%;
+            position: relative;
         }
 
         .nav-item-btn:hover {
             color: var(--text-main);
             background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(56, 189, 248, 0.2);
         }
 
         .nav-item-btn.active {
             color: #ffffff;
             background: #192744;
             border-color: var(--primary-cyan);
-            box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.18);
+        }
+
+        .nav-item-main {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .nav-item-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            padding-left: 24px;
+            font-weight: 400;
+        }
+
+        .sidebar-guide-btn {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1px solid #38bdf8;
+            color: #38bdf8;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+
+        .sidebar-guide-btn:hover {
+            background: rgba(56, 189, 248, 0.15);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+            color: #ffffff;
         }
 
         .sidebar-footer {
@@ -169,18 +210,18 @@ def build_mission8_site():
 
         /* Main Story Content Area */
         .main-wrapper {
-            margin-left: 280px;
+            margin-left: 290px;
             flex: 1;
             padding: 24px 32px 60px 32px;
-            max-width: 1380px;
+            max-width: 1400px;
         }
 
         /* Sticky Global Controls Header */
         .global-header {
             position: sticky;
             top: 0;
-            background: rgba(13, 21, 39, 0.94);
-            backdrop-filter: blur(10px);
+            background: rgba(13, 21, 39, 0.95);
+            backdrop-filter: blur(12px);
             border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 14px 20px;
@@ -199,11 +240,26 @@ def build_mission8_site():
             align-items: center;
             gap: 10px;
             font-size: 13px;
+            position: relative;
+        }
+
+        .control-label-box {
+            display: flex;
+            flex-direction: column;
         }
 
         .control-label {
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 12.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .control-subtext {
+            font-size: 10.5px;
             color: var(--text-muted);
-            font-weight: 600;
         }
 
         input[type="range"] {
@@ -223,8 +279,8 @@ def build_mission8_site():
         }
 
         .btn-toggle-key {
-            padding: 7px 14px;
-            border-radius: 6px;
+            padding: 8px 14px;
+            border-radius: 8px;
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
@@ -232,13 +288,124 @@ def build_mission8_site():
             border: 1px solid var(--border-color);
             background: #080d1a;
             color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
         }
 
         .btn-toggle-key.active {
-            background: rgba(239, 68, 68, 0.15);
+            background: rgba(239, 68, 68, 0.18);
             border-color: var(--fraud-red);
             color: #f87171;
-            box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+            box-shadow: 0 0 14px rgba(239, 68, 68, 0.35);
+        }
+
+        /* Info Badge & Interactive Popover */
+        .info-btn {
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--primary-cyan);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .info-btn:hover, .info-btn:focus {
+            background: var(--primary-cyan);
+            color: #080d1a;
+            box-shadow: 0 0 8px var(--primary-cyan);
+        }
+
+        /* Tooltip Box */
+        .tooltip-container {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .popover-box {
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #0f172a;
+            border: 1px solid #38bdf8;
+            border-radius: 8px;
+            padding: 12px 14px;
+            width: 280px;
+            color: #f8fafc;
+            font-size: 12px;
+            line-height: 1.4;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            z-index: 999;
+        }
+
+        .popover-box::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: #38bdf8 transparent transparent transparent;
+        }
+
+        .popover-box.align-right {
+            left: auto;
+            right: 0;
+            transform: none;
+        }
+        .popover-box.align-right::after {
+            left: auto;
+            right: 20px;
+            transform: none;
+        }
+
+        .tooltip-container:hover .popover-box,
+        .tooltip-container:focus-within .popover-box,
+        .popover-box.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-2px);
+        }
+        .tooltip-container:hover .popover-box.align-right,
+        .tooltip-container:focus-within .popover-box.align-right,
+        .popover-box.align-right.show {
+            transform: translateY(-2px);
+        }
+
+        .popover-title {
+            font-weight: 700;
+            color: var(--primary-cyan);
+            margin-bottom: 4px;
+            font-size: 12.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .popover-desc {
+            color: #cbd5e1;
+            margin-bottom: 6px;
+        }
+        .popover-action {
+            color: #f59e0b;
+            font-size: 11px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 4px;
         }
 
         /* Step Section Headers */
@@ -271,6 +438,9 @@ def build_mission8_site():
             font-size: 22px;
             font-weight: 700;
             color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .step-sub {
@@ -294,7 +464,7 @@ def build_mission8_site():
             margin-bottom: 24px;
         }
 
-        /* Card Container (Contract Enforcement) */
+        /* Card Container */
         .story-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -304,13 +474,21 @@ def build_mission8_site():
             flex-direction: column;
             justify-content: space-between;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .card-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 6px;
         }
 
         .card-question {
             font-size: 16px;
             font-weight: 700;
             color: #ffffff;
-            margin-bottom: 6px;
         }
 
         .card-headline {
@@ -351,6 +529,9 @@ def build_mission8_site():
             font-size: 11px;
             color: #64748b;
             font-family: monospace;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         /* 2x2 Confusion Box */
@@ -370,15 +551,27 @@ def build_mission8_site():
             display: flex;
             flex-direction: column;
             justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .matrix-cell:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+            transform: translateY(-2px);
         }
         .matrix-cell.tp { border-left: 4px solid var(--safe-green); }
         .matrix-cell.fp { border-left: 4px solid var(--alert-amber); }
         .matrix-cell.fn { border-left: 4px solid var(--fraud-red); }
         .matrix-cell.tn { border-left: 4px solid var(--honest-grey); }
 
+        .matrix-cell-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
         .matrix-cell-title {
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 12.5px;
+            font-weight: 700;
             color: var(--text-main);
         }
         .matrix-cell-tech {
@@ -457,24 +650,172 @@ def build_mission8_site():
             max-height: 280px;
             overflow-y: auto;
         }
+
+        /* Terminology Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #0f172a;
+            border: 1px solid #38bdf8;
+            border-radius: 14px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 26px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-cyan);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .modal-close-btn:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .term-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 14px;
+        }
+
+        .term-card {
+            background: #1e293b;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px;
+        }
+
+        .term-card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #38bdf8;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .term-card-tech {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+        .term-card-body {
+            font-size: 12px;
+            color: #e2e8f0;
+            line-height: 1.4;
+        }
+        .term-card-example {
+            font-size: 11px;
+            color: #f59e0b;
+            margin-top: 6px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+            padding-top: 4px;
+        }
     </style>
 </head>
 <body>
+
     <!-- Left-Hand Story Navigation -->
     <aside class="sidebar">
         <div class="brand-box">
             <img src="assets/sentinel-logo.svg" alt="Sentinel Logo" class="brand-logo">
         </div>
 
-        <div class="nav-section-title">Investigation Story</div>
+        <button class="sidebar-guide-btn" onclick="openGlossaryModal()">
+            <span>📖</span> Beginner's Terminology Guide
+        </button>
+
+        <div class="nav-section-title">
+            <span>Investigation Story</span>
+            <span style="font-size:10px; color:#38bdf8;">7 Steps</span>
+        </div>
         <ul class="nav-list">
-            <li><button class="nav-item-btn active" onclick="goToStep(1)">🔴 1. The Problem</button></li>
-            <li><button class="nav-item-btn" onclick="goToStep(2)">📊 2. The Data</button></li>
-            <li><button class="nav-item-btn" onclick="goToStep(3)">🔬 3. The Detector</button></li>
-            <li><button class="nav-item-btn" onclick="goToStep(4)">🎯 4. The Result</button></li>
-            <li><button class="nav-item-btn" onclick="goToStep(5)">⚖️ 5. The Decision</button></li>
-            <li><button class="nav-item-btn" onclick="goToStep(6)">📉 6. The Market Link</button></li>
-            <li><button class="nav-item-btn" onclick="goToStep(7)">⏱️ 7. Live Patrol & Cases</button></li>
+            <li>
+                <button class="nav-item-btn active" onclick="goToStep(1)">
+                    <div class="nav-item-main">🔴 1. The Problem</div>
+                    <div class="nav-item-sub">How rare is fraud?</div>
+                </button>
+            </li>
+            <li>
+                <button class="nav-item-btn" onclick="goToStep(2)">
+                    <div class="nav-item-main">📊 2. The Data</div>
+                    <div class="nav-item-sub">Past vs future timeline</div>
+                </button>
+            </li>
+            <li>
+                <button class="nav-item-btn" onclick="goToStep(3)">
+                    <div class="nav-item-main">🔬 3. The Detector</div>
+                    <div class="nav-item-sub">AI vs rules benchmark</div>
+                </button>
+            </li>
+            <li>
+                <button class="nav-item-btn" onclick="goToStep(4)">
+                    <div class="nav-item-main">🎯 4. The Result</div>
+                    <div class="nav-item-sub">Caught vs false alarms</div>
+                </button>
+            </li>
+            <li>
+                <button class="nav-item-btn" onclick="goToStep(5)">
+                    <div class="nav-item-main">⚖️ 5. The Decision</div>
+                    <div class="nav-item-sub">Cost curves & money saved</div>
+                </button>
+            </li>
+            <li>
+                <button class="nav-item-btn" onclick="goToStep(6)">
+                    <div class="nav-item-main">📉 6. The Market Link</div>
+                    <div class="nav-item-sub">Stock impact & compliance</div>
+                </button>
+            </li>
+            <li>
+                <button class="nav-item-btn" onclick="goToStep(7)">
+                    <div class="nav-item-main">⏱️ 7. Live Patrol & Cases</div>
+                    <div class="nav-item-sub">Live stream & dossier files</div>
+                </button>
+            </li>
         </ul>
 
         <div class="sidebar-footer">
@@ -487,30 +828,71 @@ def build_mission8_site():
     <main class="main-wrapper">
         <!-- Sticky Global Control Bar -->
         <header class="global-header">
+            <!-- Control 1: Strictness Threshold -->
             <div class="control-group">
-                <span class="control-label">Strictness Threshold:</span>
+                <div class="control-label-box">
+                    <div class="control-label">
+                        <span>Filter Strictness</span>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box">
+                                <div class="popover-title">🎯 Filter Strictness (θ)</div>
+                                <div class="popover-desc">Sets how picky the AI detector is before sounding an alarm. Lower numbers catch more fraud; higher numbers reduce false alarms.</div>
+                                <div class="popover-action">⚙️ Dragging this recalculates caught frauds, false alarms, and total costs instantly.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="control-subtext">Cutoff: <strong id="strictnessLabel" style="color:var(--primary-cyan);">0.50</strong></span>
+                </div>
                 <input type="range" id="strictnessRange" min="0" max="22" value="13" oninput="onStrictnessChange(this.value)">
-                <strong id="strictnessLabel" style="color:var(--primary-cyan); min-width:60px;">0.50</strong>
             </div>
 
+            <!-- Control 2: Review Cost Selector -->
             <div class="control-group">
-                <span class="control-label">Review Cost:</span>
+                <div class="control-label-box">
+                    <div class="control-label">
+                        <span>Cost per Check</span>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box">
+                                <div class="popover-title">💼 Cost per Human Check</div>
+                                <div class="popover-desc">The salary, tooling, and customer support expense to investigate one flagged transaction.</div>
+                                <div class="popover-action">⚙️ Selecting a cost finds the mathematically lowest-cost strictness setting.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="control-subtext">Analyst expense per alert</span>
+                </div>
                 <select id="checkingCostSelect" onchange="onCheckingCostChange(this.value)">
-                    <option value="100">100 CU / check</option>
-                    <option value="500" selected>500 CU / check (Base)</option>
+                    <option value="100">100 CU / check (Low)</option>
+                    <option value="500" selected>500 CU / check (Base Standard)</option>
                     <option value="2000">2,000 CU / check</option>
                     <option value="5000">5,000 CU / check</option>
-                    <option value="25000">25,000 CU / check</option>
+                    <option value="25000">25,000 CU / check (Specialist)</option>
                     <option value="100000">100,000 CU / check</option>
-                    <option value="500000">500,000 CU / check</option>
+                    <option value="500000">500,000 CU / check (High Legal)</option>
                 </select>
             </div>
 
+            <!-- Control 3: Answer Key / Ground Truth -->
             <div class="control-group">
-                <button class="btn-toggle-key" id="evalKeyToggle" onclick="toggleAnswerKey()">
-                    <span id="evalKeyText">👁️ Reveal Ground Truth: OFF</span>
-                </button>
+                <div class="tooltip-container">
+                    <button class="btn-toggle-key" id="evalKeyToggle" onclick="toggleAnswerKey()">
+                        <span id="evalKeyText">👁️ Show True Fraud: OFF</span>
+                        <span style="font-size:10px; opacity:0.8;">[Reveal bank ground truth]</span>
+                    </button>
+                    <div class="popover-box align-right">
+                        <div class="popover-title">👁️ Reveal Ground Truth (Answer Key)</div>
+                        <div class="popover-desc">By default, true fraud labels are masked like in real life. Turning this ON unmasks confirmed fraud answers in red across all cards.</div>
+                        <div class="popover-action">⚙️ Click to toggle true fraud visibility on/off.</div>
+                    </div>
+                </div>
             </div>
+
+            <!-- Guide Button in Header -->
+            <button class="btn btn-secondary" onclick="openGlossaryModal()" style="font-size:12px; gap:6px;">
+                <span>💡 Cheat Sheet</span>
+            </button>
         </header>
 
         <!-- ========================================================================= -->
@@ -526,26 +908,44 @@ def build_mission8_site():
             <div class="cards-grid">
                 <!-- Card 1 -->
                 <div class="story-card">
-                    <div class="card-question">How rare is financial fraud in digital payments?</div>
+                    <div class="card-header-bar">
+                        <div class="card-question">How rare is financial fraud in digital payments?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">🔍 Class Imbalance</div>
+                                <div class="popover-desc">When only 1 in 800 transactions is fraud, regular accuracy is deceiving. An algorithm that flags nothing is 99.4% accurate but completely useless!</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card-headline" id="c1Headline">Loading...</div>
                     <div class="card-visual-box">
                         <div class="dot-grid-container" id="c1DotGrid"></div>
                     </div>
                     <div class="card-explanation">
-                        <strong>What this means:</strong> Extreme class imbalance renders traditional accuracy metrics useless (a dummy model predicting 100% legitimate achieves 99.37% accuracy while catching 0 frauds). Precision and recall are the only meaningful evaluation benchmarks.
+                        <strong>What this means:</strong> Extreme rarity requires models that focus on <em>Precision</em> (accuracy of alarms) and <em>Recall</em> (percentage of fraud stopped) rather than plain accuracy.
                     </div>
                     <div class="card-source-footer">Source: docs/data/data_overview.json</div>
                 </div>
 
                 <!-- Card 2 -->
                 <div class="story-card">
-                    <div class="card-question">Which payment types carry fraud risk?</div>
+                    <div class="card-header-bar">
+                        <div class="card-question">Which payment types carry fraud risk?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">💳 Payment Channels</div>
+                                <div class="popover-desc">Fraudsters only steal money by transferring it out (TRANSFER) or cashing out at an ATM/agent (CASH_OUT). Merchant payments (PAYMENT) are completely safe in this dataset.</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card-headline" id="c2Headline">Loading...</div>
                     <div class="card-visual-box">
                         <canvas id="c2Chart"></canvas>
                     </div>
                     <div class="card-explanation">
-                        <strong>What this means:</strong> Fraud is structurally confined to unauthorized outbound money transfers (<code>TRANSFER</code>) and subsequent account liquidations (<code>CASH_OUT</code>). Low-risk merchant purchases and deposits can bypass heavy ML screening pipelines.
+                        <strong>What this means:</strong> Fraud is structurally confined to outbound transfers and cash-outs. Low-risk merchant purchases and deposits can safely bypass heavy screening.
                     </div>
                     <div class="card-source-footer">Source: docs/data/data_overview.json</div>
                 </div>
@@ -558,33 +958,51 @@ def build_mission8_site():
         <section id="step2" class="step-section">
             <div class="step-header">
                 <div class="step-badge">Step 2 of 7</div>
-                <h2 class="step-title">The Data: Temporal Splitting & Feature Distributions</h2>
-                <p class="step-sub">Preventing lookahead data leakage and analyzing monetary and diurnal fraud patterns.</p>
+                <h2 class="step-title">The Data: Past vs Future Split & Payment Patterns</h2>
+                <p class="step-sub">Preventing lookahead data leakage and analyzing monetary and 24-hour day/night cycles.</p>
             </div>
 
             <div class="cards-grid">
                 <!-- Card 3 -->
                 <div class="story-card">
-                    <div class="card-question">How is the dataset split across time to prevent leakage?</div>
+                    <div class="card-header-bar">
+                        <div class="card-question">How is the data split across time to prevent cheating?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">⏳ Temporal Train/Test Split</div>
+                                <div class="popover-desc">We train only on past steps (1–333) and test on future steps (334–742). Randomly shuffling data would be cheating because in real life you cannot see future fraud!</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card-headline" id="c3Headline">Loading...</div>
                     <div class="card-visual-box">
                         <canvas id="c3Chart"></canvas>
                     </div>
                     <div class="card-explanation">
-                        <strong>What this means:</strong> Random train/test splits cheat by leaking future fraud patterns into past training. Sentinel strictly trains on steps 1–333 and evaluates on future unseen steps 334–742, replicating real-time production conditions.
+                        <strong>What this means:</strong> Temporal splitting strictly evaluates the model on unseen future days, faithfully replicating live bank deployment.
                     </div>
                     <div class="card-source-footer">Source: docs/data/data_overview.json</div>
                 </div>
 
                 <!-- Card 4 -->
                 <div class="story-card">
-                    <div class="card-question">How do fraud amounts compare to honest payments?</div>
+                    <div class="card-header-bar">
+                        <div class="card-question">How do stolen amounts compare to honest payments?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">💰 Log-Scale Amount Distribution</div>
+                                <div class="popover-desc">Honest payments range from small to large, but fraudsters almost always try to drain large sums (>200,000 currency units) at once.</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card-headline" id="c4Headline">Loading...</div>
                     <div class="card-visual-box">
                         <canvas id="c4Chart"></canvas>
                     </div>
                     <div class="card-explanation">
-                        <strong>What this means:</strong> Fraudsters aim for maximum principal extraction per compromised credential, skewing transactions toward high amounts (>200,000 currency units). However, monetary scale alone is insufficient due to legitimate high-value commercial transfers.
+                        <strong>What this means:</strong> Fraudsters aim for maximum money stolen per compromised account. However, high amount alone is not enough to prove guilt.
                     </div>
                     <div class="card-source-footer">Source: docs/data/amount_hist.csv</div>
                 </div>
@@ -593,13 +1011,22 @@ def build_mission8_site():
             <!-- Card 5 -->
             <div class="cards-grid-full">
                 <div class="story-card">
-                    <div class="card-question">When does fraud happen during the diurnal 24-hour cycle?</div>
+                    <div class="card-header-bar">
+                        <div class="card-question">When does fraud happen during the 24-hour day/night cycle?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">🌙 Diurnal 24-Hour Pattern</div>
+                                <div class="popover-desc">Humans sleep at night, so honest payments drop between 11 PM and 6 AM. Automated fraud bots and money drainers run constantly 24/7.</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card-headline" id="c5Headline">Loading...</div>
                     <div class="card-visual-box" style="height:260px;">
                         <canvas id="c5Chart"></canvas>
                     </div>
                     <div class="card-explanation">
-                        <strong>What this means:</strong> Honest transactions follow human business hours with sharp drop-offs late at night. Automated fraud scripts and money laundering rings operate around the clock, causing the relative risk of overnight transfers to spike.
+                        <strong>What this means:</strong> Honest payments follow normal business hours, while automated theft scripts operate around the clock, making nighttime transfers relatively more risky.
                     </div>
                     <div class="card-source-footer">Source: docs/data/hourly_stats.csv</div>
                 </div>
@@ -619,26 +1046,44 @@ def build_mission8_site():
             <div class="cards-grid">
                 <!-- Card 6 -->
                 <div class="story-card">
-                    <div class="card-question">Which detector catches fraud best without cheating?</div>
+                    <div class="card-header-bar">
+                        <div class="card-question">Which detector catches fraud best without cheating?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">🏆 PR-AUC Discovery Power</div>
+                                <div class="popover-desc">PR-AUC measures how well a model discovers rare fraud across all strictness levels. Higher is much better (Random Forest achieves 0.3371 vs random baseline 0.0063).</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card-headline" id="c6Headline">Loading...</div>
                     <div class="card-visual-box">
                         <canvas id="c6Chart"></canvas>
                     </div>
                     <div class="card-explanation">
-                        <strong>What this means:</strong> Random Forest achieves a PR-AUC of 0.3371 (~53x lift over random guessing baseline of 0.63%), outperforming linear models and static amount thresholds while strictly avoiding leaked balance columns.
+                        <strong>What this means:</strong> Random Forest achieves a PR-AUC of 0.3371 (~53x higher than random guessing), outperforming simple rules and unweighted models without using leaked balance columns.
                     </div>
                     <div class="card-source-footer">Source: docs/data/detector_comparison.csv</div>
                 </div>
 
                 <!-- Card 7 -->
                 <div class="story-card">
-                    <div class="card-question">How confident is the model across payments?</div>
+                    <div class="card-header-bar">
+                        <div class="card-question">How confident is the AI detector across all transactions?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">📊 Score Histogram</div>
+                                <div class="popover-desc">Shows the distribution of AI suspicion scores. Over 96% of payments are cleanly scored near 0.0, meaning normal users are not bothered by false alarms.</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card-headline" id="c7Headline">Loading...</div>
                     <div class="card-visual-box">
                         <canvas id="c7Chart"></canvas>
                     </div>
                     <div class="card-explanation">
-                        <strong>What this means:</strong> 97.6% of payments score below 0.10 probability, confirming the model concentrates risk effectively into a small actionable queue without creating friction for normal customers.
+                        <strong>What this means:</strong> 97.6% of transactions score below 0.10, showing the detector concentrates risk into a small, manageable investigation queue.
                     </div>
                     <div class="card-source-footer">Source: docs/data/score_hist.csv</div>
                 </div>
@@ -658,26 +1103,44 @@ def build_mission8_site():
             <div class="cards-grid">
                 <!-- Card 8 -->
                 <div class="story-card">
-                    <div class="card-question">What is the operational performance at the selected strictness?</div>
+                    <div class="card-header-bar">
+                        <div class="card-question">What is the operational outcome at the chosen strictness?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">🎯 The 2x2 Outcome Box</div>
+                                <div class="popover-desc">Breaks transactions into 4 buckets: Caught Fraud (thieves stopped), False Alarms (innocent questioned), Missed Fraud (theft lost), and Clean Passes (innocent approved).</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card-headline" id="c8Headline">Loading...</div>
                     <div class="card-visual-box">
                         <div class="matrix-2x2" id="c8Matrix"></div>
                     </div>
                     <div class="card-explanation">
-                        <strong>What this means:</strong> Lower strictness thresholds capture more fraudulent transactions (higher recall) at the cost of generating more false alerts for compliance officers to inspect.
+                        <strong>What this means:</strong> Lower strictness captures more fraud (higher catch rate) but increases false alarms for analysts to verify.
                     </div>
                     <div class="card-source-footer">Source: docs/data/threshold_curve.csv</div>
                 </div>
 
                 <!-- Card 9 -->
                 <div class="story-card">
-                    <div class="card-question">What is the total financial cost curve at this checking cost?</div>
+                    <div class="card-header-bar">
+                        <div class="card-question">What is the total financial loss at this checking cost?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">📉 Financial Cost Curve</div>
+                                <div class="popover-desc">Total Loss = (Missed Fraud Stolen Money) + (Alerts × Cost per Human Check). The red dot marks the lowest-loss strictness setting.</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card-headline" id="c9Headline">Loading...</div>
                     <div class="card-visual-box">
                         <canvas id="c9Chart"></canvas>
                     </div>
                     <div class="card-explanation">
-                        <strong>What this means:</strong> <em>"The best strictness depends on the cost of one check"</em>. When review costs are low (e.g. 500 CU), strict screening (0.01) achieves the lowest net loss by saving massive fraud principal. When review costs are high (e.g. 100,000 CU), higher thresholds become optimal.
+                        <strong>What this means:</strong> <em>"The best strictness depends on the cost of one check."</em> Because missing large fraud is so costly, catching fraud skews the optimal setting toward sensitive thresholds.
                     </div>
                     <div class="card-source-footer">Source: docs/data/cost_curve.csv & docs/data/cost_sensitivity.csv</div>
                 </div>
@@ -697,7 +1160,16 @@ def build_mission8_site():
             <div class="cards-grid-full">
                 <!-- Card 10 -->
                 <div class="story-card">
-                    <div class="card-question">How much fraud money is stopped under each policy?</div>
+                    <div class="card-header-bar">
+                        <div class="card-question">How much fraud money is stopped under each policy?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">⚖️ Three Operating Policies</div>
+                                <div class="popover-desc">Compares Strict (catch everything), Balanced (standard trade-off), and Lenient (low analyst workload).</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card-headline" id="c10Headline">Loading...</div>
                     <div class="card-visual-box" style="height:300px;">
                         <canvas id="c10Chart"></canvas>
@@ -723,13 +1195,22 @@ def build_mission8_site():
             <div class="cards-grid-full">
                 <!-- Card 11 -->
                 <div class="story-card">
-                    <div class="card-question">What is the market impact of fraud compliance failure?</div>
+                    <div class="card-header-bar">
+                        <div class="card-question">What happens to fintech company value when fraud controls fail?</div>
+                        <div class="tooltip-container">
+                            <span class="info-btn" tabindex="0">i</span>
+                            <div class="popover-box align-right">
+                                <div class="popover-title">📈 Stock & Regulatory Shock</div>
+                                <div class="popover-desc">When regulators step in due to weak fraud monitoring, stock value plunges and price volatility doubles. Strong AI fraud auditing protects the entire enterprise.</div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="card-headline" id="c11Headline">Loading...</div>
                     <div class="card-visual-box" style="height:320px;">
                         <canvas id="c11Chart"></canvas>
                     </div>
                     <div class="card-explanation">
-                        <strong>What this means:</strong> Weak supervisory AML/KYC controls lead to direct equity destruction and regulatory license restrictions. Automated multi-agent monitoring with full audit logs guarantees compliance under RBI and DPDP directives.
+                        <strong>What this means:</strong> Weak supervisory AML/KYC controls lead to direct equity destruction and regulatory license restrictions. Automated multi-agent monitoring with full audit logs guarantees compliance under regulatory directives.
                     </div>
                     <div class="card-source-footer">Source: docs/data/market/paytm_nifty.csv</div>
                 </div>
@@ -747,7 +1228,16 @@ def build_mission8_site():
             </div>
 
             <div class="story-card" style="margin-bottom:20px;">
-                <div class="card-question">How does Sentinel monitor transactions live?</div>
+                <div class="card-header-bar">
+                    <div class="card-question">How does Sentinel monitor transactions live?</div>
+                    <div class="tooltip-container">
+                        <span class="info-btn" tabindex="0">i</span>
+                        <div class="popover-box align-right">
+                            <div class="popover-title">⏱️ Live Patrol Replay</div>
+                            <div class="popover-desc">Replays each simulated hour from step 334 to 742. Use Play, Pause, Scrubber, and Speed controls to inspect traffic surges and alarms.</div>
+                        </div>
+                    </div>
+                </div>
                 <div class="card-headline" id="c12Headline">Loading...</div>
 
                 <div class="patrol-controls">
@@ -781,7 +1271,16 @@ def build_mission8_site():
 
             <!-- Case Dossier Explorer -->
             <div class="story-card">
-                <div class="card-question">Forensic Case File Dossier (Precomputed Multi-Agent Synthesis)</div>
+                <div class="card-header-bar">
+                    <div class="card-question">Forensic Case File Dossier (Precomputed Multi-Agent Synthesis)</div>
+                    <div class="tooltip-container">
+                        <span class="info-btn" tabindex="0">i</span>
+                        <div class="popover-box align-right">
+                            <div class="popover-title">📁 Investigation Case Files</div>
+                            <div class="popover-desc">Detailed multi-agent investigative reports summarizing transaction flags, user history, and final risk officer decisions.</div>
+                        </div>
+                    </div>
+                </div>
                 <div style="display:flex; gap:12px; margin-bottom:14px; align-items:center; flex-wrap:wrap;">
                     <label style="font-size:12px; color:var(--text-muted);">Select Alert Dossier:</label>
                     <select id="patrolCaseSelect" onchange="renderCaseDossier(this.value)" style="min-width:320px;"></select>
@@ -792,6 +1291,84 @@ def build_mission8_site():
         </section>
 
     </main>
+
+    <!-- Beginners' Terminology Modal Dialog -->
+    <div class="modal-overlay" id="glossaryModal" onclick="closeGlossaryModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">📖 Beginner's Fraud Intelligence Cheat Sheet</div>
+                <button class="modal-close-btn" onclick="closeGlossaryModal()">✕</button>
+            </div>
+            <p style="color:var(--text-muted); font-size:13px; margin-bottom:16px;">
+                Everything in Sentinel explained in simple, everyday language. Hover over any <span class="info-btn">i</span> button on the dashboard for instant help!
+            </p>
+
+            <div class="term-grid">
+                <div class="term-card">
+                    <div class="term-card-title">🎯 Filter Strictness (θ)</div>
+                    <div class="term-card-tech">Technical term: Decision Threshold</div>
+                    <div class="term-card-body">The sensitivity cutoff. Scores above this number sound an alarm. Low (0.01) catches almost all fraud; high (0.80) only alarms on high-confidence cases.</div>
+                    <div class="term-card-example">💡 Rule of thumb: Low review cost = keep strictness low to stop big theft.</div>
+                </div>
+
+                <div class="term-card">
+                    <div class="term-card-title">💼 Cost per Check</div>
+                    <div class="term-card-tech">Technical term: Review / Inspection Cost</div>
+                    <div class="term-card-body">The money spent paying an analyst and running support when a payment is held for verification. Baseline is 500 currency units.</div>
+                    <div class="term-card-example">💡 High review costs push companies to raise strictness.</div>
+                </div>
+
+                <div class="term-card">
+                    <div class="term-card-title">👁️ Show True Fraud</div>
+                    <div class="term-card-tech">Technical term: Ground Truth / Answer Key</div>
+                    <div class="term-card-body">In real life, you don't know who is a thief until days later. This toggle unmasks the actual verified fraud answers in red for evaluation.</div>
+                    <div class="term-card-example">💡 Keep OFF for realistic simulation; turn ON to grade performance.</div>
+                </div>
+
+                <div class="term-card">
+                    <div class="term-card-title">🟢 Caught Fraud</div>
+                    <div class="term-card-tech">Technical term: True Positive (TP)</div>
+                    <div class="term-card-body">A real fraudster successfully caught and blocked by the model. Money saved!</div>
+                </div>
+
+                <div class="term-card">
+                    <div class="term-card-title">🟡 False Alarm</div>
+                    <div class="term-card-tech">Technical term: False Positive (FP)</div>
+                    <div class="term-card-body">An innocent customer flagged by mistake. Costs analyst time to review and clear.</div>
+                </div>
+
+                <div class="term-card">
+                    <div class="term-card-title">🔴 Missed Fraud</div>
+                    <div class="term-card-tech">Technical term: False Negative (FN)</div>
+                    <div class="term-card-body">A thief who slipped past the detector. The entire stolen principal is lost!</div>
+                </div>
+
+                <div class="term-card">
+                    <div class="term-card-title">⚪ Clean Pass</div>
+                    <div class="term-card-tech">Technical term: True Negative (TN)</div>
+                    <div class="term-card-body">An honest payment approved immediately without annoying the user.</div>
+                </div>
+
+                <div class="term-card">
+                    <div class="term-card-title">🏆 PR-AUC Discovery Power</div>
+                    <div class="term-card-tech">Technical term: Precision-Recall Area Under Curve</div>
+                    <div class="term-card-body">The master score for fraud AI. Measures how well the model catches rare needles in a giant haystack without drowning in false alarms.</div>
+                </div>
+
+                <div class="term-card">
+                    <div class="term-card-title">⏳ Past vs Future Split</div>
+                    <div class="term-card-tech">Technical term: Temporal Train/Test Split</div>
+                    <div class="term-card-body">Training on past days (steps 1–333) and testing on future days (steps 334–742) so the AI never cheats by looking ahead.</div>
+                </div>
+
+                <div class="term-card">
+                    <div class="term-card-title">🔗 Same-Step Pair</div>
+                    <div class="term-card-tech">Technical term: Correlated Laundering Graph</div>
+                    <div class="term-card-body">When stolen funds are transferred to an accomplice and cashed out at the exact same hour for the exact same amount.</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Global Application State & Reactive Data Script -->
     <script>
@@ -808,6 +1385,16 @@ def build_mission8_site():
 
         // Chart instances
         let chartC2, chartC3, chartC4, chartC5, chartC6, chartC7, chartC9, chartC10, chartC11, chartC12;
+
+        function openGlossaryModal() {
+            document.getElementById('glossaryModal').classList.add('active');
+        }
+
+        function closeGlossaryModal(e) {
+            if (!e || e.target === document.getElementById('glossaryModal') || e.target.classList.contains('modal-close-btn')) {
+                document.getElementById('glossaryModal').classList.remove('active');
+            }
+        }
 
         function goToStep(stepNum) {
             document.querySelectorAll('.step-section').forEach(el => el.classList.remove('active'));
@@ -830,7 +1417,7 @@ def build_mission8_site():
 
         function toggleAnswerKey() {
             evalMode = !evalMode;
-            document.getElementById('evalKeyText').innerText = evalMode ? "👁️ Reveal Ground Truth: ON" : "👁️ Reveal Ground Truth: OFF";
+            document.getElementById('evalKeyText').innerText = evalMode ? "👁️ Show True Fraud: ON" : "👁️ Show True Fraud: OFF";
             document.getElementById('evalKeyToggle').classList.toggle('active', evalMode);
             renderAllDynamicCards();
         }
@@ -863,7 +1450,7 @@ def build_mission8_site():
             if (evalMode) {
                 document.getElementById('c1Headline').innerText = `Across the sample, only ${frauds.toLocaleString()} of ${total.toLocaleString()} payments (${pct}%) are fraud (${testFrauds} of ${testTotal.toLocaleString()} in test, ${testPct}%).`;
             } else {
-                document.getElementById('c1Headline').innerText = `Fraud represents under 1% of digital payments across the network, making detection an extreme class-imbalance problem.`;
+                document.getElementById('c1Headline').innerText = `Fraud represents under 1% of digital payments across the network, making detection an extreme needle-in-a-haystack challenge.`;
             }
 
             const grid = document.getElementById('c1DotGrid');
@@ -915,14 +1502,14 @@ def build_mission8_site():
         // Card 3: Time split
         function renderCard3() {
             const sp = DATA.overview.time_split;
-            document.getElementById('c3Headline').innerText = `Training on steps 1–${sp.split_step} (${sp.train_rows.toLocaleString()} payments) and evaluating on future steps ${sp.test_steps[0]}–${sp.test_steps[1]} (${sp.test_rows.toLocaleString()} payments).`;
+            document.getElementById('c3Headline').innerText = `Training on past steps 1–${sp.split_step} (${sp.train_rows.toLocaleString()} payments) and evaluating on future steps ${sp.test_steps[0]}–${sp.test_steps[1]} (${sp.test_rows.toLocaleString()} payments).`;
 
             const ctx = document.getElementById('c3Chart').getContext('2d');
             if (chartC3) chartC3.destroy();
             chartC3 = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Train Set (Steps 1-333: 75%)', 'Test Set (Steps 334-742: 25%)'],
+                    labels: ['Past Training (Steps 1-333: 75%)', 'Future Test (Steps 334-742: 25%)'],
                     datasets: [{
                         data: [sp.train_rows, sp.test_rows],
                         backgroundColor: ['#3b82f6', '#38bdf8'],
@@ -1023,7 +1610,7 @@ def build_mission8_site():
                 data: {
                     labels: DATA.detector_comparison.map(d => d.detector),
                     datasets: [{
-                        label: 'PR-AUC (Precision-Recall Area)',
+                        label: 'PR-AUC (Fraud Discovery Score)',
                         data: DATA.detector_comparison.map(d => d.pr_auc),
                         backgroundColor: ['#64748b', '#3b82f6', '#10b981', '#a78bfa']
                     }]
@@ -1084,23 +1671,35 @@ def build_mission8_site():
 
             const matrix = document.getElementById('c8Matrix');
             matrix.innerHTML = `
-                <div class="matrix-cell tp">
-                    <div class="matrix-cell-title">Caught Frauds</div>
+                <div class="matrix-cell tp" title="Caught Fraud: Real criminals stopped">
+                    <div class="matrix-cell-header">
+                        <span class="matrix-cell-title">🟢 Caught Fraud</span>
+                        <span class="info-btn">i</span>
+                    </div>
                     <div class="matrix-cell-tech">True Positives (TP)</div>
-                    <div class="matrix-cell-val" style="color:var(--safe-green);">${evalMode ? row.tp.toLocaleString() : 'Masked'}</div>
+                    <div class="matrix-cell-val" style="color:var(--safe-green);">${evalMode ? row.tp.toLocaleString() : 'Masked (Turn ON Ground Truth)'}</div>
                 </div>
-                <div class="matrix-cell fp">
-                    <div class="matrix-cell-title">False Alarms</div>
+                <div class="matrix-cell fp" title="False Alarm: Innocent customers flagged for review">
+                    <div class="matrix-cell-header">
+                        <span class="matrix-cell-title">🟡 False Alarms</span>
+                        <span class="info-btn">i</span>
+                    </div>
                     <div class="matrix-cell-tech">False Positives (FP)</div>
-                    <div class="matrix-cell-val" style="color:var(--alert-amber);">${evalMode ? row.fp.toLocaleString() : alerts.toLocaleString()}</div>
+                    <div class="matrix-cell-val" style="color:var(--alert-amber);">${evalMode ? row.fp.toLocaleString() : alerts.toLocaleString() + ' Alerts'}</div>
                 </div>
-                <div class="matrix-cell fn">
-                    <div class="matrix-cell-title">Missed Frauds</div>
+                <div class="matrix-cell fn" title="Missed Fraud: Thieves who got away undetected">
+                    <div class="matrix-cell-header">
+                        <span class="matrix-cell-title">🔴 Missed Fraud</span>
+                        <span class="info-btn">i</span>
+                    </div>
                     <div class="matrix-cell-tech">False Negatives (FN)</div>
-                    <div class="matrix-cell-val" style="color:var(--fraud-red);">${evalMode ? row.fn.toLocaleString() : 'Masked'}</div>
+                    <div class="matrix-cell-val" style="color:var(--fraud-red);">${evalMode ? row.fn.toLocaleString() : 'Masked (Turn ON Ground Truth)'}</div>
                 </div>
-                <div class="matrix-cell tn">
-                    <div class="matrix-cell-title">Safe Passes</div>
+                <div class="matrix-cell tn" title="Clean Passes: Honest customers approved smoothly">
+                    <div class="matrix-cell-header">
+                        <span class="matrix-cell-title">⚪ Clean Passes</span>
+                        <span class="info-btn">i</span>
+                    </div>
                     <div class="matrix-cell-tech">True Negatives (TN)</div>
                     <div class="matrix-cell-val" style="color:var(--honest-grey);">${evalMode ? row.tn.toLocaleString() : (DATA.overview.time_split.test_rows - alerts).toLocaleString()}</div>
                 </div>
@@ -1120,7 +1719,6 @@ def build_mission8_site():
             if (chartC9) chartC9.destroy();
 
             const totals = sensData.map(s => parseFloat(s[col]));
-            const minVal = Math.min(...totals);
 
             chartC9 = new Chart(ctx, {
                 type: 'line',
@@ -1143,7 +1741,7 @@ def build_mission8_site():
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
-                        x: { title: { display: true, text: 'Strictness Threshold', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        x: { title: { display: true, text: 'Filter Strictness (θ)', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
                         y: { title: { display: true, text: 'Total Loss (currency units)', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
                     },
                     plugins: { legend: { labels: { color: '#f8fafc' } } }
@@ -1333,7 +1931,7 @@ def build_mission8_site():
     with open("docs/index.html", "w", encoding="utf-8") as f:
         f.write(html_out)
 
-    print("Successfully built Mission 8 Story Dashboard at index.html and docs/index.html")
+    print("Successfully built Mission 8 Story Dashboard with Easy Terminology and Interactive Tooltips at index.html and docs/index.html")
 
 if __name__ == "__main__":
     build_mission8_site()
