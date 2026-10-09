@@ -1,10 +1,11 @@
-"""Mission 8 & 9: Story Dashboard with Enhanced 3D Ledger City Camera Angles, Multi-Tier Risk Flagging, and Threat Radar."""
+"""Mission 8 Story Dashboard Builder: Left-hand story navigation, 12 dynamic cards, and live patrol."""
 
 import os
 import json
 import pandas as pd
 
 def build_mission8_site():
+    # Load all data files from docs/data/
     with open("docs/data/stream.json", "r", encoding="utf-8") as f:
         stream_data = json.load(f)
 
@@ -14,20 +15,21 @@ def build_mission8_site():
     with open("docs/data/checks.json", "r", encoding="utf-8") as f:
         checks_data = json.load(f)
 
-    with open("docs/data/city_people.json", "r", encoding="utf-8") as f:
-        city_people_raw = json.load(f)
-
     df_cost_curve = pd.read_csv("docs/data/cost_curve.csv")
     df_cost_sens = pd.read_csv("docs/data/cost_sensitivity.csv")
-    df_detector_comp = pd.read_csv("docs/data/detector_comparison.csv")
+    df_detector = pd.read_csv("docs/data/detector_comparison.csv")
     df_hourly = pd.read_csv("docs/data/hourly_stats.csv")
+    df_amount_hist = pd.read_csv("docs/data/amount_hist.csv")
     df_score_hist = pd.read_csv("docs/data/score_hist.csv")
-    df_thresh = pd.read_csv("docs/data/threshold_curve.csv")
-    df_feat_imp = pd.read_csv("docs/data/feature_importance.csv")
+    df_threshold_curve = pd.read_csv("docs/data/threshold_curve.csv")
     df_market = pd.read_csv("docs/data/market/paytm_nifty.csv")
+    df_feat_imp = pd.read_csv("docs/data/feature_importance.csv")
+
+    
+    with open("docs/data/city_people.json", "r", encoding="utf-8") as f:
+        city_people_raw = json.load(f)
     df_district_hourly = pd.read_csv("docs/data/district_hourly.csv")
 
-    # Group city people by step for instant O(1) step lookup
     city_people_by_step = {}
     for p in city_people_raw:
         s = p["step"]
@@ -46,7 +48,6 @@ def build_mission8_site():
             "f": p["is_fraud"]
         })
 
-    # Group district hourly by step
     dist_hourly_by_step = {}
     for _, row in df_district_hourly.iterrows():
         s = int(row["step"])
@@ -59,588 +60,437 @@ def build_mission8_site():
             "b": int(row["alerts_balanced"]),
             "l": int(row["alerts_lenient"])
         }
-
     bundle = {
+        "stream": stream_data,
         "overview": data_overview,
         "checks": checks_data,
-        "city_people_by_step": city_people_by_step,
-        "district_hourly_by_step": dist_hourly_by_step,
         "cost_curve": df_cost_curve.to_dict(orient="records"),
         "cost_sensitivity": df_cost_sens.to_dict(orient="records"),
-        "detector_comparison": df_detector_comp.to_dict(orient="records"),
+        "detector_comparison": df_detector.to_dict(orient="records"),
         "hourly_stats": df_hourly.to_dict(orient="records"),
+        "amount_hist": df_amount_hist.to_dict(orient="records"),
         "score_hist": df_score_hist.to_dict(orient="records"),
-        "threshold_curve": df_thresh.to_dict(orient="records"),
-        "feature_importance": df_feat_imp.to_dict(orient="records"),
+        "threshold_curve": df_threshold_curve.to_dict(orient="records"),
         "market": df_market.to_dict(orient="records"),
-        "stream": stream_data
+        "feature_importance": df_feat_imp.to_dict(orient="records"),
+        "city_people_by_step": city_people_by_step,
+        "district_hourly_by_step": dist_hourly_by_step
     }
 
-    json_bundle = json.dumps(bundle)
-    html_content = HTML_TEMPLATE.replace("__JSON_DATA_BUNDLE__", json_bundle)
-
-    with open("index.html", "w", encoding="utf-8") as f:
-        f.write(html_content)
-
-    with open("docs/index.html", "w", encoding="utf-8") as f:
-        f.write(html_content)
-
-    print("Successfully built Sentinel Story Dashboard & Realistic 3D Ledger City at docs/index.html and index.html")
-
-HTML_TEMPLATE = """<!DOCTYPE html>
+    # HTML template with standard replace
+    html_template = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sentinel | Financial Fraud Intelligence & 3D Ledger City</title>
-    <!-- Fonts & CDNs -->
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-    <style>
+<style>
         :root {
-            --bg-base: #030712;
-            --bg-surface: #0b1329;
-            --bg-card: #0f1c3f;
-            --bg-card-hover: #162654;
-            --accent-cyan: #38bdf8;
-            --accent-blue: #3b82f6;
-            --accent-purple: #c084fc;
-            --accent-amber: #f59e0b;
-            --fraud-red: #ef4444;
-            --safe-green: #10b981;
-            --honest-grey: #64748b;
+            --bg-color: #080d1a;
+            --sidebar-bg: #0d1527;
+            --card-bg: #121d33;
+            --card-header: #192744;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --text-dim: #64748b;
-            --border-color: rgba(56, 189, 248, 0.18);
-            --border-bright: rgba(56, 189, 248, 0.45);
-            --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
+            --border-color: #1e2e4a;
+            --primary-cyan: #38bdf8;
+            --primary-blue: #3b82f6;
+            --safe-green: #10b981;
+            --alert-amber: #f59e0b;
+            --fraud-red: #ef4444;
+            --honest-grey: #64748b;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        }
 
         body {
-            background-color: var(--bg-base);
+            background-color: var(--bg-color);
             color: var(--text-main);
-            font-family: var(--font-main);
             line-height: 1.5;
-            overflow-x: hidden;
-        }
-
-        /* Layout */
-        .app-layout {
             display: flex;
             min-height: 100vh;
         }
 
-        /* Sidebar Navigation */
+        /* Left-Hand Story Navigation */
         .sidebar {
-            width: 290px;
-            background: #080e1f;
+            width: 280px;
+            background: var(--sidebar-bg);
             border-right: 1px solid var(--border-color);
-            padding: 24px 16px;
+            padding: 20px 16px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            overflow-y: auto;
-            flex-shrink: 0;
-            z-index: 50;
+            z-index: 100;
         }
 
-        .brand {
+        .brand-box {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
+            margin-bottom: 24px;
             padding-bottom: 16px;
             border-bottom: 1px solid var(--border-color);
         }
 
         .brand-logo {
-            width: 38px;
-            height: 38px;
-            background: linear-gradient(135deg, #0284c7, #38bdf8);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 16px rgba(56, 189, 248, 0.4);
-        }
-
-        .brand-text h1 {
-            font-size: 17px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            background: linear-gradient(90deg, #38bdf8, #818cf8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .brand-text p {
-            font-size: 10.5px;
-            color: var(--text-muted);
-            font-family: var(--font-mono);
+            height: 42px;
+            width: auto;
         }
 
         .nav-section-title {
             font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            color: var(--text-dim);
             font-weight: 700;
-            margin-top: 6px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            padding-left: 8px;
         }
 
         .nav-list {
             list-style: none;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
+            margin-bottom: 20px;
         }
 
         .nav-item-btn {
-            width: 100%;
-            text-align: left;
             background: transparent;
             border: 1px solid transparent;
             color: var(--text-muted);
-            padding: 9px 12px;
+            padding: 10px 12px;
             border-radius: 8px;
-            font-size: 12.5px;
+            font-size: 13px;
             font-weight: 600;
+            text-align: left;
             cursor: pointer;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             gap: 10px;
-            transition: all 0.2s ease;
+            width: 100%;
         }
 
         .nav-item-btn:hover {
-            background: rgba(56, 189, 248, 0.08);
-            color: var(--accent-cyan);
-            border-color: rgba(56, 189, 248, 0.2);
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.04);
         }
 
         .nav-item-btn.active {
-            background: rgba(56, 189, 248, 0.14);
             color: #ffffff;
-            border-color: var(--accent-cyan);
-            box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+            background: #192744;
+            border-color: var(--primary-cyan);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.15);
         }
 
-        .sidebar-city-btn {
-            background: linear-gradient(135deg, #1e1b4b, #0f172a);
-            border: 1px solid #818cf8;
-            color: #c7d2fe;
-            padding: 12px 14px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(129, 140, 248, 0.2);
+        .sidebar-footer {
+            margin-top: auto;
+            font-size: 11px;
+            color: var(--text-muted);
+            padding-top: 14px;
+            border-top: 1px solid var(--border-color);
+            line-height: 1.4;
         }
 
-        .sidebar-city-btn:hover {
-            background: rgba(129, 140, 248, 0.3);
-            box-shadow: 0 0 20px rgba(129, 140, 248, 0.6);
-            color: #ffffff;
-            transform: translateY(-1px);
-        }
-
-        /* Main Workspace Container */
-        .main-content {
+        /* Main Story Content Area */
+        .main-wrapper {
+            margin-left: 280px;
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            background: radial-gradient(circle at 50% 0%, #0d1a38 0%, #030712 70%);
+            padding: 24px 32px 60px 32px;
+            max-width: 1380px;
         }
 
-        /* Global Header Controls Bar */
-        .topbar {
-            background: rgba(8, 14, 31, 0.85);
-            border-bottom: 1px solid var(--border-color);
-            padding: 14px 28px;
+        /* Sticky Global Controls Header */
+        .global-header {
+            position: sticky;
+            top: 0;
+            background: rgba(13, 21, 39, 0.94);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px 20px;
+            margin-bottom: 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            backdrop-filter: blur(12px);
-            position: sticky;
-            top: 0;
-            z-index: 40;
-        }
-
-        .controls-group {
-            display: flex;
-            align-items: center;
-            gap: 20px;
             flex-wrap: wrap;
+            gap: 16px;
+            z-index: 90;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
         }
 
-        .control-pill {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 6px 14px;
+        .control-group {
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 12.5px;
-            position: relative;
+            font-size: 13px;
         }
 
-        .control-pill label {
+        .control-label {
             color: var(--text-muted);
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
 
-        .control-pill input[type="range"] {
-            accent-color: var(--accent-cyan);
+        input[type="range"] {
+            accent-color: var(--primary-cyan);
             cursor: pointer;
-            width: 110px;
         }
 
-        .pill-badge {
-            background: rgba(56, 189, 248, 0.15);
-            color: var(--accent-cyan);
-            font-family: var(--font-mono);
-            font-size: 11px;
-            padding: 2px 7px;
-            border-radius: 12px;
+        select {
+            background: #080d1a;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .btn-toggle-key {
+            padding: 7px 14px;
+            border-radius: 6px;
+            font-size: 12px;
             font-weight: 700;
-        }
-
-        .toggle-btn {
-            background: rgba(100, 116, 139, 0.2);
-            border: 1px solid var(--honest-grey);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+            background: #080d1a;
             color: var(--text-muted);
-            border-radius: 20px;
-            padding: 6px 14px;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
         }
 
-        .toggle-btn.active {
-            background: rgba(239, 68, 68, 0.2);
+        .btn-toggle-key.active {
+            background: rgba(239, 68, 68, 0.15);
             border-color: var(--fraud-red);
-            color: #fca5a5;
-            box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
+            color: #f87171;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
         }
 
-        .help-btn {
-            background: rgba(56, 189, 248, 0.12);
-            border: 1px solid var(--accent-cyan);
-            color: var(--accent-cyan);
-            border-radius: 20px;
-            padding: 6px 14px;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-
-        .help-btn:hover {
-            background: var(--accent-cyan);
-            color: #030712;
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.5);
-        }
-
-        /* Interactive Info Tooltips [i] */
-        .info-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 17px;
-            height: 17px;
-            border-radius: 50%;
-            background: rgba(56, 189, 248, 0.15);
-            border: 1px solid var(--accent-cyan);
-            color: var(--accent-cyan);
-            font-size: 10px;
-            font-family: var(--font-mono);
-            font-weight: 800;
-            cursor: pointer;
-            margin-left: 4px;
-            position: relative;
-            vertical-align: middle;
-            transition: all 0.2s;
-        }
-
-        .info-btn:hover {
-            background: var(--accent-cyan);
-            color: #030712;
-            box-shadow: 0 0 8px var(--accent-cyan);
-        }
-
-        .tooltip-container {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .popover-box {
-            position: absolute;
-            bottom: calc(100% + 10px);
-            left: 50%;
-            transform: translateX(-50%);
-            background: #0f172a;
-            border: 1px solid #38bdf8;
-            border-radius: 8px;
-            padding: 12px 14px;
-            width: 280px;
-            color: #f8fafc;
-            font-size: 12px;
-            line-height: 1.4;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
-            pointer-events: none;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-            z-index: 999;
-        }
-
-        .tooltip-container:hover .popover-box,
-        .tooltip-container:focus-within .popover-box,
-        .popover-box.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(-50%) translateY(-2px);
-        }
-
-        /* Content Sections */
-        .content-area {
-            padding: 32px 40px;
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
-        }
-
+        /* Step Section Headers */
         .step-section {
             display: none;
-            flex-direction: column;
-            gap: 28px;
-            animation: fadeIn 0.3s ease-in-out;
         }
 
         .step-section.active {
-            display: flex;
+            display: block;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
+        .step-header {
+            margin-bottom: 20px;
         }
 
-        .section-header {
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 16px;
-        }
-
-        .step-tag {
-            font-family: var(--font-mono);
+        .step-badge {
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--primary-cyan);
+            padding: 4px 10px;
+            border-radius: 4px;
             font-size: 11px;
+            font-weight: 700;
             text-transform: uppercase;
-            color: var(--accent-cyan);
-            font-weight: 700;
             letter-spacing: 1px;
+            margin-bottom: 6px;
         }
 
-        .section-title {
-            font-size: 26px;
-            font-weight: 800;
-            color: #ffffff;
-            margin-top: 4px;
-        }
-
-        .section-desc {
-            color: var(--text-muted);
-            font-size: 14px;
-            margin-top: 6px;
-            max-width: 900px;
-        }
-
-        /* Cards Grid */
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-            gap: 24px;
-        }
-
-        .card-full {
-            grid-column: 1 / -1;
-        }
-
-        .dashboard-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            position: relative;
-            transition: border-color 0.2s;
-        }
-
-        .dashboard-card:hover {
-            border-color: var(--border-bright);
-        }
-
-        .card-title-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .card-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .card-headline {
-            font-size: 13px;
-            color: var(--accent-cyan);
-            background: rgba(56, 189, 248, 0.08);
-            border-left: 3px solid var(--accent-cyan);
-            padding: 8px 12px;
-            border-radius: 0 6px 6px 0;
-            font-weight: 600;
-        }
-
-        .chart-box {
-            height: 260px;
-            position: relative;
-            width: 100%;
-        }
-
-        .dot-grid-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 3px;
-            padding: 12px;
-            background: #080d1a;
-            border-radius: 8px;
-            max-height: 220px;
-            overflow-y: auto;
-        }
-
-        .grid-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--honest-grey); opacity: 0.5; }
-        .grid-dot.fraud-dot { background: var(--fraud-red); opacity: 1; box-shadow: 0 0 6px var(--fraud-red); transform: scale(1.3); }
-
-        /* Confusion Matrix Grid */
-        .matrix-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .matrix-cell {
-            background: #091024;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .matrix-cell.tp { border-left: 4px solid var(--safe-green); }
-        .matrix-cell.fp { border-left: 4px solid var(--accent-amber); }
-        .matrix-cell.fn { border-left: 4px solid var(--fraud-red); }
-        .matrix-cell.tn { border-left: 4px solid var(--honest-grey); }
-
-        .matrix-cell-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .matrix-cell-title {
-            font-size: 12px;
+        .step-title {
+            font-size: 22px;
             font-weight: 700;
             color: var(--text-main);
         }
 
-        .matrix-cell-tech {
-            font-size: 10.5px;
+        .step-sub {
             color: var(--text-muted);
-            font-family: var(--font-mono);
+            font-size: 13px;
+            margin-top: 2px;
         }
 
-        .matrix-cell-val {
-            font-size: 20px;
-            font-weight: 800;
-            font-family: var(--font-mono);
+        /* Story Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
         }
 
-        /* Buttons & Forms */
-        .btn {
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 12.5px;
-            font-weight: 700;
-            cursor: pointer;
-            border: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
+        .cards-grid-full {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
         }
 
-        .btn-primary {
-            background: var(--accent-cyan);
-            color: #030712;
-        }
-
-        .btn-primary:hover {
-            background: #7dd3fc;
-            box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
-        }
-
-        .btn-secondary {
-            background: #1e293b;
-            color: #f8fafc;
+        /* Card Container (Contract Enforcement) */
+        .story-card {
+            background: var(--card-bg);
             border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
-        .btn-secondary:hover {
-            background: #334155;
-            border-color: var(--accent-cyan);
+        .card-question {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 6px;
         }
 
-        pre {
+        .card-headline {
+            font-size: 14px;
+            color: var(--primary-cyan);
+            font-weight: 600;
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .card-visual-box {
+            position: relative;
+            height: 280px;
+            width: 100%;
+            margin-bottom: 14px;
+            background: rgba(8, 13, 26, 0.5);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-explanation {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 8px;
+        }
+        .card-explanation strong {
+            color: var(--text-main);
+        }
+
+        .card-source-footer {
+            font-size: 11px;
+            color: #64748b;
+            font-family: monospace;
+        }
+
+        /* 2x2 Confusion Box */
+        .matrix-2x2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+            height: 100%;
+        }
+
+        .matrix-cell {
             background: #080d1a;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 12px;
-            font-family: var(--font-mono);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .matrix-cell.tp { border-left: 4px solid var(--safe-green); }
+        .matrix-cell.fp { border-left: 4px solid var(--alert-amber); }
+        .matrix-cell.fn { border-left: 4px solid var(--fraud-red); }
+        .matrix-cell.tn { border-left: 4px solid var(--honest-grey); }
+
+        .matrix-cell-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        .matrix-cell-tech {
+            font-size: 10.5px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        .matrix-cell-val {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        /* Dot Grid */
+        .dot-grid-container {
+            display: grid;
+            grid-template-columns: repeat(40, 1fr);
+            gap: 3px;
+            width: 100%;
+            max-height: 240px;
+            overflow: hidden;
+            padding: 10px;
+        }
+        .grid-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--honest-grey);
+            opacity: 0.5;
+        }
+        .grid-dot.fraud-dot {
+            background: var(--fraud-red);
+            opacity: 1;
+            box-shadow: 0 0 6px var(--fraud-red);
+            transform: scale(1.3);
+        }
+
+        /* Live Strip */
+        .patrol-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 14px;
+            padding: 10px 14px;
+            background: #080d1a;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary { background: var(--primary-blue); color: white; }
+        .btn-secondary { background: #1a2640; color: var(--text-main); border-color: var(--border-color); }
+
+        pre {
+            background: #080d1a;
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
             font-size: 11.5px;
             color: #93c5fd;
             white-space: pre-wrap;
@@ -648,11 +498,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             max-height: 280px;
             overflow-y: auto;
         }
-
-        /* ========================================================================= */
-        /* 3D LEDGER CITY (SENTINEL MODE) MODAL STYLES                              */
-        /* ========================================================================= */
-        .city-modal-overlay {
+    
+.city-modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background: #030712;
@@ -945,442 +792,361 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             color: var(--text-muted);
             line-height: 1.4;
         }
+    
+    
     </style>
 </head>
 <body>
+    <!-- Left-Hand Story Navigation -->
+    <aside class="sidebar">
+        <div class="brand-box">
+            <img src="assets/sentinel-logo.svg" alt="Sentinel Logo" class="brand-logo">
+        </div>
 
-    <div class="app-layout">
-        <!-- Sidebar Story Navigation -->
-        <aside class="sidebar">
-            <div class="brand">
-                <div class="brand-logo">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        <circle cx="12" cy="11" r="3"/>
-                    </svg>
+        <div class="nav-section-title">Investigation Story</div>
+        <ul class="nav-list">
+            <li><button class="nav-item-btn active" onclick="goToStep(1)">🔴 1. The Problem</button></li>
+            <li><button class="nav-item-btn" onclick="goToStep(2)">📊 2. The Data</button></li>
+            <li><button class="nav-item-btn" onclick="goToStep(3)">🔬 3. The Detector</button></li>
+            <li><button class="nav-item-btn" onclick="goToStep(4)">🎯 4. The Result</button></li>
+            <li><button class="nav-item-btn" onclick="goToStep(5)">⚖️ 5. The Decision</button></li>
+            <li><button class="nav-item-btn" onclick="goToStep(6)">📉 6. The Market Link</button></li>
+            <li><button class="nav-item-btn" onclick="goToStep(7)">⏱️ 7. Live Patrol & Cases</button></li>
+        </ul>
+
+        <div class="nav-section-title" style="margin-top: 18px;">3D Visualization</div>
+        <ul class="nav-list">
+            <li><button class="nav-item-btn" style="color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); background: rgba(56, 189, 248, 0.08); font-weight: 700;" onclick="openSentinelCity()">🏙️ 3D Ledger City</button></li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <strong>Sentinel Patrol</strong><br>
+            Simulated live stream: replay of the PaySim test period (steps 334–743). Never claim real-time bank data.
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+        <!-- Sticky Global Control Bar -->
+        <header class="global-header">
+            <div class="control-group">
+                <span class="control-label">Strictness Threshold:</span>
+                <input type="range" id="strictnessRange" min="0" max="22" value="13" oninput="onStrictnessChange(this.value)">
+                <strong id="strictnessLabel" style="color:var(--primary-cyan); min-width:60px;">0.50</strong>
+            </div>
+
+            <div class="control-group">
+                <span class="control-label">Review Cost:</span>
+                <select id="checkingCostSelect" onchange="onCheckingCostChange(this.value)">
+                    <option value="100">100 CU / check</option>
+                    <option value="500" selected>500 CU / check (Base)</option>
+                    <option value="2000">2,000 CU / check</option>
+                    <option value="5000">5,000 CU / check</option>
+                    <option value="25000">25,000 CU / check</option>
+                    <option value="100000">100,000 CU / check</option>
+                    <option value="500000">500,000 CU / check</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <button class="btn-toggle-key" id="evalKeyToggle" onclick="toggleAnswerKey()">
+                    <span id="evalKeyText">👁️ Reveal Ground Truth: OFF</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ========================================================================= -->
+        <!-- STEP 1: THE PROBLEM -->
+        <!-- ========================================================================= -->
+        <section id="step1" class="step-section active">
+            <div class="step-header">
+                <div class="step-badge">Step 1 of 7</div>
+                <h2 class="step-title">The Problem: Extreme Scarcity in Fraud Detection</h2>
+                <p class="step-sub">Understanding the needle-in-a-haystack nature of payment fraud and high-risk transaction channels.</p>
+            </div>
+
+            <div class="cards-grid">
+                <!-- Card 1 -->
+                <div class="story-card">
+                    <div class="card-question">How rare is financial fraud in digital payments?</div>
+                    <div class="card-headline" id="c1Headline">Loading...</div>
+                    <div class="card-visual-box">
+                        <div class="dot-grid-container" id="c1DotGrid"></div>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> Extreme class imbalance renders traditional accuracy metrics useless (a dummy model predicting 100% legitimate achieves 99.37% accuracy while catching 0 frauds). Precision and recall are the only meaningful evaluation benchmarks.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/data_overview.json</div>
                 </div>
-                <div class="brand-text">
-                    <h1>SENTINEL</h1>
-                    <p>AUTONOMOUS FRAUD ENGINE</p>
+
+                <!-- Card 2 -->
+                <div class="story-card">
+                    <div class="card-question">Which payment types carry fraud risk?</div>
+                    <div class="card-headline" id="c2Headline">Loading...</div>
+                    <div class="card-visual-box">
+                        <canvas id="c2Chart"></canvas>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> Fraud is structurally confined to unauthorized outbound money transfers (<code>TRANSFER</code>) and subsequent account liquidations (<code>CASH_OUT</code>). Low-risk merchant purchases and deposits can bypass heavy ML screening pipelines.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/data_overview.json</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- STEP 2: THE DATA -->
+        <!-- ========================================================================= -->
+        <section id="step2" class="step-section">
+            <div class="step-header">
+                <div class="step-badge">Step 2 of 7</div>
+                <h2 class="step-title">The Data: Temporal Splitting & Feature Distributions</h2>
+                <p class="step-sub">Preventing lookahead data leakage and analyzing monetary and diurnal fraud patterns.</p>
+            </div>
+
+            <div class="cards-grid">
+                <!-- Card 3 -->
+                <div class="story-card">
+                    <div class="card-question">How is the dataset split across time to prevent leakage?</div>
+                    <div class="card-headline" id="c3Headline">Loading...</div>
+                    <div class="card-visual-box">
+                        <canvas id="c3Chart"></canvas>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> Random train/test splits cheat by leaking future fraud patterns into past training. Sentinel strictly trains on steps 1–333 and evaluates on future unseen steps 334–742, replicating real-time production conditions.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/data_overview.json</div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="story-card">
+                    <div class="card-question">How do fraud amounts compare to honest payments?</div>
+                    <div class="card-headline" id="c4Headline">Loading...</div>
+                    <div class="card-visual-box">
+                        <canvas id="c4Chart"></canvas>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> Fraudsters aim for maximum principal extraction per compromised credential, skewing transactions toward high amounts (>200,000 currency units). However, monetary scale alone is insufficient due to legitimate high-value commercial transfers.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/amount_hist.csv</div>
                 </div>
             </div>
 
-            <button class="sidebar-city-btn" onclick="openSentinelCity()">
-                <span>🏙️</span>
-                <span>OPEN 3D LEDGER CITY</span>
-            </button>
-
-            <div class="nav-section-title">Investigation Story Steps</div>
-            <ul class="nav-list">
-                <li><button class="nav-item-btn active" onclick="goToStep(1)"><span>1.</span> The Fraud Landscape</button></li>
-                <li><button class="nav-item-btn" onclick="goToStep(2)"><span>2.</span> The Feature Leakage Trap</button></li>
-                <li><button class="nav-item-btn" onclick="goToStep(3)"><span>3.</span> Machine Learning Model</button></li>
-                <li><button class="nav-item-btn" onclick="goToStep(4)"><span>4.</span> Choosing Strictness (θ)</button></li>
-                <li><button class="nav-item-btn" onclick="goToStep(5)"><span>5.</span> Multi-Agent Defense</button></li>
-                <li><button class="nav-item-btn" onclick="goToStep(6)"><span>6.</span> Network Laundering</button></li>
-                <li><button class="nav-item-btn" onclick="goToStep(7)"><span>7.</span> Paytm Market Shock</button></li>
-            </ul>
-
-            <div style="margin-top:auto; padding-top:16px; border-top:1px solid var(--border-color); font-size:11.5px; color:var(--text-dim);">
-                <div>PaySim 15% Verified Sample</div>
-                <div style="color:#38bdf8;">954,393 rows | 1,201 frauds</div>
+            <!-- Card 5 -->
+            <div class="cards-grid-full">
+                <div class="story-card">
+                    <div class="card-question">When does fraud happen during the diurnal 24-hour cycle?</div>
+                    <div class="card-headline" id="c5Headline">Loading...</div>
+                    <div class="card-visual-box" style="height:260px;">
+                        <canvas id="c5Chart"></canvas>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> Honest transactions follow human business hours with sharp drop-offs late at night. Automated fraud scripts and money laundering rings operate around the clock, causing the relative risk of overnight transfers to spike.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/hourly_stats.csv</div>
+                </div>
             </div>
-        </aside>
+        </section>
 
-        <!-- Main Workspace -->
-        <main class="main-content">
-            <!-- Top Controls Bar -->
-            <header class="topbar">
-                <div class="controls-group">
-                    <!-- Filter Strictness (Decision Threshold) Slider -->
-                    <div class="control-pill tooltip-container">
-                        <label for="strictnessSlider">
-                            🎯 Filter Strictness (θ)
-                            <span class="info-btn" onclick="openGlossaryTerm('strictness')">i</span>
-                        </label>
-                        <input type="range" id="strictnessSlider" min="0" max="15" value="7" oninput="onStrictnessChange(this.value)">
-                        <span class="pill-badge" id="strictnessLabel">0.50</span>
+        <!-- ========================================================================= -->
+        <!-- STEP 3: THE DETECTOR -->
+        <!-- ========================================================================= -->
+        <section id="step3" class="step-section">
+            <div class="step-header">
+                <div class="step-badge">Step 3 of 7</div>
+                <h2 class="step-title">The Detector: Model Architecture & Discrimination Power</h2>
+                <p class="step-sub">Benchmarking the balanced Random Forest against static rules, Logistic Regression, and Isolation Forest.</p>
+            </div>
 
-                        <div class="popover-box">
-                            <strong>🎯 Filter Strictness (θ)</strong><br>
-                            Technical term: <em>Decision Threshold</em>.<br>
-                            How sensitive the AI alarm is. A lower number catches more fraud but flags more innocent users.
-                        </div>
+            <div class="cards-grid">
+                <!-- Card 6 -->
+                <div class="story-card">
+                    <div class="card-question">Which detector catches fraud best without cheating?</div>
+                    <div class="card-headline" id="c6Headline">Loading...</div>
+                    <div class="card-visual-box">
+                        <canvas id="c6Chart"></canvas>
                     </div>
-
-                    <!-- Review Cost Slider -->
-                    <div class="control-pill tooltip-container">
-                        <label for="reviewCostSlider">
-                            💼 Cost per Check
-                            <span class="info-btn" onclick="openGlossaryTerm('cost')">i</span>
-                        </label>
-                        <input type="range" id="reviewCostSlider" min="50" max="2000" step="50" value="500" oninput="onCheckingCostChange(this.value)">
-                        <span class="pill-badge" id="reviewCostLabel">500 CU</span>
-
-                        <div class="popover-box">
-                            <strong>💼 Cost per Check</strong><br>
-                            Technical term: <em>Review / Investigation Cost</em>.<br>
-                            Money spent per flagged payment to have human analysts review it (default: 500 currency units).
-                        </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> Random Forest achieves a PR-AUC of 0.3371 (~53x lift over random guessing baseline of 0.63%), outperforming linear models and static amount thresholds while strictly avoiding leaked balance columns.
                     </div>
-
-                    <!-- Ground Truth (Answer Key) Toggle -->
-                    <button class="toggle-btn" id="evalKeyToggle" onclick="toggleAnswerKey()">
-                        <span>👁️</span>
-                        <span id="evalKeyText">Show True Fraud: OFF</span>
-                    </button>
+                    <div class="card-source-footer">Source: docs/data/detector_comparison.csv</div>
                 </div>
 
+                <!-- Card 7 -->
+                <div class="story-card">
+                    <div class="card-question">How confident is the model across payments?</div>
+                    <div class="card-headline" id="c7Headline">Loading...</div>
+                    <div class="card-visual-box">
+                        <canvas id="c7Chart"></canvas>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> 97.6% of payments score below 0.10 probability, confirming the model concentrates risk effectively into a small actionable queue without creating friction for normal customers.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/score_hist.csv</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- STEP 4: THE RESULT -->
+        <!-- ========================================================================= -->
+        <section id="step4" class="step-section">
+            <div class="step-header">
+                <div class="step-badge">Step 4 of 7</div>
+                <h2 class="step-title">The Result: Confusion Matrix & Financial Cost Curve</h2>
+                <p class="step-sub">Interactive trade-off between analyst verification workload and unrecovered fraud losses.</p>
+            </div>
+
+            <div class="cards-grid">
+                <!-- Card 8 -->
+                <div class="story-card">
+                    <div class="card-question">What is the operational performance at the selected strictness?</div>
+                    <div class="card-headline" id="c8Headline">Loading...</div>
+                    <div class="card-visual-box">
+                        <div class="matrix-2x2" id="c8Matrix"></div>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> Lower strictness thresholds capture more fraudulent transactions (higher recall) at the cost of generating more false alerts for compliance officers to inspect.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/threshold_curve.csv</div>
+                </div>
+
+                <!-- Card 9 -->
+                <div class="story-card">
+                    <div class="card-question">What is the total financial cost curve at this checking cost?</div>
+                    <div class="card-headline" id="c9Headline">Loading...</div>
+                    <div class="card-visual-box">
+                        <canvas id="c9Chart"></canvas>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> <em>"The best strictness depends on the cost of one check"</em>. When review costs are low (e.g. 500 CU), strict screening (0.01) achieves the lowest net loss by saving massive fraud principal. When review costs are high (e.g. 100,000 CU), higher thresholds become optimal.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/cost_curve.csv & docs/data/cost_sensitivity.csv</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- STEP 5: THE DECISION -->
+        <!-- ========================================================================= -->
+        <section id="step5" class="step-section">
+            <div class="step-header">
+                <div class="step-badge">Step 5 of 7</div>
+                <h2 class="step-title">The Decision: Policy Economics & Protected Capital</h2>
+                <p class="step-sub">Macroeconomic comparison between Strict (0.10), Balanced (0.50), and Lenient (0.90) risk policies.</p>
+            </div>
+
+            <div class="cards-grid-full">
+                <!-- Card 10 -->
+                <div class="story-card">
+                    <div class="card-question">How much fraud money is stopped under each policy?</div>
+                    <div class="card-headline" id="c10Headline">Loading...</div>
+                    <div class="card-visual-box" style="height:300px;">
+                        <canvas id="c10Chart"></canvas>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> Missed fraud principal dominates manual review costs by over two orders of magnitude. The Strict Policy catches 752.38M currency units, minimizing net financial exposure across the payments network.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/stream.json (policy_comparison)</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- STEP 6: THE MARKET LINK -->
+        <!-- ========================================================================= -->
+        <section id="step6" class="step-section">
+            <div class="step-header">
+                <div class="step-badge">Step 6 of 7</div>
+                <h2 class="step-title">The Market Link: Compliance Failures & Equity Impact</h2>
+                <p class="step-sub">Case study on the systemic valuation fallout following supervisory action on payment fraud controls.</p>
+            </div>
+
+            <div class="cards-grid-full">
+                <!-- Card 11 -->
+                <div class="story-card">
+                    <div class="card-question">What is the market impact of fraud compliance failure?</div>
+                    <div class="card-headline" id="c11Headline">Loading...</div>
+                    <div class="card-visual-box" style="height:320px;">
+                        <canvas id="c11Chart"></canvas>
+                    </div>
+                    <div class="card-explanation">
+                        <strong>What this means:</strong> Weak supervisory AML/KYC controls lead to direct equity destruction and regulatory license restrictions. Automated multi-agent monitoring with full audit logs guarantees compliance under RBI and DPDP directives.
+                    </div>
+                    <div class="card-source-footer">Source: docs/data/market/paytm_nifty.csv</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================================= -->
+        <!-- STEP 7: LIVE PATROL AND CASES -->
+        <!-- ========================================================================= -->
+        <section id="step7" class="step-section">
+            <div class="step-header">
+                <div class="step-badge">Step 7 of 7</div>
+                <h2 class="step-title">Live Patrol: Test Replay Stream & Case Dossiers</h2>
+                <p class="step-sub">Simulated hourly playback across test steps 334–742 and forensic multi-agent case investigation dossiers.</p>
+            </div>
+
+            <div style="background: linear-gradient(90deg, rgba(56,189,248,0.15), rgba(14,165,233,0.05)); border: 1px solid rgba(56,189,248,0.3); border-radius: 8px; padding: 12px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div>
-                    <button class="help-btn" onclick="openGlossaryModal()">
-                        <span>📖</span>
-                        <span>Beginner Cheat Sheet</span>
-                    </button>
+                    <strong style="color: #38bdf8; font-size: 14px;">🏙️ 3D Sentinel Ledger City Radar</strong>
+                    <p style="color: #94a3b8; font-size: 12px; margin: 2px 0 0 0;">Inspect hourly live transactions as animated 3D urban traffic across 8 districts with live threat lasers & suspect evidence cards.</p>
                 </div>
-            </header>
-
-            <!-- Main Content Area -->
-            <div class="content-area">
-                
-                <!-- STEP 1: THE FRAUD LANDSCAPE -->
-                <section class="step-section active" id="step1">
-                    <div class="section-header">
-                        <div class="step-tag">Step 1 of 7 // Executive Reality Check</div>
-                        <h2 class="section-title">The Extreme Haystack Problem</h2>
-                        <p class="section-desc">
-                            In modern high-speed financial networks, genuine fraud represents less than 1 in 800 transactions.
-                            Detecting money theft without shutting down legitimate commerce is an operational balancing act.
-                        </p>
-                    </div>
-
-                    <div class="cards-grid">
-                        <!-- Card 1: Needle in Haystack -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>🌾 Visualizing Fraud Rarity (Needle in Haystack)</span>
-                                    <span class="info-btn" onclick="openGlossaryTerm('rarity')">i</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c1Headline">Loading sample distribution...</div>
-                            <div class="dot-grid-container" id="c1DotGrid"></div>
-                            <p style="font-size:11.5px; color:var(--text-muted);">
-                                Each grey square is a legitimate payment. Red glowing squares represent actual fraud attempts.
-                            </p>
-                        </div>
-
-                        <!-- Card 2: Fraud Channel Distribution -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>💳 Payment Channels & Attack Surfaces</span>
-                                    <span class="info-btn" onclick="openGlossaryTerm('channels')">i</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c2Headline">Analyzing transfer vs cashout channels...</div>
-                            <div class="chart-box">
-                                <canvas id="c2Chart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- STEP 2: THE FEATURE LEAKAGE TRAP -->
-                <section class="step-section" id="step2">
-                    <div class="section-header">
-                        <div class="step-tag">Step 2 of 7 // Forensic Data Engineering</div>
-                        <h2 class="section-title">The Feature Leakage Trap</h2>
-                        <p class="section-desc">
-                            A naive model that reads synthetic balance updates (<code>oldbalanceOrg</code>, <code>newbalanceDest</code>) achieves 99.9% artificial accuracy in simulation, but completely fails in real production where fraudsters manipulate balance logs.
-                        </p>
-                    </div>
-
-                    <div class="cards-grid">
-                        <!-- Card 3: Zero-Balance Leakage -->
-                        <div class="dashboard-card card-full">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>🛡️ Zero Balance Leakage Rule (Strict Production Constraint)</span>
-                                    <span class="info-btn" onclick="openGlossaryTerm('leakage')">i</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c3Headline">Evaluating data integrity rules...</div>
-                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:8px;">
-                                <div style="background:#091024; border:1px solid #ef4444; border-radius:10px; padding:16px;">
-                                    <h4 style="color:#f87171; font-size:14px; margin-bottom:8px;">❌ Banned Leakage Columns</h4>
-                                    <ul style="font-size:12.5px; color:#cbd5e1; list-style:square; padding-left:18px; line-height:1.6;">
-                                        <li><code>oldbalanceOrg</code> (Pre-transaction origin balance)</li>
-                                        <li><code>newbalanceOrig</code> (Post-transaction origin balance)</li>
-                                        <li><code>oldbalanceDest</code> (Pre-transaction receiver balance)</li>
-                                        <li><code>newbalanceDest</code> (Post-transaction receiver balance)</li>
-                                    </ul>
-                                    <p style="font-size:11.5px; color:#94a3b8; margin-top:10px;">
-                                        <em>Why excluded?</em> Real payment switches cannot atomically compute receiver state before approval.
-                                    </p>
-                                </div>
-
-                                <div style="background:#091024; border:1px solid #10b981; border-radius:10px; padding:16px;">
-                                    <h4 style="color:#34d399; font-size:14px; margin-bottom:8px;">✅ Allowed Production Features</h4>
-                                    <ul style="font-size:12.5px; color:#cbd5e1; list-style:square; padding-left:18px; line-height:1.6;">
-                                        <li><code>amount</code> (Nominal transaction value in currency units)</li>
-                                        <li><code>log_amount</code> (Logarithmic scaling: <code>log(1 + amount)</code>)</li>
-                                        <li><code>is_transfer</code> (Binary flag: 1 for Transfer, 0 for Cash-Out)</li>
-                                        <li><code>hour</code> (Cyclical hour of transaction: 0 to 23)</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- STEP 3: MACHINE LEARNING MODEL -->
-                <section class="step-section" id="step3">
-                    <div class="section-header">
-                        <div class="step-tag">Step 3 of 7 // Machine Learning Architecture</div>
-                        <h2 class="section-title">Random Forest Detection Engine</h2>
-                        <p class="section-desc">
-                            Sentinel trains a balanced Random Forest classifier strictly on historical days (Steps 1–333) and evaluates against future unseen days (Steps 334–742) using a strict temporal split.
-                        </p>
-                    </div>
-
-                    <div class="cards-grid">
-                        <!-- Card 4: Amount Distribution -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>💰 Transaction Amount Profiles (Normal vs Fraud)</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c4Headline">Loading amount curves...</div>
-                            <div class="chart-box"><canvas id="c4Chart"></canvas></div>
-                        </div>
-
-                        <!-- Card 5: Hourly Attack Patterns -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>🌙 Nocturnal Attack Signatures (Hour of Day)</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c5Headline">Analyzing diurnal volume...</div>
-                            <div class="chart-box"><canvas id="c5Chart"></canvas></div>
-                        </div>
-
-                        <!-- Card 6: Detector Comparison -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>🏆 PR-AUC Discovery Power Benchmark</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c6Headline">Benchmarking detectors...</div>
-                            <div class="chart-box"><canvas id="c6Chart"></canvas></div>
-                        </div>
-
-                        <!-- Feature Importance -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>⚖️ Feature Discriminator Weights</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="cFeatImpHeadline">Loading feature importance...</div>
-                            <div class="chart-box"><canvas id="cFeatImpChart"></canvas></div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- STEP 4: CHOOSING STRICTNESS -->
-                <section class="step-section" id="step4">
-                    <div class="section-header">
-                        <div class="step-tag">Step 4 of 7 // Business Policy Optimization</div>
-                        <h2 class="section-title">Strictness & Operational Cost Curve</h2>
-                        <p class="section-desc">
-                            Choosing strictness is not just math; it is a financial tradeoff between paying analysts to inspect false alarms vs suffering unrecovered fraud losses.
-                        </p>
-                    </div>
-
-                    <div class="cards-grid">
-                        <!-- Card 7: Score Distribution -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>📊 AI Risk Score Distribution</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c7Headline">Analyzing score distribution...</div>
-                            <div class="chart-box"><canvas id="c7Chart"></canvas></div>
-                        </div>
-
-                        <!-- Card 8: Operational Confusion Matrix -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>🎯 Live Performance Breakdown at Current Strictness</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c8Headline">Computing matrix...</div>
-                            <div class="matrix-grid" id="c8Matrix"></div>
-                        </div>
-
-                        <!-- Card 9: Total Operational Cost Curve -->
-                        <div class="dashboard-card card-full">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>📉 Total Cost Curve (Loss + Review Costs)</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c9Headline">Calculating cost curves...</div>
-                            <div class="chart-box" style="height:320px;"><canvas id="c9Chart"></canvas></div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- STEP 5: MULTI-AGENT DEFENSE & LIVE SIMULATOR -->
-                <section class="step-section" id="step5">
-                    <div class="section-header">
-                        <div class="step-tag">Step 5 of 7 // Multi-Agent Governance</div>
-                        <h2 class="section-title">Multi-Agent Intelligence & Live Simulator</h2>
-                        <p class="section-desc">
-                            Sentinel coordinates specialized agents: <strong>Scout</strong> (rapid filtering), <strong>Investigator</strong> (deep forensics), <strong>Risk Officer</strong> (final authorization), and <strong>Reporter</strong> (audit documentation).
-                        </p>
-                    </div>
-
-                    <div class="cards-grid">
-                        <!-- Interactive Live Simulator -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>⚡ Live Transaction Risk Calculator</span>
-                                </div>
-                            </div>
-                            <div class="card-headline">Test any custom payment against Sentinel's Random Forest model:</div>
-
-                            <div style="display:flex; flex-direction:column; gap:14px; margin-top:8px;">
-                                <div>
-                                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
-                                        <label>Amount (Currency Units):</label>
-                                        <strong id="simAmountVal" style="color:var(--accent-cyan);">250,000 CU</strong>
-                                    </div>
-                                    <input type="range" id="simAmountInput" min="1000" max="10000000" step="5000" value="250000" style="width:100%;" oninput="updateSimScore()">
-                                </div>
-
-                                <div>
-                                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
-                                        <label>Hour of Day:</label>
-                                        <strong id="simHourVal" style="color:var(--accent-cyan);">3:00 (Late Night 🌙)</strong>
-                                    </div>
-                                    <input type="range" id="simHourInput" min="0" max="23" value="3" style="width:100%;" oninput="updateSimScore()">
-                                </div>
-
-                                <div>
-                                    <label style="font-size:12px; margin-bottom:4px; display:block;">Payment Channel:</label>
-                                    <select id="simTypeInput" style="width:100%; background:#080d1a; color:white; border:1px solid var(--border-color); padding:8px; border-radius:6px;" onchange="updateSimScore()">
-                                        <option value="TRANSFER">TRANSFER (Wire to new party)</option>
-                                        <option value="CASH_OUT">CASH_OUT (Withdrawal to fiat/ATM)</option>
-                                        <option value="PAYMENT">PAYMENT (Merchant checkout)</option>
-                                    </select>
-                                </div>
-
-                                <div id="simResultCard" style="background:#091024; border:1px solid var(--border-color); border-radius:8px; padding:14px; margin-top:6px;">
-                                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                                        <span>Model Risk Score:</span>
-                                        <strong id="simScoreDisplay" style="font-size:22px; font-family:var(--font-mono); color:#ef4444;">0.78</strong>
-                                    </div>
-                                    <div style="font-size:12px; margin-top:6px; color:var(--text-muted);" id="simVerdictBadge">
-                                        🚨 FLAGGED FOR HUMAN INVESTIGATION (Score ≥ Strictness θ)
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Card 10: Multi-Agent Policy Alerts -->
-                        <div class="dashboard-card">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>🛡️ Multi-Agent Tiered Alerts</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c10Headline">Loading policy matrix...</div>
-                            <div class="chart-box"><canvas id="c10Chart"></canvas></div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- STEP 6: NETWORK LAUNDERING & INVESTIGATOR REPLAY -->
-                <section class="step-section" id="step6">
-                    <div class="section-header">
-                        <div class="step-tag">Step 6 of 7 // Network Laundering Analysis</div>
-                        <h2 class="section-title">Network Laundering & Timeline Replay</h2>
-                        <p class="section-desc">
-                            Sentinel's Network Analyst identifies correlated money laundering chains where funds transferred into an account are immediately cashed out in the exact same hour.
-                        </p>
-                    </div>
-
-                    <div class="cards-grid">
-                        <!-- Card 12: Stream Patrol Timeline -->
-                        <div class="dashboard-card card-full">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>📡 Hourly Test Stream Patrol (Steps 334–742)</span>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <button class="btn btn-secondary" id="patrolPlayBtn" onclick="togglePatrolPlay()">⏸️ Pause</button>
-                                    <span class="pill-badge" id="patrolStepDisplay">Step: 334 (Hour 22)</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c12Headline">Replaying test stream...</div>
-
-                            <div style="margin:10px 0;">
-                                <input type="range" id="patrolScrubber" min="334" max="742" value="334" style="width:100%;" oninput="scrubPatrol(this.value)">
-                            </div>
-
-                            <div class="chart-box"><canvas id="c12Chart"></canvas></div>
-
-                            <!-- Case Dossier Explorer -->
-                            <div style="margin-top:20px; border-top:1px solid var(--border-color); padding-top:16px;">
-                                <h4 style="font-size:14px; color:#ffffff; margin-bottom:8px;">📁 Inspected Case Dossier Drawer</h4>
-                                <div style="display:flex; gap:10px; margin-bottom:12px;">
-                                    <select id="patrolCaseSelect" style="flex:1; background:#080d1a; color:white; border:1px solid var(--border-color); padding:8px; border-radius:6px;" onchange="renderCaseDossier(this.value)"></select>
-                                </div>
-                                <div id="patrolCaseDossierBox"></div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- STEP 7: PAYTM MARKET SHOCK -->
-                <section class="step-section" id="step7">
-                    <div class="section-header">
-                        <div class="step-tag">Step 7 of 7 // Real-World Fintech Governance Shock</div>
-                        <h2 class="section-title">Paytm Payments Bank vs NSE / NIFTY 50</h2>
-                        <p class="section-desc">
-                            On January 31, 2024, the Reserve Bank of India (RBI) halted Paytm Payments Bank operations due to persistent KYC and AML compliance deficiencies, causing a 42% market equity collapse in 3 trading sessions.
-                        </p>
-                    </div>
-
-                    <div class="cards-grid">
-                        <!-- Card 11: Market Shock Chart -->
-                        <div class="dashboard-card card-full">
-                            <div class="card-title-row">
-                                <div class="card-title">
-                                    <span>📉 Paytm Equity Collapse vs NIFTY 50 (Jan–Mar 2024)</span>
-                                </div>
-                            </div>
-                            <div class="card-headline" id="c11Headline">Loading RBI regulatory timeline...</div>
-                            <div class="chart-box" style="height:340px;"><canvas id="c11Chart"></canvas></div>
-                        </div>
-                    </div>
-                </section>
-
+                <button class="btn btn-primary" onclick="openSentinelCity()" style="font-weight: 700; padding: 8px 16px; font-size: 13px;">Launch 3D City 🚀</button>
             </div>
-        </main>
-    </div>
 
-    <!-- ========================================================================= -->
-    <!-- 3D LEDGER CITY (SENTINEL MODE) MODAL VIEW                                 -->
-    <!-- ========================================================================= -->
-    <div class="city-modal-overlay" id="cityModal">
+            <div class="story-card" style="margin-bottom:20px;">
+                <div class="card-question">How does Sentinel monitor transactions live?</div>
+                <div class="card-headline" id="c12Headline">Loading...</div>
+
+                <div class="patrol-controls">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button class="btn btn-primary" id="patrolPlayBtn" onclick="togglePatrolPlay()">⏸️ Pause</button>
+                        <span id="patrolStepDisplay" style="font-weight:700; font-size:13px; color:var(--primary-cyan);">Step: 334 (Hour 22)</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px; flex:1; max-width:460px;">
+                        <span style="font-size:12px; color:var(--text-muted);">Scrubber:</span>
+                        <input type="range" id="patrolScrubber" min="334" max="742" value="334" style="flex:1;" oninput="scrubPatrol(this.value)">
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:12px; color:var(--text-muted);">Speed:</span>
+                        <select id="patrolSpeedSelect" onchange="changePatrolSpeed(this.value)">
+                            <option value="1000">1 hr/sec</option>
+                            <option value="400" selected>2.5 hr/sec</option>
+                            <option value="150">6 hr/sec</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card-visual-box" style="height:240px;">
+                    <canvas id="c12Chart"></canvas>
+                </div>
+
+                <div class="card-explanation">
+                    <strong>What this means:</strong> Sentinel continuously scans incoming transactions, maintaining a strict chronological profile and correlating same-step identical-amount money laundering pairs without delaying honest transactions.
+                </div>
+                <div class="card-source-footer">Source: docs/data/hourly_stats.csv, docs/data/stream.json</div>
+            </div>
+
+            <!-- Case Dossier Explorer -->
+            <div class="story-card">
+                <div class="card-question">Forensic Case File Dossier (Precomputed Multi-Agent Synthesis)</div>
+                <div style="display:flex; gap:12px; margin-bottom:14px; align-items:center; flex-wrap:wrap;">
+                    <label style="font-size:12px; color:var(--text-muted);">Select Alert Dossier:</label>
+                    <select id="patrolCaseSelect" onchange="renderCaseDossier(this.value)" style="min-width:320px;"></select>
+                </div>
+                <div id="patrolCaseDossierBox"></div>
+                <div class="card-source-footer" style="margin-top:14px;">Source: docs/data/stream.json (cases)</div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Global Application State & Reactive Data Script -->
+    
+
+<div class="city-modal-overlay" id="cityModal">
         <!-- City Header Bar -->
         <div class="city-header">
             <div class="city-header-title">
@@ -1542,27 +1308,544 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <!-- ========================================================================= -->
     <!-- APPLICATION LOGIC & THREE.JS 3D ENGINE                                   -->
     <!-- ========================================================================= -->
+    
+    
     <script>
-        // Injected Dynamic Data Bundle
-        const DATA = __JSON_DATA_BUNDLE__;
 
-        // Strictness Threshold Grid
-        const THRESHOLD_GRID = [0.01, 0.02, 0.05, 0.10, 0.15, 0.20, 0.30, 0.50, 0.60, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 0.99];
+        const DATA = __DATA_BUNDLE__;
+
+        const THRESHOLD_GRID = [0.01, 0.02, 0.03, 0.04, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95];
         let currentStrictness = 0.50;
         let currentCheckingCost = 500;
         let evalMode = false;
-
-        // Patrol & Stream State
         let patrolPlaying = true;
         let patrolCurrentStep = 334;
         let patrolInterval = null;
-        let patrolSpeed = 800;
+        let patrolSpeed = 400;
 
-        // Chart Instances
-        let chartC2, chartC4, chartC5, chartC6, chartFeatImp, chartC7, chartC9, chartC10, chartC11, chartC12;
+        // Chart instances
+        let chartC2, chartC3, chartC4, chartC5, chartC6, chartC7, chartC9, chartC10, chartC11, chartC12;
 
-        // 3D Engine Globals
-        let cityScene, cityCamera, cityRenderer, cityRaycaster, cityMouse;
+        function goToStep(stepNum) {
+            document.querySelectorAll('.step-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('step' + stepNum).classList.add('active');
+            document.querySelectorAll('.nav-item-btn')[stepNum - 1].classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function onStrictnessChange(idx) {
+            currentStrictness = THRESHOLD_GRID[parseInt(idx)];
+            document.getElementById('strictnessLabel').innerText = currentStrictness.toFixed(2);
+            renderAllDynamicCards();
+        }
+
+        function onCheckingCostChange(val) {
+            currentCheckingCost = parseInt(val);
+            renderAllDynamicCards();
+        }
+
+        function toggleAnswerKey() {
+            evalMode = !evalMode;
+            document.getElementById('evalKeyText').innerText = evalMode ? "👁️ Reveal Ground Truth: ON" : "👁️ Reveal Ground Truth: OFF";
+            document.getElementById('evalKeyToggle').classList.toggle('active', evalMode);
+            renderAllDynamicCards();
+        }
+
+        function renderAllDynamicCards() {
+            renderCard1();
+            renderCard2();
+            renderCard3();
+            renderCard4();
+            renderCard5();
+            renderCard6();
+            renderCard7();
+            renderCard8();
+            renderCard9();
+            renderCard10();
+            renderCard11();
+            renderCard12();
+        }
+
+        // Card 1: How rare is fraud?
+        function renderCard1() {
+            const ov = DATA.overview;
+            const total = ov.sample_dataset.total_transactions;
+            const frauds = ov.sample_dataset.total_frauds;
+            const pct = (ov.sample_dataset.overall_fraud_rate * 100).toFixed(3);
+            const testFrauds = ov.time_split.test_frauds;
+            const testTotal = ov.time_split.test_rows;
+            const testPct = (ov.time_split.test_fraud_rate * 100).toFixed(3);
+
+            if (evalMode) {
+                document.getElementById('c1Headline').innerText = `Across the sample, only ${frauds.toLocaleString()} of ${total.toLocaleString()} payments (${pct}%) are fraud (${testFrauds} of ${testTotal.toLocaleString()} in test, ${testPct}%).`;
+            } else {
+                document.getElementById('c1Headline').innerText = `Fraud represents under 1% of digital payments across the network, making detection an extreme class-imbalance problem.`;
+            }
+
+            const grid = document.getElementById('c1DotGrid');
+            grid.innerHTML = '';
+            for (let i = 0; i < 800; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'grid-dot' + (evalMode && i < 5 ? ' fraud-dot' : '');
+                grid.appendChild(dot);
+            }
+        }
+
+        // Card 2: Payment types
+        function renderCard2() {
+            const ov = DATA.overview.filtered_dataset;
+            const trFrauds = ov.transfer_frauds;
+            const coFrauds = ov.cashout_frauds;
+            const trTotal = ov.transfer_count;
+            const coTotal = ov.cashout_count;
+
+            if (evalMode) {
+                document.getElementById('c2Headline').innerText = `100% of frauds occur in TRANSFER (${trFrauds} of ${trTotal.toLocaleString()}) and CASH_OUT (${coFrauds} of ${coTotal.toLocaleString()}). Zero frauds occur in other types.`;
+            } else {
+                document.getElementById('c2Headline').innerText = `Fraud is concentrated exclusively in outbound TRANSFER and CASH_OUT payment corridors.`;
+            }
+
+            const ctx = document.getElementById('c2Chart').getContext('2d');
+            if (chartC2) chartC2.destroy();
+            chartC2 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['TRANSFER', 'CASH_OUT', 'PAYMENT', 'CASH_IN', 'DEBIT'],
+                    datasets: [
+                        { label: 'Total Payments', data: [trTotal, coTotal, 321000, 210000, 7000], backgroundColor: '#64748b' },
+                        { label: 'Frauds (Ground Truth)', data: evalMode ? [trFrauds, coFrauds, 0, 0, 0] : [0, 0, 0, 0, 0], backgroundColor: '#ef4444' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { type: 'logarithmic', grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f8fafc' } } }
+                }
+            });
+        }
+
+        // Card 3: Time split
+        function renderCard3() {
+            const sp = DATA.overview.time_split;
+            document.getElementById('c3Headline').innerText = `Training on steps 1–${sp.split_step} (${sp.train_rows.toLocaleString()} payments) and evaluating on future steps ${sp.test_steps[0]}–${sp.test_steps[1]} (${sp.test_rows.toLocaleString()} payments).`;
+
+            const ctx = document.getElementById('c3Chart').getContext('2d');
+            if (chartC3) chartC3.destroy();
+            chartC3 = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Train Set (Steps 1-333: 75%)', 'Test Set (Steps 334-742: 25%)'],
+                    datasets: [{
+                        data: [sp.train_rows, sp.test_rows],
+                        backgroundColor: ['#3b82f6', '#38bdf8'],
+                        borderColor: '#080d1a',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#f8fafc' } } }
+                }
+            });
+        }
+
+        // Card 4: Amount histogram
+        function renderCard4() {
+            const hist = DATA.amount_hist;
+            const highFraud = hist.filter(h => h.bin_min >= 200000).reduce((sum, h) => sum + h.count_fraud, 0);
+            
+            if (evalMode) {
+                document.getElementById('c4Headline').innerText = `${highFraud} of 652 test frauds (${((highFraud/652)*100).toFixed(1)}%) occur in amounts exceeding 200,000 currency units.`;
+            } else {
+                document.getElementById('c4Headline').innerText = `Fraudulent payments skew heavily towards high-value brackets (>200,000 currency units).`;
+            }
+
+            const ctx = document.getElementById('c4Chart').getContext('2d');
+            if (chartC4) chartC4.destroy();
+            chartC4 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: hist.map(h => h.bin_label),
+                    datasets: [
+                        { label: 'Legitimate Payments', data: hist.map(h => h.count_legit), backgroundColor: '#64748b' },
+                        { label: 'Fraud Payments', data: evalMode ? hist.map(h => h.count_fraud) : hist.map(() => 0), backgroundColor: '#ef4444' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { type: 'logarithmic', grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f8fafc' } } }
+                }
+            });
+        }
+
+        // Card 5: Diurnal 24-hour cycle
+        function renderCard5() {
+            const hrMap = {};
+            for (let i = 0; i < 24; i++) hrMap[i] = { payments: 0, frauds: 0, alerts: 0 };
+            DATA.hourly_stats.forEach(h => {
+                hrMap[h.hour].payments += h.payments;
+                hrMap[h.hour].frauds += h.frauds_actual;
+                hrMap[h.hour].alerts += h.alerts_strict;
+            });
+
+            document.getElementById('c5Headline').innerText = `Payments follow human business hours (peaking 9:00–18:00), while automated fraud attacks continue across all 24 hours.`;
+
+            const ctx = document.getElementById('c5Chart').getContext('2d');
+            if (chartC5) chartC5.destroy();
+            chartC5 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    datasets: [
+                        { label: 'Total Payments', data: Object.values(hrMap).map(v => v.payments), backgroundColor: '#38bdf8' },
+                        { label: 'Strict Alerts (Flagged)', data: Object.values(hrMap).map(v => v.alerts), backgroundColor: '#f59e0b' },
+                        { label: 'Actual Frauds', data: evalMode ? Object.values(hrMap).map(v => v.frauds) : Object.values(hrMap).map(() => 0), backgroundColor: '#ef4444' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f8fafc' } } }
+                }
+            });
+        }
+
+        // Card 6: Detector comparison
+        function renderCard6() {
+            const rf = DATA.detector_comparison.find(d => d.detector.includes("Random Forest"));
+            const lr = DATA.detector_comparison.find(d => d.detector.includes("Logistic"));
+            const rule = DATA.detector_comparison.find(d => d.detector.includes("Rule"));
+
+            document.getElementById('c6Headline').innerText = `Random Forest achieves PR-AUC of ${rf.pr_auc.toFixed(4)} (~53x lift over 0.0063 baseline), outperforming Logistic Regression (${lr.pr_auc.toFixed(4)}) and Static Rule (${rule.pr_auc.toFixed(4)}).`;
+
+            const ctx = document.getElementById('c6Chart').getContext('2d');
+            if (chartC6) chartC6.destroy();
+            chartC6 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: DATA.detector_comparison.map(d => d.detector),
+                    datasets: [{
+                        label: 'PR-AUC (Precision-Recall Area)',
+                        data: DATA.detector_comparison.map(d => d.pr_auc),
+                        backgroundColor: ['#64748b', '#3b82f6', '#10b981', '#a78bfa']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 10 } } },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' }, max: 0.4 }
+                    },
+                    plugins: { legend: { labels: { color: '#f8fafc' } } }
+                }
+            });
+        }
+
+        // Card 7: Score histogram
+        function renderCard7() {
+            const sh = DATA.score_hist;
+            const lowPct = ((sh[0].total / DATA.overview.time_split.test_rows) * 100).toFixed(1);
+            document.getElementById('c7Headline').innerText = `${lowPct}% of test payments score in the lowest 0.0–0.1 bucket, confining risk alerts to a sharp actionable tail.`;
+
+            const ctx = document.getElementById('c7Chart').getContext('2d');
+            if (chartC7) chartC7.destroy();
+            chartC7 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sh.map(s => s.bin_label),
+                    datasets: [
+                        { label: 'Legitimate Payments', data: sh.map(s => s.count_legit), backgroundColor: '#64748b' },
+                        { label: 'Fraud Payments', data: evalMode ? sh.map(s => s.count_fraud) : sh.map(() => 0), backgroundColor: '#ef4444' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { type: 'logarithmic', grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f8fafc' } } }
+                }
+            });
+        }
+
+        // Card 8: 2x2 Matrix at Strictness
+        function renderCard8() {
+            const row = DATA.threshold_curve.find(t => Math.abs(t.threshold - currentStrictness) < 0.001) || DATA.threshold_curve[0];
+            const alerts = row.tp + row.fp;
+            const prec = (row.precision * 100).toFixed(2);
+            const rec = (row.recall * 100).toFixed(2);
+
+            if (evalMode) {
+                document.getElementById('c8Headline').innerText = `At strictness ${row.threshold.toFixed(2)}: ${alerts.toLocaleString()} alerts generated; ${row.tp} frauds caught (${rec}% recall) with ${prec}% precision.`;
+            } else {
+                document.getElementById('c8Headline').innerText = `At strictness ${row.threshold.toFixed(2)}: ${alerts.toLocaleString()} total candidate alerts generated for operational review.`;
+            }
+
+            const matrix = document.getElementById('c8Matrix');
+            matrix.innerHTML = `
+                <div class="matrix-cell tp">
+                    <div class="matrix-cell-title">Caught Frauds</div>
+                    <div class="matrix-cell-tech">True Positives (TP)</div>
+                    <div class="matrix-cell-val" style="color:var(--safe-green);">${evalMode ? row.tp.toLocaleString() : 'Masked'}</div>
+                </div>
+                <div class="matrix-cell fp">
+                    <div class="matrix-cell-title">False Alarms</div>
+                    <div class="matrix-cell-tech">False Positives (FP)</div>
+                    <div class="matrix-cell-val" style="color:var(--alert-amber);">${evalMode ? row.fp.toLocaleString() : alerts.toLocaleString()}</div>
+                </div>
+                <div class="matrix-cell fn">
+                    <div class="matrix-cell-title">Missed Frauds</div>
+                    <div class="matrix-cell-tech">False Negatives (FN)</div>
+                    <div class="matrix-cell-val" style="color:var(--fraud-red);">${evalMode ? row.fn.toLocaleString() : 'Masked'}</div>
+                </div>
+                <div class="matrix-cell tn">
+                    <div class="matrix-cell-title">Safe Passes</div>
+                    <div class="matrix-cell-tech">True Negatives (TN)</div>
+                    <div class="matrix-cell-val" style="color:var(--honest-grey);">${evalMode ? row.tn.toLocaleString() : (DATA.overview.time_split.test_rows - alerts).toLocaleString()}</div>
+                </div>
+            `;
+        }
+
+        // Card 9: Cost curve & sensitivity
+        function renderCard9() {
+            const col = `cost_${currentCheckingCost}`;
+            const sensData = DATA.cost_sensitivity.filter(s => s.threshold !== 'lowest_cost_threshold');
+            const optRow = DATA.cost_sensitivity.find(s => s.threshold === 'lowest_cost_threshold');
+            const optTh = optRow ? parseFloat(optRow[col]) : 0.01;
+
+            document.getElementById('c9Headline').innerText = `At ${currentCheckingCost.toLocaleString()} currency units/check, the minimum total loss is achieved at strictness threshold ${optTh.toFixed(2)}.`;
+
+            const ctx = document.getElementById('c9Chart').getContext('2d');
+            if (chartC9) chartC9.destroy();
+
+            const totals = sensData.map(s => parseFloat(s[col]));
+            const minVal = Math.min(...totals);
+
+            chartC9 = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sensData.map(s => s.threshold),
+                    datasets: [
+                        {
+                            label: `Total Cost @ ${currentCheckingCost} CU/check`,
+                            data: totals,
+                            borderColor: '#38bdf8',
+                            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                            fill: true,
+                            tension: 0.2,
+                            pointRadius: sensData.map(s => parseFloat(s.threshold) === optTh ? 7 : 2),
+                            pointBackgroundColor: sensData.map(s => parseFloat(s.threshold) === optTh ? '#ef4444' : '#38bdf8')
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: 'Strictness Threshold', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { title: { display: true, text: 'Total Loss (currency units)', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f8fafc' } } }
+                }
+            });
+        }
+
+        // Card 10: Policy comparison
+        function renderCard10() {
+            const pol = DATA.stream.policy_comparison;
+            const strictSaved = (pol.find(p => p.policy.toLowerCase() === 'strict').fraud_value_saved / 1000000).toFixed(2);
+            const balSaved = (pol.find(p => p.policy.toLowerCase() === 'balanced').fraud_value_saved / 1000000).toFixed(2);
+            const lenSaved = (pol.find(p => p.policy.toLowerCase() === 'lenient').fraud_value_saved / 1000000).toFixed(2);
+
+            document.getElementById('c10Headline').innerText = `Strict Policy stops ${strictSaved}M currency units; Balanced stops ${balSaved}M CU; Lenient stops ${lenSaved}M CU.`;
+
+            const ctx = document.getElementById('c10Chart').getContext('2d');
+            if (chartC10) chartC10.destroy();
+            chartC10 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: pol.map(p => p.policy),
+                    datasets: [
+                        { label: 'Protected Fraud Principal (currency units)', data: pol.map(p => p.fraud_value_saved), backgroundColor: '#10b981' },
+                        { label: 'Lost Fraud Principal (currency units)', data: pol.map(p => p.fraud_value_lost), backgroundColor: '#ef4444' },
+                        { label: 'Analyst Review Cost (currency units)', data: pol.map(p => p.review_cost), backgroundColor: '#f59e0b' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f8fafc' } } }
+                }
+            });
+        }
+
+        // Card 11: Market Link
+        function renderCard11() {
+            const m = DATA.market;
+            const preVol = m[0].pre_volatility;
+            const postVol = m[0].post_volatility;
+            const betaPre = m[0].beta_pre;
+            const betaPost = m[0].beta_post;
+
+            document.getElementById('c11Headline').innerText = `Post-RBI supervisory action, Paytm equity dropped ~55%; annualized volatility surged from ${preVol}% to ${postVol}% while market beta rose from ${betaPre} to ${betaPost}.`;
+
+            const ctx = document.getElementById('c11Chart').getContext('2d');
+            if (chartC11) chartC11.destroy();
+            chartC11 = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: m.map(r => r.date),
+                    datasets: [
+                        { label: 'Paytm Normalized (Base=100)', data: m.map(r => r.paytm_normalized), borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.2 },
+                        { label: 'NIFTY 50 Benchmark (Base=100)', data: m.map(r => r.nifty_normalized), borderColor: '#38bdf8', borderDash: [4, 4], tension: 0.1 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', maxTicksLimit: 12 } },
+                        y: { title: { display: true, text: 'Normalized Index (Jan 1 = 100)', color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f8fafc' } } }
+                }
+            });
+        }
+
+        // Card 12: Live Patrol
+        function renderCard12() {
+            const edges46 = DATA.stream.network_edges.filter(e => e.step > 333);
+            document.getElementById('c12Headline').innerText = `Replaying steps 334–742 with ${edges46.length} test-period correlated money laundering pairs tracked across nodes.`;
+
+            // Populate Case Selector
+            const caseSel = document.getElementById('patrolCaseSelect');
+            if (caseSel && caseSel.children.length === 0) {
+                const keys = Object.keys(DATA.stream.cases);
+                caseSel.innerHTML = keys.map(k => `<option value="${k}">${k} (${DATA.stream.cases[k].transaction.type}, ${DATA.stream.cases[k].transaction.amount.toLocaleString()} currency units)</option>`).join('');
+                if (keys.length > 0) renderCaseDossier(keys[0]);
+            }
+
+            renderPatrolStep(patrolCurrentStep);
+        }
+
+        function renderCaseDossier(caseId) {
+            const c = DATA.stream.cases[caseId];
+            if (!c) return;
+            const tx = c.transaction;
+            const ro = c.risk_officer;
+            const rpt = c.report_text || "No AI report available.";
+
+            document.getElementById('patrolCaseDossierBox').innerHTML = `
+                <div style="background:#080d1a; border:1px solid var(--border-color); border-radius:8px; padding:14px; margin-top:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <strong>📁 Dossier: <code>${caseId}</code></strong>
+                        <span style="background:#f59e0b; color:black; padding:2px 8px; border-radius:4px; font-weight:700; font-size:11px;">${ro.decision_balanced.toUpperCase()}</span>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+                        <div>• Step: ${tx.step} (Hour ${tx.hour})<br>• Type: ${tx.type}<br>• Amount: <strong style="color:white;">${tx.amount.toLocaleString()}</strong> currency units</div>
+                        <div>• Model Score: ${c.scores.model_score.toFixed(4)}<br>• Anomaly Score: ${c.scores.anomaly_score.toFixed(4)}<br>• Sender Prior History: ${c.sender_history.prior_tx_count > 0 ? c.sender_history.prior_tx_count + ' txs' : 'no prior history available'}</div>
+                    </div>
+                    <pre>${rpt}</pre>
+                </div>
+            `;
+        }
+
+        function togglePatrolPlay() {
+            patrolPlaying = !patrolPlaying;
+            document.getElementById('patrolPlayBtn').innerText = patrolPlaying ? "⏸️ Pause" : "▶️ Play";
+            if (patrolPlaying) startPatrolLoop();
+            else clearInterval(patrolInterval);
+        }
+
+        function scrubPatrol(step) {
+            patrolCurrentStep = parseInt(step);
+            renderPatrolStep(patrolCurrentStep);
+        }
+
+        function changePatrolSpeed(ms) {
+            patrolSpeed = parseInt(ms);
+            if (patrolPlaying) {
+                clearInterval(patrolInterval);
+                startPatrolLoop();
+            }
+        }
+
+        function startPatrolLoop() {
+            clearInterval(patrolInterval);
+            patrolInterval = setInterval(() => {
+                if (patrolCurrentStep >= 742) patrolCurrentStep = 334;
+                else patrolCurrentStep++;
+                document.getElementById('patrolScrubber').value = patrolCurrentStep;
+                renderPatrolStep(patrolCurrentStep);
+            }, patrolSpeed);
+        }
+
+        function renderPatrolStep(step) {
+            currentPatrolStep = parseInt(step);
+            patrolCurrentStep = parseInt(step);
+            if (typeof updateCityForStep === "function" && document.getElementById("cityModal") && document.getElementById("cityModal").classList.contains("active")) {
+                updateCityForStep(currentPatrolStep);
+            }
+            const hour = step % 24;
+            document.getElementById('patrolStepDisplay').innerText = `Step: ${step} (Hour ${hour})`;
+
+            // Slice recent 30 steps for strip chart
+            const minS = Math.max(334, step - 30);
+            const stepSlice = DATA.hourly_stats.filter(h => h.step >= minS && h.step <= step);
+
+            const ctx = document.getElementById('c12Chart').getContext('2d');
+            if (chartC12) chartC12.destroy();
+            chartC12 = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: stepSlice.map(s => `S${s.step}`),
+                    datasets: [
+                        { label: 'Payments Volume', data: stepSlice.map(s => s.payments), backgroundColor: '#64748b' },
+                        { label: 'Strict Alerts', data: stepSlice.map(s => s.alerts_strict), backgroundColor: '#f59e0b' },
+                        { label: 'Actual Frauds', data: evalMode ? stepSlice.map(s => s.frauds_actual) : stepSlice.map(() => 0), backgroundColor: '#ef4444' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f8fafc' } } }
+                }
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderAllDynamicCards();
+            startPatrolLoop();
+        });
+    
+
+let cityScene, cityCamera, cityRenderer, cityRaycaster, cityMouse;
         let cityInitialized = false;
         let cityAnimId = null;
         let cityBuildings = [];
@@ -3093,9 +3376,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             updateSimScore();
             startPatrolLoop();
         });
+    
+    
     </script>
 </body>
 </html>"""
+
+    html_out = html_template.replace("__DATA_BUNDLE__", json.dumps(bundle))
+
+    with open("index.html", "w", encoding="utf-8") as f:
+        f.write(html_out)
+
+    with open("docs/index.html", "w", encoding="utf-8") as f:
+        f.write(html_out)
+
+    print("Successfully built Sentinel Mission 8 Story Dashboard & 3D Ledger City at index.html and docs/index.html")
 
 if __name__ == "__main__":
     build_mission8_site()
