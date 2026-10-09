@@ -721,6 +721,41 @@
             backdrop-filter: blur(16px);
         }
 
+        /* Live City Situation Briefing (Top Center) */
+        .city-situation-briefing {
+            position: absolute;
+            top: 14px; left: 390px; right: 390px;
+            background: rgba(13, 21, 39, 0.94);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            border-radius: 12px;
+            padding: 10px 16px;
+            backdrop-filter: blur(14px);
+            z-index: 1004;
+            color: #f8fafc;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            font-size: 11.5px;
+            line-height: 1.45;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        @media (max-width: 1200px) {
+            .city-situation-briefing { display: none; }
+        }
+
+        .briefing-pulse {
+            width: 10px; height: 10px; border-radius: 50%; background: #38bdf8;
+            box-shadow: 0 0 10px #38bdf8; flex-shrink: 0;
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0% { transform: scale(0.9); opacity: 0.7; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.7; }
+        }
+
         .stamp-box {
             display: inline-block;
             padding: 6px 12px;
@@ -1297,6 +1332,15 @@
         <!-- 3D WebGL Canvas Container -->
         <div class="city-canvas-container" id="cityCanvasContainer">
             <canvas id="cityFallback2D" style="display:none; width:100%; height:100%;"></canvas>
+
+            <!-- Live City Situation Briefing (Top Center) -->
+            <div class="city-situation-briefing" id="cityBriefingBox">
+                <div class="briefing-pulse"></div>
+                <div>
+                    <strong style="color:#38bdf8; font-size:12px;">📡 LIVE SITUATION BRIEFING:</strong>
+                    <span id="cityBriefingText" style="color:#e2e8f0; margin-left:4px;">Initializing live payment simulation stream...</span>
+                </div>
+            </div>
 
             <!-- Hourly Threat Briefing & Live Incident Feed (Top-Left) -->
             <div class="city-threat-radar-panel">
@@ -2202,8 +2246,12 @@
             eye.position.y = 170;
             towerGroup.add(eye);
 
-            const labelSprite = createDistrictLabelSprite("SENTINEL HQ (CENTER)", "#38bdf8");
-            labelSprite.position.set(0, 230, 0);
+            const labelSprite = createDistrictLabelSprite("SENTINEL HQ // AI CORE", "🗼 CENTRAL COMMAND", "#38bdf8");
+            labelSprite.position.set(0, 235, 0);
+            labelSprite.scale.set(120, 36, 1);
+            labelSprite.material.depthTest = false;
+            labelSprite.material.depthWrite = false;
+            labelSprite.renderOrder = 9999;
             towerGroup.add(labelSprite);
 
             cityScene.add(towerGroup);
@@ -2228,11 +2276,21 @@
                 plaza.position.set(pos.x, 1, pos.z);
                 cityScene.add(plaza);
 
-                // Floating Hologram Status Board
+                // High-Altitude Sky Billboard (Always on top with depthTest: false)
                 const labelSprite = createDistrictLabelSprite(`DISTRICT ${d}: ${pos.name.toUpperCase()}`, "🟢 SECURE", "#38bdf8");
-                labelSprite.position.set(pos.x, 135, pos.z);
+                labelSprite.position.set(pos.x, 185, pos.z);
+                labelSprite.scale.set(110, 32, 1);
+                labelSprite.material.depthTest = false;
+                labelSprite.material.depthWrite = false;
+                labelSprite.renderOrder = 9999;
                 cityScene.add(labelSprite);
                 districtSprites[d] = labelSprite;
+
+                // Street-Level Entrance Marker Banner
+                const entranceSprite = createDistrictLabelSprite(`D${d}: ${pos.name.toUpperCase()}`, "PORTAL", "#38bdf8");
+                entranceSprite.position.set(pos.x, 10, pos.z);
+                entranceSprite.scale.set(40, 12, 1);
+                cityScene.add(entranceSprite);
 
                 for (let b = 0; b < 12; b++) {
                     const bx = pos.x + (Math.random() - 0.5) * 100;
@@ -2321,29 +2379,30 @@
 
         function createDistrictLabelSprite(title, status, colorHex) {
             const canvas = document.createElement('canvas');
-            canvas.width = 300;
-            canvas.height = 80;
+            canvas.width = 512;
+            canvas.height = 140;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = "rgba(10, 18, 36, 0.92)";
+            ctx.fillStyle = "rgba(10, 18, 36, 0.95)";
             ctx.strokeStyle = colorHex;
-            ctx.lineWidth = 3;
-            ctx.roundRect(4, 4, 292, 72, 12);
+            ctx.lineWidth = 4;
+            ctx.roundRect(6, 6, 500, 128, 16);
             ctx.fill();
             ctx.stroke();
 
             ctx.fillStyle = colorHex;
-            ctx.font = "bold 18px sans-serif";
+            ctx.font = "bold 30px sans-serif";
             ctx.textAlign = "center";
-            ctx.fillText(title, 150, 32);
+            ctx.fillText(title, 256, 56);
 
             ctx.fillStyle = status.includes("ALARM") ? "#f87171" : "#34d399";
-            ctx.font = "bold 14px monospace";
-            ctx.fillText(status, 150, 58);
+            ctx.font = "bold 24px monospace";
+            ctx.fillText(status, 256, 104);
 
             const texture = new THREE.CanvasTexture(canvas);
-            const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true });
+            const spriteMat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false, depthWrite: false });
             const sprite = new THREE.Sprite(spriteMat);
-            sprite.scale.set(65, 17, 1);
+            sprite.scale.set(110, 32, 1);
+            sprite.renderOrder = 9999;
             sprite.userData = { canvas, ctx, texture };
             return sprite;
         }
@@ -2351,22 +2410,22 @@
         function updateDistrictLabelSprite(sprite, title, status, colorHex) {
             if (!sprite || !sprite.userData || !sprite.userData.ctx) return;
             const { canvas, ctx, texture } = sprite.userData;
-            ctx.clearRect(0, 0, 300, 80);
-            ctx.fillStyle = "rgba(10, 18, 36, 0.92)";
+            ctx.clearRect(0, 0, 512, 140);
+            ctx.fillStyle = "rgba(10, 18, 36, 0.95)";
             ctx.strokeStyle = colorHex;
-            ctx.lineWidth = 3;
-            ctx.roundRect(4, 4, 292, 72, 12);
+            ctx.lineWidth = 4;
+            ctx.roundRect(6, 6, 500, 128, 16);
             ctx.fill();
             ctx.stroke();
 
             ctx.fillStyle = colorHex;
-            ctx.font = "bold 18px sans-serif";
+            ctx.font = "bold 30px sans-serif";
             ctx.textAlign = "center";
-            ctx.fillText(title, 150, 32);
+            ctx.fillText(title, 256, 56);
 
             ctx.fillStyle = status.includes("ALARM") ? "#f87171" : "#34d399";
-            ctx.font = "bold 14px monospace";
-            ctx.fillText(status, 150, 58);
+            ctx.font = "bold 24px monospace";
+            ctx.fillText(status, 256, 104);
 
             texture.needsUpdate = true;
         }
@@ -2733,6 +2792,24 @@
             document.getElementById('radarHourDisplay').innerText = hourText;
             document.getElementById('radarActiveTxCount').innerText = activeStepPeople.length;
             document.getElementById('radarThreatCountBadge').innerText = `${flaggedThreats.length} Threats`;
+
+            // Dynamic Narrative Briefing Description
+            const briefingEl = document.getElementById('cityBriefingText');
+            if (briefingEl) {
+                const totalAmt = activeStepPeople.reduce((sum, p) => sum + p.amt, 0);
+                const flaggedAmt = flaggedThreats.reduce((sum, p) => sum + p.amt, 0);
+                const kTotal = (totalAmt >= 1000000) ? (totalAmt / 1000000).toFixed(1) + 'M CU' : (totalAmt / 1000).toFixed(0) + 'K CU';
+                const kFlagged = (flaggedAmt >= 1000000) ? (flaggedAmt / 1000000).toFixed(1) + 'M CU' : (flaggedAmt / 1000).toFixed(0) + 'K CU';
+
+                if (flaggedThreats.length > 0) {
+                    const topThreat = flaggedThreats[0];
+                    briefingEl.innerHTML = `<strong>Step ${step} (${hour}:00)</strong>: Replaying ${activeStepPeople.length} live transactions (${kTotal} volume) across 8 account districts. <span style="color:#f87171; font-weight:700;">🚨 Sentinel AI flagged ${flaggedThreats.length} high-risk threat(s) (${kFlagged} stolen)</span> moving from Dist ${topThreat.df} (${DISTRICT_POSITIONS[topThreat.df].name}) ➔ Dist ${topThreat.dt} (${DISTRICT_POSITIONS[topThreat.dt].name}) with AI score ${topThreat.sc.toFixed(2)}. Red beams show frozen funds.`;
+                } else if (elevatedThreats.length > 0) {
+                    briefingEl.innerHTML = `<strong>Step ${step} (${hour}:00)</strong>: Replaying ${activeStepPeople.length} transactions (${kTotal} volume). <span style="color:#f59e0b; font-weight:600;">⚠️ ${elevatedThreats.length} elevated transactions under observation</span> below alarm strictness (θ = ${currentStrictness.toFixed(2)}).`;
+                } else {
+                    briefingEl.innerHTML = `<strong>Step ${step} (${hour}:00)</strong>: Replaying ${activeStepPeople.length} transactions (${kTotal} volume) across 8 account districts. <span style="color:#34d399; font-weight:600;">🟢 All payment traffic normal.</span> No high-risk anomalies detected in this hour.`;
+                }
+            }
 
             const radarList = document.getElementById('radarThreatList');
             if (flaggedThreats.length === 0 && elevatedThreats.length === 0) {
